@@ -24,43 +24,195 @@ export const DEFAULT_WEIGHTS: Weights = {
 // "higher = healthier (lower debt)", consistent with the factor everywhere.
 // ---------------------------------------------------------------------------
 
-export interface FactorRange {
-  min: number
-  max: number
+// Real-value bucket filters. Eight financial fields, each split into buckets
+// whose boundaries are grounded in the real distribution across all 2,046
+// companies. Two interaction styles: multi-select pills (marketCap,
+// promoterPledge) store an array of selected bucket keys; single-select
+// segmented controls (the rest) store one key or null.
+
+export type BucketFieldKey =
+  | "marketCap"
+  | "peRatio"
+  | "revenueGrowth"
+  | "ebitdaMargin"
+  | "roce"
+  | "roe"
+  | "debtLevel"
+  | "promoterPledge"
+
+export interface Bucket {
+  key: string
+  name: string // "Small", "Value", "Excellent"
+  range: string // real-unit range, e.g. "< ₹700 Cr", "12–28%", "> 51x"
+  match: (v: number) => boolean
 }
 
-export interface RangeFilters {
-  revenueGrowth: FactorRange
-  ebitdaMargin: FactorRange
-  roce: FactorRange
-  debtLevel: FactorRange
+export interface BucketFieldDef {
+  key: BucketFieldKey
+  label: string
+  select: "multi" | "single"
+  getValue: (c: Company) => number | null
+  buckets: Bucket[]
 }
 
-export const DEFAULT_RANGE_FILTERS: RangeFilters = {
-  revenueGrowth: { min: 0, max: 100 },
-  ebitdaMargin: { min: 0, max: 100 },
-  roce: { min: 0, max: 100 },
-  debtLevel: { min: 0, max: 100 },
+export const BUCKET_FIELDS: BucketFieldDef[] = [
+  {
+    key: "marketCap",
+    label: "Market Cap",
+    select: "multi",
+    getValue: (c) => c.raw.marketCap,
+    buckets: [
+      { key: "small", name: "Small", range: "< ₹700 Cr", match: (v) => v < 700 },
+      { key: "mid", name: "Mid", range: "₹700–2,900 Cr", match: (v) => v >= 700 && v < 2900 },
+      { key: "large", name: "Large", range: "₹2,900–13,000 Cr", match: (v) => v >= 2900 && v < 13000 },
+      { key: "mega", name: "Mega", range: "> ₹13,000 Cr", match: (v) => v >= 13000 },
+    ],
+  },
+  {
+    key: "peRatio",
+    label: "P/E Ratio",
+    select: "single",
+    getValue: (c) => c.raw.peRatio,
+    buckets: [
+      { key: "value", name: "Value", range: "< 16x", match: (v) => v < 16 },
+      { key: "moderate", name: "Moderate", range: "16–29x", match: (v) => v >= 16 && v < 29 },
+      { key: "growth", name: "Growth", range: "29–51x", match: (v) => v >= 29 && v < 51 },
+      { key: "premium", name: "Premium", range: "> 51x", match: (v) => v >= 51 },
+    ],
+  },
+  {
+    key: "revenueGrowth",
+    label: "Revenue Growth",
+    select: "single",
+    getValue: (c) => c.raw.revenueGrowth,
+    buckets: [
+      { key: "declining", name: "Declining", range: "< 0%", match: (v) => v < 0 },
+      { key: "flat", name: "Flat", range: "0–12%", match: (v) => v >= 0 && v < 12 },
+      { key: "growing", name: "Growing", range: "12–28%", match: (v) => v >= 12 && v < 28 },
+      { key: "highGrowth", name: "High Growth", range: "> 28%", match: (v) => v >= 28 },
+    ],
+  },
+  {
+    key: "ebitdaMargin",
+    label: "EBITDA Margin",
+    select: "single",
+    getValue: (c) => c.raw.ebitdaMargin,
+    buckets: [
+      { key: "thin", name: "Thin", range: "< 6%", match: (v) => v < 6 },
+      { key: "moderate", name: "Moderate", range: "6–12%", match: (v) => v >= 6 && v < 12 },
+      { key: "healthy", name: "Healthy", range: "12–20%", match: (v) => v >= 12 && v < 20 },
+      { key: "high", name: "High", range: "> 20%", match: (v) => v >= 20 },
+    ],
+  },
+  {
+    key: "roce",
+    label: "ROCE",
+    select: "single",
+    getValue: (c) => c.raw.roce,
+    buckets: [
+      { key: "weak", name: "Weak", range: "< 6%", match: (v) => v < 6 },
+      { key: "average", name: "Average", range: "6–13%", match: (v) => v >= 6 && v < 13 },
+      { key: "strong", name: "Strong", range: "13–19%", match: (v) => v >= 13 && v < 19 },
+      { key: "excellent", name: "Excellent", range: "> 19%", match: (v) => v >= 19 },
+    ],
+  },
+  {
+    key: "roe",
+    label: "ROE",
+    select: "single",
+    getValue: (c) => c.raw.roe,
+    buckets: [
+      { key: "weak", name: "Weak", range: "< 5%", match: (v) => v < 5 },
+      { key: "average", name: "Average", range: "5–11%", match: (v) => v >= 5 && v < 11 },
+      { key: "strong", name: "Strong", range: "11–17%", match: (v) => v >= 11 && v < 17 },
+      { key: "excellent", name: "Excellent", range: "> 17%", match: (v) => v >= 17 },
+    ],
+  },
+  {
+    // Low debt reads as favorable, consistent with the "higher = healthier"
+    // debtLevel factor convention -- but here we filter the real ₹ Cr figure.
+    key: "debtLevel",
+    label: "Debt Level",
+    select: "single",
+    getValue: (c) => c.raw.totalDebt,
+    buckets: [
+      { key: "low", name: "Low", range: "< ₹40 Cr", match: (v) => v < 40 },
+      { key: "moderate", name: "Moderate", range: "₹40–210 Cr", match: (v) => v >= 40 && v < 210 },
+      { key: "elevated", name: "Elevated", range: "₹210–935 Cr", match: (v) => v >= 210 && v < 935 },
+      { key: "high", name: "High", range: "> ₹935 Cr", match: (v) => v >= 935 },
+    ],
+  },
+  {
+    key: "promoterPledge",
+    label: "Promoter Pledge",
+    select: "multi",
+    getValue: (c) => c.raw.promoterPledge,
+    buckets: [
+      { key: "none", name: "None", range: "0%", match: (v) => v === 0 },
+      { key: "low", name: "Low", range: "0–10%", match: (v) => v > 0 && v <= 10 },
+      { key: "elevated", name: "Elevated", range: "> 10%", match: (v) => v > 10 },
+    ],
+  },
+]
+
+const BUCKET_FIELD_BY_KEY = Object.fromEntries(BUCKET_FIELDS.map((f) => [f.key, f])) as Record<
+  BucketFieldKey,
+  BucketFieldDef
+>
+
+export interface BucketFilters {
+  marketCap: string[] // multi-select
+  promoterPledge: string[] // multi-select
+  revenueGrowth: string | null // single-select
+  ebitdaMargin: string | null
+  roce: string | null
+  roe: string | null
+  debtLevel: string | null
+  peRatio: string | null
 }
 
-// A range is "active" only when it actually narrows the 0-100 span.
-export function isRangeActive(r: FactorRange): boolean {
-  return r.min > 0 || r.max < 100
+export const DEFAULT_BUCKET_FILTERS: BucketFilters = {
+  marketCap: [],
+  promoterPledge: [],
+  revenueGrowth: null,
+  ebitdaMargin: null,
+  roce: null,
+  roe: null,
+  debtLevel: null,
+  peRatio: null,
 }
 
-export function countActiveRangeFilters(f: RangeFilters): number {
-  return (Object.keys(f) as (keyof RangeFilters)[]).reduce(
-    (n, key) => n + (isRangeActive(f[key]) ? 1 : 0),
-    0,
+function isFieldActive(sel: string[] | string | null): boolean {
+  return Array.isArray(sel) ? sel.length > 0 : sel !== null
+}
+
+export function countActiveBucketFilters(f: BucketFilters): number {
+  return (Object.keys(f) as BucketFieldKey[]).reduce((n, key) => n + (isFieldActive(f[key]) ? 1 : 0), 0)
+}
+
+// A company passes a field's constraint if its real value falls within (any of)
+// the selected bucket(s). A field with no selection never constrains. A missing
+// value (null) never falls in any bucket, so such a company is simply excluded
+// once that field is filtered -- it never crashes or defaults into a bucket.
+function passesField(company: Company, def: BucketFieldDef, selection: string[] | string | null): boolean {
+  const keys = Array.isArray(selection) ? selection : selection ? [selection] : []
+  if (keys.length === 0) return true
+  const v = def.getValue(company)
+  if (v == null) return false
+  return keys.some((k) => {
+    const bucket = def.buckets.find((b) => b.key === k)
+    return bucket ? bucket.match(v) : false
+  })
+}
+
+export function passesBucketFilters(company: Company, filters: BucketFilters): boolean {
+  return (Object.keys(filters) as BucketFieldKey[]).every((key) =>
+    passesField(company, BUCKET_FIELD_BY_KEY[key], filters[key]),
   )
 }
 
-function passesRangeFilters(company: Company, filters: RangeFilters): boolean {
-  return (Object.keys(filters) as (keyof RangeFilters)[]).every((key) => {
-    const { min, max } = filters[key]
-    const v = company.factors[key]
-    return v >= min && v <= max
-  })
+export function filterCompanies(companies: Company[], filters: BucketFilters): Company[] {
+  return companies.filter((c) => passesBucketFilters(c, filters))
 }
 
 export interface ComparableDeal {
@@ -95,6 +247,19 @@ export interface Company {
     freeCashFlow: string
     promoterPledge: string
     beta: string
+  }
+  // Unformatted numeric values for real-value bucket filtering. Currency fields
+  // are in ₹ Cr, percentages are plain (e.g. 14.8), ratios are plain (e.g. 63.3).
+  // null = missing, so such a company never falls inside any bucket for that field.
+  raw: {
+    marketCap: number | null // ₹ Cr
+    peRatio: number | null
+    revenueGrowth: number | null // %
+    ebitdaMargin: number | null // %
+    roce: number | null // %
+    roe: number | null // %
+    totalDebt: number | null // ₹ Cr
+    promoterPledge: number | null // %
   }
   valuation: {
     evEbitda: string
@@ -222,6 +387,16 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       freeCashFlow: formatCr(r.free_cash_flow),
       promoterPledge: formatPct(r.promoter_pledge_pct),
       beta: r.beta != null ? r.beta.toFixed(2) : "N/A",
+    },
+    raw: {
+      marketCap: isNum(r.market_cap) ? r.market_cap / 1e7 : null,
+      peRatio: isNum(r.trailing_pe) ? r.trailing_pe : null,
+      revenueGrowth: isNum(r.revenue_growth_pct) ? r.revenue_growth_pct : null,
+      ebitdaMargin: isNum(r.ebitda_margin_pct) ? r.ebitda_margin_pct : null,
+      roce: isNum(r.roce_pct) ? r.roce_pct : null,
+      roe: isNum(r.return_on_equity_pct) ? r.return_on_equity_pct : null,
+      totalDebt: isNum(r.total_debt) ? r.total_debt / 1e7 : null,
+      promoterPledge: isNum(r.promoter_pledge_pct) ? r.promoter_pledge_pct : null,
     },
     valuation: {
       evEbitda: formatRange(r.ev_ebitda_low, r.ev_ebitda_high),
@@ -416,19 +591,19 @@ export function searchCompaniesDetailed(
   query: string,
   sectors: string[],
   weights: Weights,
-  filters?: RangeFilters,
+  filters?: BucketFilters,
 ): SearchOutcome {
   const q = query.trim().toLowerCase()
 
-  // Hard constraints first: sector chips + range filters define the base set.
+  // Hard constraints first: sector chips + bucket filters define the base set.
   // A query then searches WITHIN that base, and a no-match query falls back to
-  // the base -- never back to the full universe, so range filters always hold.
+  // the base -- never back to the full universe, so bucket filters always hold.
   let base = companies
   if (sectors.length > 0) {
     base = base.filter((c) => sectors.includes(c.sector))
   }
   if (filters) {
-    base = base.filter((c) => passesRangeFilters(c, filters))
+    base = base.filter((c) => passesBucketFilters(c, filters))
   }
 
   let results = base
@@ -458,7 +633,7 @@ export function searchCompanies(
   query: string,
   sectors: string[],
   weights: Weights,
-  filters?: RangeFilters,
+  filters?: BucketFilters,
 ): Company[] {
   return searchCompaniesDetailed(companies, query, sectors, weights, filters).results
 }
@@ -489,8 +664,8 @@ export function queryHasNumericIntent(query: string): boolean {
 
 // ---------------------------------------------------------------------------
 // Example scenarios -- unlike a plain text query, each sets a sector AND real
-// range filters, then runs, demonstrating that the filters actually narrow the
-// set. Counts are computed live from the same passesRangeFilters() used by
+// bucket filters, then runs, demonstrating that the filters actually narrow the
+// set. Counts are computed live from the same passesBucketFilters() used by
 // search, so a card's number always equals what the results page will show.
 // ---------------------------------------------------------------------------
 
@@ -499,16 +674,11 @@ export interface ExampleScenario {
   label: string
   description: string
   sector: string // matches Company.sector (display name)
-  filters: RangeFilters
+  filters: BucketFilters
 }
 
-function makeFilters(part: Partial<RangeFilters>): RangeFilters {
-  return {
-    revenueGrowth: part.revenueGrowth ?? { ...DEFAULT_RANGE_FILTERS.revenueGrowth },
-    ebitdaMargin: part.ebitdaMargin ?? { ...DEFAULT_RANGE_FILTERS.ebitdaMargin },
-    roce: part.roce ?? { ...DEFAULT_RANGE_FILTERS.roce },
-    debtLevel: part.debtLevel ?? { ...DEFAULT_RANGE_FILTERS.debtLevel },
-  }
+function makeFilters(part: Partial<BucketFilters>): BucketFilters {
+  return { ...DEFAULT_BUCKET_FILTERS, ...part }
 }
 
 export const EXAMPLE_SCENARIOS: ExampleScenario[] = [
@@ -517,26 +687,26 @@ export const EXAMPLE_SCENARIOS: ExampleScenario[] = [
     label: "Pharma · high ROCE · low debt",
     description: "Lifesciences names in the top tier on capital returns and balance-sheet strength.",
     sector: "Lifesciences",
-    filters: makeFilters({ roce: { min: 60, max: 100 }, debtLevel: { min: 60, max: 100 } }),
+    filters: makeFilters({ roce: "excellent", debtLevel: "low" }),
   },
   {
     id: "tech-growth",
     label: "Tech · high growth · low leverage",
     description: "Technology compounding revenue without loading up on debt.",
     sector: "Technology",
-    filters: makeFilters({ revenueGrowth: { min: 60, max: 100 }, debtLevel: { min: 60, max: 100 } }),
+    filters: makeFilters({ revenueGrowth: "highGrowth", debtLevel: "low" }),
   },
   {
     id: "financials-returns",
     label: "Financials · rich margins · strong returns",
-    description: "Financial Services with sector-leading EBITDA margin and ROCE.",
+    description: "Financial Services with sector-leading EBITDA margin and returns.",
     sector: "Financial Services",
-    filters: makeFilters({ ebitdaMargin: { min: 60, max: 100 }, roce: { min: 50, max: 100 } }),
+    filters: makeFilters({ ebitdaMargin: "high", roe: "excellent" }),
   },
 ]
 
 export function countScenario(companies: Company[], scenario: ExampleScenario): number {
   return companies.filter(
-    (c) => c.sector === scenario.sector && passesRangeFilters(c, scenario.filters),
+    (c) => c.sector === scenario.sector && passesBucketFilters(c, scenario.filters),
   ).length
 }

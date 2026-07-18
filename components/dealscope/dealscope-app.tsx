@@ -10,10 +10,10 @@ import { FiltersPanel } from "@/components/dealscope/filters-panel"
 import {
   type Company,
   type Weights,
-  type RangeFilters,
+  type BucketFilters,
   type ExampleScenario,
   DEFAULT_WEIGHTS,
-  DEFAULT_RANGE_FILTERS,
+  DEFAULT_BUCKET_FILTERS,
   EXAMPLE_SCENARIOS,
   getCompanies,
   getDeals,
@@ -47,7 +47,7 @@ export function DealScopeApp() {
   const [query, setQuery] = useState("")
   const [selectedSectors, setSelectedSectors] = useState<string[]>([])
   const [weights, setWeights] = useState<Weights>({ ...DEFAULT_WEIGHTS })
-  const [filters, setFilters] = useState<RangeFilters>({ ...DEFAULT_RANGE_FILTERS })
+  const [filters, setFilters] = useState<BucketFilters>({ ...DEFAULT_BUCKET_FILTERS })
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [weightsOpen, setWeightsOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
