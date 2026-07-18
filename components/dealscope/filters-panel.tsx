@@ -4,19 +4,32 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useEffect } from "react"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import {
-  type RangeFilters,
-  type FactorRange,
-  DEFAULT_RANGE_FILTERS,
-  FACTOR_LABELS,
-  countActiveRangeFilters,
+  type BucketFilters,
+  type BucketFieldDef,
+  type BucketFieldKey,
+  BUCKET_FIELDS,
+  DEFAULT_BUCKET_FILTERS,
+  countActiveBucketFilters,
 } from "@/lib/dealscope-data"
+import { cn } from "@/lib/utils"
 
 interface FiltersPanelProps {
   open: boolean
-  filters: RangeFilters
-  onFiltersChange: (filters: RangeFilters) => void
+  filters: BucketFilters
+  onFiltersChange: (filters: BucketFilters) => void
   onClose: () => void
 }
+
+const FIELD = Object.fromEntries(BUCKET_FIELDS.map((f) => [f.key, f])) as Record<
+  BucketFieldKey,
+  BucketFieldDef
+>
+
+const GROUPS: { index: string; label: string; fields: BucketFieldKey[] }[] = [
+  { index: "01", label: "Size & Valuation", fields: ["marketCap", "peRatio"] },
+  { index: "02", label: "Quality & Growth", fields: ["revenueGrowth", "ebitdaMargin", "roce", "roe"] },
+  { index: "03", label: "Risk", fields: ["debtLevel", "promoterPledge"] },
+]
 
 export function FiltersPanel({ open, filters, onFiltersChange, onClose }: FiltersPanelProps) {
   useEffect(() => {
@@ -27,7 +40,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
     return () => window.removeEventListener("keydown", handler)
   }, [open, onClose])
 
-  const activeCount = countActiveRangeFilters(filters)
+  const activeCount = countActiveBucketFilters(filters)
 
   return (
     <AnimatePresence>
@@ -59,7 +72,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
             className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-background border-l border-border overflow-y-auto overscroll-contain"
             role="dialog"
             aria-modal="true"
-            aria-label="Range filters"
+            aria-label="Screening filters"
           >
             <div className="p-8 md:p-10 flex flex-col min-h-full">
               {/* Header */}
@@ -69,7 +82,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
                     Screening Constraints
                   </span>
                   <h2 className="mt-3 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
-                    RANGE FILTERS
+                    FILTERS
                   </h2>
                 </div>
                 <button
@@ -82,20 +95,27 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
               </div>
 
               <p className="mt-6 font-mono text-xs text-muted-foreground leading-relaxed">
-                Constrain the screened set by factor score. Each is sector-relative, 0–100 — the same
-                score shown on the rings. Filters decide which companies appear; weights decide how
-                they rank.
+                Constrain the screened set by real financials — size, valuation, quality, growth and risk.
+                Pills accept several bands at once; segmented controls pick one. Fields left untouched
+                don&apos;t constrain. Filters decide which companies appear; weights decide how they rank.
               </p>
 
-              {/* Range inputs */}
-              <div className="mt-10 flex flex-col gap-9 flex-1">
-                {FACTOR_LABELS.map((factor) => (
-                  <RangeControl
-                    key={factor.key}
-                    label={factor.label}
-                    range={filters[factor.key]}
-                    onChange={(range) => onFiltersChange({ ...filters, [factor.key]: range })}
-                  />
+              {/* Grouped bucket controls */}
+              <div className="mt-10 flex flex-col gap-12 flex-1">
+                {GROUPS.map((group) => (
+                  <div key={group.index}>
+                    <SectionLabel index={group.index} label={group.label} />
+                    <div className="mt-6 flex flex-col gap-8">
+                      {group.fields.map((key) => (
+                        <FieldControl
+                          key={key}
+                          def={FIELD[key]}
+                          selection={filters[key]}
+                          onChange={(next) => onFiltersChange({ ...filters, [key]: next } as BucketFilters)}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
 
                 {/* Active readout */}
@@ -108,7 +128,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
                   </span>
                 </div>
                 <p className="font-mono text-[10px] text-muted-foreground/70 leading-relaxed -mt-4">
-                  A factor is only applied once its range narrows below the full 0–100 span.
+                  A field only narrows the set once you pick at least one band; up to eight can be active.
                 </p>
               </div>
 
@@ -121,7 +141,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
                   <ScrambleTextOnHover text="Apply Filters" as="span" duration={0.5} />
                 </button>
                 <button
-                  onClick={() => onFiltersChange({ ...DEFAULT_RANGE_FILTERS })}
+                  onClick={() => onFiltersChange({ ...DEFAULT_BUCKET_FILTERS })}
                   className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
                   Reset
@@ -135,84 +155,136 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
   )
 }
 
-function RangeControl({
-  label,
-  range,
+// Reuses the tear sheet's SectionLabel pattern for consistency.
+function SectionLabel({ index, label }: { index: string; label: string }) {
+  return (
+    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+      {index} / {label}
+    </span>
+  )
+}
+
+function FieldControl({
+  def,
+  selection,
   onChange,
 }: {
-  label: string
-  range: FactorRange
-  onChange: (range: FactorRange) => void
+  def: BucketFieldDef
+  selection: string[] | string | null
+  onChange: (next: string[] | string | null) => void
 }) {
-  // Plain number inputs, 0-100. Non-numeric input is rejected; an emptied field
-  // resets that bound to its extreme. Min can never cross above max and vice
-  // versa -- clamp on the way through, same rule as before.
-  const commit = (which: "min" | "max", raw: string) => {
-    if (raw.trim() === "") {
-      onChange(which === "min" ? { min: 0, max: range.max } : { min: range.min, max: 100 })
-      return
-    }
-    const parsed = Number.parseInt(raw, 10)
-    if (Number.isNaN(parsed)) return // reject non-numeric
-    const v = Math.max(0, Math.min(100, parsed))
-    if (which === "min") onChange({ min: Math.min(v, range.max), max: range.max })
-    else onChange({ min: range.min, max: Math.max(v, range.min) })
-  }
-
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-4">
-        <label className="font-mono text-[11px] uppercase tracking-[0.2em] text-foreground">{label}</label>
-        <span className="font-mono text-xs text-accent">
-          {range.min} – {range.max}
+      <div className="flex items-baseline justify-between mb-3">
+        <label className="font-mono text-[11px] uppercase tracking-[0.2em] text-foreground">{def.label}</label>
+        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+          {def.select === "multi" ? "Select any" : "Select one"}
         </span>
       </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <NumberField
-          label="Min"
-          value={range.min}
-          ariaLabel={`${label} minimum score`}
-          onCommit={(raw) => commit("min", raw)}
+      {def.select === "multi" ? (
+        <PillGroup def={def} selected={Array.isArray(selection) ? selection : []} onChange={onChange} />
+      ) : (
+        <SegmentedControl
+          def={def}
+          selected={typeof selection === "string" ? selection : null}
+          onChange={onChange}
         />
-        <NumberField
-          label="Max"
-          value={range.max}
-          ariaLabel={`${label} maximum score`}
-          onCommit={(raw) => commit("max", raw)}
-        />
-      </div>
+      )}
     </div>
   )
 }
 
-function NumberField({
-  label,
-  value,
-  ariaLabel,
-  onCommit,
+// Multi-select, outline-active. Used for Market Cap and Promoter Pledge.
+function PillGroup({
+  def,
+  selected,
+  onChange,
 }: {
-  label: string
-  value: number
-  ariaLabel: string
-  onCommit: (raw: string) => void
+  def: BucketFieldDef
+  selected: string[]
+  onChange: (next: string[]) => void
+}) {
+  const toggle = (key: string) => {
+    onChange(selected.includes(key) ? selected.filter((k) => k !== key) : [...selected, key])
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {def.buckets.map((b) => {
+        const active = selected.includes(b.key)
+        return (
+          <button
+            key={b.key}
+            onClick={() => toggle(b.key)}
+            aria-pressed={active}
+            className={cn(
+              "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-200",
+              active
+                ? "border-accent text-accent"
+                : "border-border text-muted-foreground hover:border-accent hover:text-accent",
+            )}
+          >
+            <span>{b.name}</span>
+            <span
+              className={cn(
+                "text-[9px] normal-case tracking-normal",
+                active ? "text-accent/70" : "text-muted-foreground/60",
+              )}
+            >
+              {b.range}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// Single-select, fill-active connected control. Segments share borders and
+// stack name over range so the real units fit without horizontal overflow on
+// narrow screens. Clicking the active segment clears the field back to null.
+function SegmentedControl({
+  def,
+  selected,
+  onChange,
+}: {
+  def: BucketFieldDef
+  selected: string | null
+  onChange: (next: string | null) => void
 }) {
   return (
-    <label className="block">
-      <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-        {label}
-      </span>
-      <input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        max={100}
-        step={5}
-        value={value}
-        aria-label={ariaLabel}
-        onChange={(e) => onCommit(e.target.value)}
-        className="ds-num w-full border border-border bg-transparent px-3 py-2.5 font-mono text-sm text-foreground focus:border-accent focus:outline-none transition-colors duration-200"
-      />
-    </label>
+    <div className="flex border border-border">
+      {def.buckets.map((b, i) => {
+        const active = selected === b.key
+        return (
+          <button
+            key={b.key}
+            onClick={() => onChange(active ? null : b.key)}
+            aria-pressed={active}
+            className={cn(
+              "flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 px-1 py-2 text-center transition-colors duration-200",
+              i < def.buckets.length - 1 ? "border-r border-border" : "",
+              active ? "bg-accent" : "hover:bg-foreground/5",
+            )}
+          >
+            <span
+              className={cn(
+                "font-mono text-[9px] uppercase tracking-wider leading-tight",
+                active ? "text-accent-foreground" : "text-muted-foreground",
+              )}
+            >
+              {b.name}
+            </span>
+            <span
+              className={cn(
+                "font-mono text-[8px] tracking-normal leading-tight",
+                active ? "text-accent-foreground/80" : "text-muted-foreground/60",
+              )}
+            >
+              {b.range}
+            </span>
+          </button>
+        )
+      })}
+    </div>
   )
 }

@@ -10,9 +10,9 @@ import {
   type Company,
   type Sector,
   type Weights,
-  type RangeFilters,
+  type BucketFilters,
   computeScore,
-  countActiveRangeFilters,
+  countActiveBucketFilters,
 } from "@/lib/dealscope-data"
 import { cn } from "@/lib/utils"
 
@@ -23,7 +23,7 @@ interface ResultsViewProps {
   selectedSectors: string[]
   onToggleSector: (sector: string) => void
   weights: Weights
-  filters: RangeFilters
+  filters: BucketFilters
   showNumericHint: boolean
   onSelectCompany: (company: Company) => void
   onOpenWeights: () => void
@@ -53,7 +53,7 @@ export function ResultsView({
 }: ResultsViewProps) {
   const [showAll, setShowAll] = useState(false)
   const visibleResults = showAll ? results : results.slice(0, RENDER_CAP)
-  const activeFilters = countActiveRangeFilters(filters)
+  const activeFilters = countActiveBucketFilters(filters)
 
   useEffect(() => {
     setShowAll(false)
