@@ -66,10 +66,11 @@ export function LandingView({
           Controlled Studies in M&amp;A Discovery
         </h2>
 
-        <p className="mt-8 max-w-md font-mono text-sm text-muted-foreground leading-relaxed">
-          Screen and value {totalCompanies.toLocaleString("en-IN")} NSE-listed companies for acquisition
-          attractiveness. Weighted factors, sector-relative scoring, indicative ranges. Free, public,
-          institutional-grade.
+        <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
+          DealScope screens all {totalCompanies.toLocaleString("en-IN")} NSE-listed companies for
+          acquisition attractiveness, scoring each on sector-relative fundamentals and attaching an
+          indicative valuation range. Adjust the factor weights, filter the universe, and open any name
+          for a full tear sheet. Free and public — no account, no paywall.
         </p>
 
         {/* Search + Run */}
@@ -176,6 +177,56 @@ export function LandingView({
               starts with before it opens a model — not advice, and not a black box.
             </p>
           </RevealItem>
+          <RevealItem delay={0.16}>
+            <p className="text-muted-foreground">
+              Screening for acquisition targets within financial services might mean constraining the
+              universe to companies scoring above the sector median on capital efficiency while keeping
+              leverage low — narrowing 220 names to a short, ranked list in seconds, each with a
+              transparent factor breakdown, an AI-drafted rationale, and an indicative valuation range
+              against recent comparable transactions.
+            </p>
+          </RevealItem>
+        </div>
+      </div>
+    </section>
+
+    {/* ---------------------------------------------------------------- */}
+    {/* How it works -- the default screener, documented                 */}
+    {/* ---------------------------------------------------------------- */}
+    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+        <div className="lg:col-span-5">
+          <SectionLabel index="02" label="How It Works" />
+          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight text-balance">
+            THE DEFAULT SCREEN
+          </h2>
+        </div>
+        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-base md:text-lg leading-relaxed text-foreground/85 text-pretty">
+          <p>
+            Before you touch a single control, every company is scored on four sector-relative
+            factors — Revenue Growth, EBITDA Margin, ROCE, and Debt Level. Each factor is ranked
+            0–100 against the company&apos;s own sector peers, and the four combine, equally weighted,
+            into the composite score shown on every tear sheet.
+          </p>
+          <p className="text-muted-foreground">
+            That equal-weight, sector-relative composite is the default ranking of all{" "}
+            {totalCompanies.toLocaleString("en-IN")} companies. From there you re-weight the factors
+            to reflect your own thesis, or apply min/max range filters to cut the universe down — the
+            ranking recomputes as you go.
+          </p>
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/40 border border-border/40">
+            {["Revenue Growth", "EBITDA Margin", "ROCE", "Debt Level"].map((f, i) => (
+              <div key={f} className="bg-background p-5 flex flex-col gap-2">
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent">
+                  Factor 0{i + 1}
+                </span>
+                <span className="font-mono text-xs text-foreground leading-relaxed">{f}</span>
+                <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70">
+                  0–100 · equal weight
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -186,7 +237,7 @@ export function LandingView({
     <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
         <div className="lg:col-span-5">
-          <SectionLabel index="02" label="Methodology & Provenance" />
+          <SectionLabel index="03" label="Methodology & Provenance" />
           <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight text-balance">
             SECTOR-RELATIVE, FULLY TRANSPARENT
           </h2>
@@ -217,7 +268,7 @@ export function LandingView({
     {/* runs live, showing the actual filtered count.                     */}
     {/* ---------------------------------------------------------------- */}
     <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <SectionLabel index="03" label="Example Scenarios" />
+      <SectionLabel index="04" label="Example Scenarios" />
       <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight max-w-2xl text-balance">
         SCREEN ON REAL CONSTRAINTS
       </h2>
