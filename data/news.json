@@ -1,0 +1,123 @@
+{
+  "RELIANCE": {
+    "filings": [
+      {
+        "category": "Financial Results",
+        "date": "2026-07-14",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-financial-results"
+      },
+      {
+        "category": "Reg 30 — Analyst / Investor Meet",
+        "date": "2026-06-28",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-announcements"
+      },
+      {
+        "category": "Board Meeting Intimation",
+        "date": "2026-06-30",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-board-meetings"
+      }
+    ],
+    "bseNotices": [
+      {
+        "title": "Outcome of Board Meeting — Dividend Recommendation",
+        "date": "2026-07-14",
+        "link": "https://www.bseindia.com/corporates/ann.html"
+      },
+      {
+        "title": "Trading Window Closure Intimation",
+        "date": "2026-06-25",
+        "link": "https://www.bseindia.com/corporates/ann.html"
+      }
+    ],
+    "news": [
+      {
+        "headline": "Reliance posts record quarterly revenue on retail and Jio strength",
+        "source": "Economic Times",
+        "date": "2026-07-15",
+        "link": "https://economictimes.indiatimes.com/"
+      },
+      {
+        "headline": "New energy business turns EBITDA-positive ahead of schedule",
+        "source": "Business Standard",
+        "date": "2026-07-02",
+        "link": "https://www.business-standard.com/"
+      }
+    ]
+  },
+  "TCS": {
+    "filings": [
+      {
+        "category": "Financial Results",
+        "date": "2026-07-10",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-financial-results"
+      },
+      {
+        "category": "Reg 30 — Buyback Intimation",
+        "date": "2026-07-01",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-announcements"
+      }
+    ],
+    "bseNotices": [
+      {
+        "title": "Outcome of Board Meeting — Interim Dividend",
+        "date": "2026-07-10",
+        "link": "https://www.bseindia.com/corporates/ann.html"
+      }
+    ],
+    "news": [
+      {
+        "headline": "TCS deal pipeline steadies as BFSI spending returns",
+        "source": "Mint",
+        "date": "2026-07-11",
+        "link": "https://www.livemint.com/"
+      }
+    ]
+  },
+  "INFY": {
+    "filings": [
+      {
+        "category": "Reg 30 — Acquisition Update",
+        "date": "2026-07-08",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-announcements"
+      }
+    ],
+    "bseNotices": [],
+    "news": [
+      {
+        "headline": "Infosys raises FY guidance on large-deal momentum",
+        "source": "Reuters",
+        "date": "2026-07-09",
+        "link": "https://www.reuters.com/"
+      }
+    ]
+  },
+  "HDFCBANK": {
+    "filings": [
+      {
+        "category": "Financial Results",
+        "date": "2026-07-16",
+        "link": "https://www.nseindia.com/companies-listing/corporate-filings-financial-results"
+      }
+    ],
+    "bseNotices": [
+      {
+        "title": "Disclosure under Reg 30 — Credit Rating Reaffirmed",
+        "date": "2026-07-12",
+        "link": "https://www.bseindia.com/corporates/ann.html"
+      }
+    ],
+    "news": []
+  },
+  "SUNPHARMA": {
+    "filings": [],
+    "bseNotices": [],
+    "news": [
+      {
+        "headline": "Sun Pharma's specialty portfolio drives US margin expansion",
+        "source": "Financial Express",
+        "date": "2026-07-05",
+        "link": "https://www.financialexpress.com/"
+      }
+    ]
+  }
+}
