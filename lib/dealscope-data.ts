@@ -84,6 +84,18 @@ export interface Company {
     roce: string
     totalDebt: string
   }
+  financials: {
+    marketCap: string
+    marketCapAsOf: string | null
+    peRatio: string
+    priceToBook: string
+    roe: string
+    debtToEquity: string
+    currentRatio: string
+    freeCashFlow: string
+    promoterPledge: string
+    beta: string
+  }
   valuation: {
     evEbitda: string
     peImplied: string
@@ -146,6 +158,16 @@ interface CompanyRecord {
   total_debt: number | null
   market_cap: number | null
   net_income: number | null
+  // Extended fundamentals (Part 1) -- real values for every company.
+  trailing_pe: number | null
+  price_to_book: number | null
+  return_on_equity_pct: number | null
+  debt_to_equity: number | null
+  current_ratio: number | null
+  free_cash_flow: number | null
+  promoter_pledge_pct: number | null
+  beta: number | null
+  market_cap_as_of: string | null
   factor_revenue_growth: number | null
   factor_ebitda_margin: number | null
   factor_roce: number | null
@@ -188,6 +210,18 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       ebitdaMargin: formatPct(r.ebitda_margin_pct),
       roce: formatPct(r.roce_pct),
       totalDebt: formatCr(r.total_debt),
+    },
+    financials: {
+      marketCap: formatCr(r.market_cap),
+      marketCapAsOf: r.market_cap_as_of,
+      peRatio: r.trailing_pe != null ? r.trailing_pe.toFixed(1) + "x" : "N/A",
+      priceToBook: r.price_to_book != null ? r.price_to_book.toFixed(1) + "x" : "N/A",
+      roe: formatPct(r.return_on_equity_pct),
+      debtToEquity: r.debt_to_equity != null ? r.debt_to_equity.toFixed(2) + "x" : "N/A",
+      currentRatio: r.current_ratio != null ? r.current_ratio.toFixed(2) + "x" : "N/A",
+      freeCashFlow: formatCr(r.free_cash_flow),
+      promoterPledge: formatPct(r.promoter_pledge_pct),
+      beta: r.beta != null ? r.beta.toFixed(2) : "N/A",
     },
     valuation: {
       evEbitda: formatRange(r.ev_ebitda_low, r.ev_ebitda_high),

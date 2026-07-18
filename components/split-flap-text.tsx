@@ -187,7 +187,8 @@ function SplitFlapChar({ char, index, animationKey, skipEntrance, speed, playCli
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const tileDelay = 0.15 * index
+  // Reduced ~33% from 0.15 so the title resolves noticeably faster on load
+  const tileDelay = 0.1 * index
 
   const bgColor = isSettled ? "hsl(0, 0%, 0%)" : "rgba(249, 115, 22, 0.2)"
   const textColor = isSettled ? "#ffffff" : "#f97316"
@@ -205,14 +206,14 @@ function SplitFlapChar({ char, index, animationKey, skipEntrance, speed, playCli
     setIsSettled(false)
     setCurrentChar(CHARSET[Math.floor(Math.random() * CHARSET.length)])
 
-    const baseFlips = 8
+    const baseFlips = 5 // reduced from 8 (~35% fewer flips before settling)
     const startDelay = skipEntrance ? tileDelay * 400 : tileDelay * 800
     let flipIndex = 0
     let hasStartedSettling = false
 
     timeoutRef.current = setTimeout(() => {
       intervalRef.current = setInterval(() => {
-        const settleThreshold = baseFlips + index * 3
+        const settleThreshold = baseFlips + index * 2 // reduced per-tile ramp from *3
 
         if (flipIndex >= settleThreshold && !hasStartedSettling) {
           hasStartedSettling = true

@@ -15,6 +15,7 @@ import {
   getNewsForTicker,
   FACTOR_LABELS,
 } from "@/lib/dealscope-data"
+import { cn } from "@/lib/utils"
 
 interface TearSheetViewProps {
   company: Company
@@ -30,6 +31,26 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
   const avg = sectorAverage(companies, company.sector, weights)
   const comparables = comparablesForSector(company.sectorKey, deals)
   const companyNews = getNewsForTicker(company.ticker)
+
+  // Key Financials -- raw numbers are the headline. A non-zero promoter pledge
+  // is a real governance-risk signal, so flag it in accent rather than leaving
+  // it as another neutral stat.
+  const fin = company.financials
+  const pledgeFlagged = fin.promoterPledge !== "N/A" && Number.parseFloat(fin.promoterPledge) > 0
+  const financialCards: { label: string; value: string; flagged?: boolean; note?: string }[] = [
+    { label: "Market Cap", value: fin.marketCap, note: fin.marketCapAsOf ? `Live as of ${fin.marketCapAsOf}` : undefined },
+    { label: "Revenue (TTM)", value: company.metrics.revenue },
+    { label: "EBITDA Margin", value: company.metrics.ebitdaMargin },
+    { label: "ROCE", value: company.metrics.roce },
+    { label: "Total Debt", value: company.metrics.totalDebt },
+    { label: "P/E Ratio", value: fin.peRatio },
+    { label: "ROE", value: fin.roe },
+    { label: "Debt / Equity", value: fin.debtToEquity },
+    { label: "Promoter Pledge", value: fin.promoterPledge, flagged: pledgeFlagged },
+    { label: "Current Ratio", value: fin.currentRatio },
+    { label: "Free Cash Flow", value: fin.freeCashFlow },
+    { label: "Beta", value: fin.beta },
+  ]
 
   return (
     <section className="relative min-h-screen pl-6 md:pl-28 pr-6 md:pr-12 py-16 md:py-24">
@@ -93,9 +114,35 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
           </motion.div>
         </div>
 
-        {/* Factor bars */}
-        <div className="mt-20">
-          <SectionLabel index="01" label="Factor Decomposition" />
+        {/* Key financials -- the raw numbers are the headline of the sheet */}
+        <div className="mt-16">
+          <SectionLabel index="01" label="Key Financials" />
+          <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
+            Fundamentals as of {dataAsOf}
+            {fin.marketCapAsOf ? " · market capitalization refreshes daily" : ""}.
+          </p>
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {financialCards.map((card) => (
+              <FinancialCard
+                key={card.label}
+                label={card.label}
+                value={card.value}
+                flagged={card.flagged}
+                note={card.note}
+              />
+            ))}
+          </div>
+          {pledgeFlagged && (
+            <p className="mt-4 font-mono text-[10px] leading-relaxed text-accent/80 max-w-2xl">
+              Non-zero promoter pledge — shares pledged by promoters are a governance-risk signal worth
+              reviewing before any approach.
+            </p>
+          )}
+        </div>
+
+        {/* Factor decomposition -- supporting detail beneath the raw numbers */}
+        <div className="mt-14">
+          <SectionLabel index="02" label="Factor Decomposition" />
           <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50 max-w-2xl">
             Each score below is ranked 0–100 against only the other companies in {company.sector} — not
             the whole market — so a 91 means this company outperforms ~91% of its direct sector peers.
@@ -118,7 +165,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
         {/* Rationale */}
         <div className="mt-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
-            <SectionLabel index="02" label="AI-Drafted Rationale" />
+            <SectionLabel index="03" label="AI-Drafted Rationale" />
             {company.hasRationale ? (
               <>
                 <motion.p
@@ -155,7 +202,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
 
           {/* Valuation */}
           <div className="lg:col-span-5">
-            <SectionLabel index="03" label="Indicative Valuation Range" />
+            <SectionLabel index="04" label="Indicative Valuation Range" />
             <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50">
               Two independent estimates of what this company could be worth in an acquisition, based on
               how similar companies have recently been valued. EV/EBITDA values the whole business
@@ -190,7 +237,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
         {/* Comparable deals */}
         <div className="mt-20">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <SectionLabel index="04" label="Comparable Deals" />
+            <SectionLabel index="05" label="Comparable Deals" />
             {/* M&A deal values are genuinely reported in USD -- label it so it
                 doesn't read as a mismatch against the rupee-denominated site. */}
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
@@ -230,7 +277,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
 
         {/* Filings, notices & news */}
         <div className="mt-20">
-          <SectionLabel index="05" label="Filings, Notices & News" />
+          <SectionLabel index="06" label="Filings, Notices & News" />
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-12">
             {/* NSE regulatory filings */}
             <NewsColumn title="NSE Filings" count={companyNews.filings.length} emptyLabel="No recent filings found">
@@ -277,6 +324,35 @@ function SectionLabel({ index, label }: { index: string; label: string }) {
     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
       {index} / {label}
     </span>
+  )
+}
+
+function FinancialCard({
+  label,
+  value,
+  flagged,
+  note,
+}: {
+  label: string
+  value: string
+  flagged?: boolean
+  note?: string
+}) {
+  return (
+    <div className="border border-border/50 p-5 flex flex-col gap-2">
+      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">{label}</span>
+      <span
+        className={cn(
+          "font-[family-name:var(--font-bebas)] text-3xl md:text-4xl leading-none tracking-tight break-words",
+          flagged ? "text-accent" : "text-foreground",
+        )}
+      >
+        {value}
+      </span>
+      {note && (
+        <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/60">{note}</span>
+      )}
+    </div>
   )
 }
 
