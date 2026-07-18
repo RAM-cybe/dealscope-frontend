@@ -96,6 +96,10 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
         {/* Factor bars */}
         <div className="mt-20">
           <SectionLabel index="01" label="Factor Decomposition" />
+          <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50 max-w-2xl">
+            Each score below is ranked 0–100 against only the other companies in {company.sector} — not
+            the whole market — so a 91 means this company outperforms ~91% of its direct sector peers.
+          </p>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
             {FACTOR_LABELS.map((factor, i) => (
               <FactorBar
@@ -104,6 +108,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
                 value={company.factors[factor.key]}
                 weight={weights[factor.key]}
                 metric={company.metrics[factor.metricKey]}
+                explainer={factor.explainer}
                 delay={0.1 * i}
               />
             ))}
@@ -151,6 +156,12 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
           {/* Valuation */}
           <div className="lg:col-span-5">
             <SectionLabel index="03" label="Indicative Valuation Range" />
+            <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50">
+              Two independent estimates of what this company could be worth in an acquisition, based on
+              how similar companies have recently been valued. EV/EBITDA values the whole business
+              including debt; P/E values just the equity. Shown as a range, not a single number, because
+              real valuations always fall in a band.
+            </p>
             <div className="mt-8 border border-border/50">
               <div className="border-b border-border/50 p-6">
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -347,12 +358,14 @@ function FactorBar({
   value,
   weight,
   metric,
+  explainer,
   delay,
 }: {
   label: string
   value: number
   weight: number
   metric: string
+  explainer: string
   delay: number
 }) {
   return (
@@ -372,6 +385,7 @@ function FactorBar({
         />
       </div>
       <span className="mt-2 block font-mono text-[10px] text-muted-foreground/60">{value} / 100 sector-relative</span>
+      <span className="mt-1 block font-mono text-[10px] leading-relaxed text-muted-foreground/40">{explainer}</span>
     </div>
   )
 }

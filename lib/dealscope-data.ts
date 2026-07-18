@@ -333,11 +333,38 @@ export function sectorAverage(companies: Company[], sector: string, weights: Wei
   return Math.round(sum / peers.length)
 }
 
-export const FACTOR_LABELS: { key: keyof Weights; label: string; metricKey: keyof Company["metrics"] }[] = [
-  { key: "revenueGrowth", label: "Revenue Growth", metricKey: "revenueGrowth" },
-  { key: "ebitdaMargin", label: "EBITDA Margin", metricKey: "ebitdaMargin" },
-  { key: "roce", label: "ROCE", metricKey: "roce" },
-  { key: "debtLevel", label: "Debt Level", metricKey: "totalDebt" },
+export const FACTOR_LABELS: {
+  key: keyof Weights
+  label: string
+  metricKey: keyof Company["metrics"]
+  explainer: string
+}[] = [
+  {
+    key: "revenueGrowth",
+    label: "Revenue Growth",
+    metricKey: "revenueGrowth",
+    explainer: "How fast sales are growing compared to other companies in the same sector.",
+  },
+  {
+    key: "ebitdaMargin",
+    label: "EBITDA Margin",
+    metricKey: "ebitdaMargin",
+    explainer:
+      "Operating profit kept from every ₹100 of revenue, before interest, tax, depreciation and amortization.",
+  },
+  {
+    key: "roce",
+    label: "ROCE",
+    metricKey: "roce",
+    explainer:
+      "How efficiently the company turns capital invested in the business into profit — higher is better.",
+  },
+  {
+    key: "debtLevel",
+    label: "Debt Level",
+    metricKey: "totalDebt",
+    explainer: "Total borrowed money on the books — lower debt scores higher.",
+  },
 ]
 
 export interface SearchOutcome {
