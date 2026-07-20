@@ -15,6 +15,9 @@ interface LandingViewProps {
   selectedSectors: string[]
   onToggleSector: (sector: string) => void
   onRun: () => void
+  onOpenFilters: () => void
+  activeFilterCount: number
+  matchingCount: number
   scenarios: { scenario: ExampleScenario; count: number }[]
   onApplyScenario: (scenario: ExampleScenario) => void
   sectors: Sector[]
@@ -28,6 +31,9 @@ export function LandingView({
   selectedSectors,
   onToggleSector,
   onRun,
+  onOpenFilters,
+  activeFilterCount,
+  matchingCount,
   scenarios,
   onApplyScenario,
   sectors,
@@ -101,6 +107,49 @@ export function LandingView({
             <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
             <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
           </button>
+        </motion.div>
+
+        {/* Screen Companies -- filters as a primary, first-class entry point.
+            Previously the filter panel was only reachable from the results
+            view, i.e. only after you'd already searched; screening the universe
+            by real financials is the product's main feature, so it gets its own
+            call to action right beside the search bar, with a live match count
+            so the effect of a filter is visible before committing to results. */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.95, duration: 0.6, ease: "easeOut" }}
+          className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 max-w-2xl"
+        >
+          <button
+            onClick={onOpenFilters}
+            className="group inline-flex items-center gap-3 border border-accent/60 bg-accent/5 px-6 py-3 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 hover:border-accent transition-all duration-200"
+          >
+            <ScrambleTextOnHover text="Screen Companies" as="span" duration={0.5} />
+            {activeFilterCount > 0 ? (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-[10px] leading-none">
+                {activeFilterCount}
+              </span>
+            ) : (
+              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+            )}
+          </button>
+
+          {activeFilterCount > 0 ? (
+            <button
+              onClick={onRun}
+              className="group inline-flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-accent transition-colors duration-200"
+            >
+              <span className="text-foreground">{matchingCount.toLocaleString("en-IN")}</span>
+              <span>of {totalCompanies.toLocaleString("en-IN")} match — view results</span>
+              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+            </button>
+          ) : (
+            <span className="font-mono text-xs text-muted-foreground leading-relaxed">
+              Filter all {totalCompanies.toLocaleString("en-IN")} companies by market cap, valuation,
+              growth, quality and risk — no search required.
+            </span>
+          )}
         </motion.div>
 
         {/* Sector filter */}

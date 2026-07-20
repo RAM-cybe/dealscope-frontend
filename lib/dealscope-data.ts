@@ -586,6 +586,80 @@ export interface SearchOutcome {
   queryFellBack: boolean
 }
 
+// ---------------------------------------------------------------------------
+// Free-text search matching. Extended 2026-07-20 from a single flat
+// "does any token substring-match name+ticker+sector" pass. That original pass
+// was already case-insensitive, whitespace-split and multi-field, but it was
+// pure OR -- so "tata motors" returned every company matching "tata" OR
+// "motors" -- had no typo tolerance, and ranked purely by composite score, so
+// searching an exact ticker could bury that company far down the list.
+// ---------------------------------------------------------------------------
+
+/** Lowercase, unify "&"/"and", strip punctuation, collapse whitespace, so
+ *  "M&M", "M & M" and "m and m" all normalize to the same thing. */
+function normalizeForSearch(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+/** Levenshtein distance, bailing out early once it exceeds `max` (we only ever
+ *  care whether a token is *within* a small distance, never the exact value). */
+function editDistance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    const curr = [i]
+    let rowMin = i
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
+      if (curr[j] < rowMin) rowMin = curr[j]
+    }
+    if (rowMin > max) return max + 1
+    prev = curr
+  }
+  return prev[b.length]
+}
+
+/** Typo tolerance scaled to token length -- 1 edit for medium words, 2 for long
+ *  ones, and none below 4 characters (at 3 chars or fewer, an edit-distance-1
+ *  match is mostly noise: "tcs" would fuzzily match "tata", "ics", "tvs"...). */
+function fuzzyTokenMatches(token: string, words: string[]): boolean {
+  if (token.length < 4) return false
+  const max = token.length >= 7 ? 2 : 1
+  return words.some((w) => w.length >= 3 && editDistance(token, w, max) <= max)
+}
+
+/** One token against one company's text. Tokens of 1-2 characters must match a
+ *  WHOLE word, not a substring: normalizing "M&M" yields the tokens ["m","and",
+ *  "m"], and a bare substring test for "m" matches roughly half the universe
+ *  (any name containing the letter m), which swamped the results. Longer tokens
+ *  keep substring matching so "pharma" still finds "AARTIPHARM". */
+function tokenMatches(token: string, haystack: string, words: string[]): boolean {
+  return token.length <= 2 ? words.includes(token) : haystack.includes(token)
+}
+
+/** Relevance tier for one company against one query. Lower is better;
+ *  null means no match at all. Tiers are evaluated cheapest-first. */
+function matchTier(company: Company, q: string, tokens: string[]): number | null {
+  const ticker = normalizeForSearch(company.ticker)
+  const name = normalizeForSearch(company.name)
+  const sector = normalizeForSearch(company.sector)
+  const haystack = `${name} ${ticker} ${sector}`
+  const words = haystack.split(" ")
+
+  if (ticker === q) return 0 // exact ticker -- always the top hit
+  if (ticker.startsWith(q) || name.startsWith(q)) return 1
+  if (tokens.every((t) => tokenMatches(t, haystack, words))) return 2 // ALL tokens
+  if (tokens.every((t) => tokenMatches(t, haystack, words) || fuzzyTokenMatches(t, words))) return 3
+
+  return null
+}
+
 export function searchCompaniesDetailed(
   companies: Company[],
   query: string,
@@ -593,7 +667,7 @@ export function searchCompaniesDetailed(
   weights: Weights,
   filters?: BucketFilters,
 ): SearchOutcome {
-  const q = query.trim().toLowerCase()
+  const q = normalizeForSearch(query)
 
   // Hard constraints first: sector chips + bucket filters define the base set.
   // A query then searches WITHIN that base, and a no-match query falls back to
@@ -608,23 +682,51 @@ export function searchCompaniesDetailed(
 
   let results = base
   let queryFellBack = false
+  let ranked: { company: Company; tier: number }[] | null = null
+
   if (q.length > 0) {
-    const tokens = q.split(/\s+/)
-    const matched = base.filter((c) => {
-      const haystack = `${c.name} ${c.ticker} ${c.sector}`.toLowerCase()
-      return tokens.some((t) => haystack.includes(t))
-    })
-    if (matched.length === 0) {
-      results = base
-      queryFellBack = true
+    const tokens = q.split(" ").filter(Boolean)
+
+    // Precise pass: exact ticker / prefix / all-tokens / all-tokens-with-typos.
+    const precise: { company: Company; tier: number }[] = []
+    for (const c of base) {
+      const tier = matchTier(c, q, tokens)
+      if (tier !== null) precise.push({ company: c, tier })
+    }
+
+    if (precise.length > 0) {
+      ranked = precise
     } else {
-      results = matched
+      // Looser ANY-token pass, preserving the original broad behavior for vague
+      // multi-word queries that no single company matches on every token.
+      const loose = base.filter((c) => {
+        const haystack = normalizeForSearch(`${c.name} ${c.ticker} ${c.sector}`)
+        return tokens.some((t) => haystack.includes(t))
+      })
+      if (loose.length > 0) {
+        ranked = loose.map((company) => ({ company, tier: 4 }))
+      } else {
+        results = base
+        queryFellBack = true
+      }
     }
   }
 
-  const sorted = [...results].sort(
-    (a, b) => computeScore(b.factors, weights) - computeScore(a.factors, weights),
-  )
+  // Rank by match quality first, then composite score within each tier -- so an
+  // exact ticker hit leads even if its score is low, while an unfiltered browse
+  // (no query) stays purely score-ordered exactly as before.
+  const sorted = ranked
+    ? ranked
+        .sort(
+          (a, b) =>
+            a.tier - b.tier ||
+            computeScore(b.company.factors, weights) - computeScore(a.company.factors, weights),
+        )
+        .map((r) => r.company)
+    : [...results].sort(
+        (a, b) => computeScore(b.factors, weights) - computeScore(a.factors, weights),
+      )
+
   return { results: sorted, queryFellBack }
 }
 

@@ -6,7 +6,13 @@
 /* Custom editorial design tokens - monochrome with orange accent */
 :root {
   --background: oklch(0.08 0 0);
-  --foreground: oklch(0.95 0 0);
+  /* 2026-07-20 brightness pass: the off-whites read muddy against the pure-black
+     background. Lifted foreground 0.95 -> 0.97 (contrast 17.96 -> 19.06 : 1) and
+     muted-foreground 0.68 -> 0.76 (7.21 -> 9.68 : 1) so secondary text clears the
+     4.5:1 body threshold even at the /70 opacity used throughout the UI
+     (3.90 -> 5.00 : 1). The black/orange split-flap identity is unchanged --
+     --accent and --background are untouched, only the neutrals got brighter. */
+  --foreground: oklch(0.97 0 0);
   --card: oklch(0.12 0 0);
   --card-foreground: oklch(0.95 0 0);
   --popover: oklch(0.1 0 0);
@@ -14,19 +20,26 @@
   --primary: oklch(0.95 0 0);
   --primary-foreground: oklch(0.08 0 0);
   --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.85 0 0);
+  --secondary-foreground: oklch(0.88 0 0);
   --muted: oklch(0.25 0 0);
-  /* Raised from 0.55 -> 0.68. At 0.55, plain muted text was only 4.28:1 on the
-     0.08 background (below the 4.5 body minimum) and any /40-/60 opacity stack
-     fell to ~1.5-2.2:1 (illegible). At 0.68, full-opacity muted is ~7.2:1 and
-     /70 stacks clear the 3:1 UI/large threshold, while staying clearly muted
-     against the 0.95 foreground so the secondary-text hierarchy is preserved. */
-  --muted-foreground: oklch(0.68 0 0);
+  /* Raised 0.55 -> 0.68 (2026-07-20 contrast fix), then 0.68 -> 0.76 in the same
+     day's brightness pass. At 0.55, plain muted text was only 4.28:1 on the 0.08
+     background (below the 4.5 body minimum) and /40-/60 opacity stacks fell to
+     ~1.5-2.2:1 (illegible). At 0.76 full-opacity muted is 9.68:1, and -- the
+     reason for the second lift -- the /70 stacks used all over this UI now clear
+     the 4.5:1 BODY threshold (5.00:1) rather than only the 3:1 UI threshold.
+     Still clearly muted against the 0.97 foreground, so the secondary-text
+     hierarchy is preserved. */
+  --muted-foreground: oklch(0.76 0 0);
   --accent: oklch(0.7 0.2 45);
   --accent-foreground: oklch(0.08 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.25 0 0);
+  /* 0.25 -> 0.32: dividers/panel edges (including the right-hand filter panel's
+     border-l and its internal segmented-control dividers) were nearly invisible
+     against the black background; 0.32 makes the structure readable without
+     turning borders into a visual element that competes with the orange accent. */
+  --border: oklch(0.32 0 0);
   --input: oklch(0.2 0 0);
   --ring: oklch(0.7 0.2 45);
   --radius: 0rem;
