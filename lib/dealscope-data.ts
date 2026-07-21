@@ -312,6 +312,22 @@ function isNum(v: unknown): v is number {
   return typeof v === "number" && !Number.isNaN(v)
 }
 
+// Guards the JSON trust boundary for the AI-content fields specifically.
+// export_for_frontend.py's cache reader was, until recently, still assigning
+// the *whole* {rationale, about, why_this_score} cache-entry object as the
+// value of the old single `rationale` key for any company already
+// reprocessed under the new two-field schema -- so `r.rationale` in real
+// exported data was an object, not a string, for a large share of
+// companies. TypeScript's `string | null` on CompanyRecord only describes
+// the intent, not what's actually in the JSON at runtime; rendering that
+// object directly in JSX crashed the whole tear sheet with "Objects are not
+// valid as a React child". Treat anything that isn't actually a non-empty
+// string as absent -- safe regardless of what shape a future data hiccup
+// takes, not just this one.
+function asString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null
+}
+
 function formatCr(value: number | null | undefined): string {
   if (!isNum(value)) return "N/A"
   return `₹${Math.round(value / 1e7).toLocaleString("en-IN")} Cr`
@@ -436,10 +452,10 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       peImplied: formatRange(r.pe_implied_low, r.pe_implied_high),
       note: r.valuation_note ?? "",
     },
-    about: r.about ?? null,
-    hasAbout: Boolean(r.about),
-    whyThisScore: r.why_this_score ?? r.rationale ?? null,
-    hasWhyThisScore: Boolean(r.why_this_score ?? r.rationale),
+    about: asString(r.about),
+    hasAbout: Boolean(asString(r.about)),
+    whyThisScore: asString(r.why_this_score) ?? asString(r.rationale),
+    hasWhyThisScore: Boolean(asString(r.why_this_score) ?? asString(r.rationale)),
   }
 }
 
