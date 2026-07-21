@@ -170,11 +170,47 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         </div>
 
-        {/* Rationale */}
+        {/* About the company -- factual, standalone, ahead of the score
+            explanation so a reader gets "what this is" before "why it
+            scored this way". Full-width: it's 2-4 sentences, doesn't need
+            to share a row with the valuation panel the way the (longer)
+            score explanation does. */}
+        <div className="mt-20 max-w-3xl">
+          <SectionLabel index="03" label="About The Company" />
+          {company.hasAbout ? (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
+            >
+              {company.about}
+            </motion.p>
+          ) : (
+            <div className="mt-8 border border-dashed border-border/60 p-8">
+              <div className="flex items-center gap-3">
+                <span className="h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden="true" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+                  Awaiting Generation
+                </span>
+              </div>
+              <p className="mt-4 font-sans text-base md:text-lg leading-relaxed text-muted-foreground text-pretty">
+                No company description has been drafted for {company.name} yet. The financials and
+                factor breakdown above are computed directly from screened fundamentals and stand on
+                their own in the meantime.
+              </p>
+              <p className="mt-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                Not yet generated • not investment advice
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Why This Score + Valuation */}
         <div className="mt-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
-            <SectionLabel index="03" label="Why This Score" />
-            {company.hasRationale ? (
+            <SectionLabel index="04" label="Why This Score" />
+            {company.hasWhyThisScore ? (
               <>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -182,7 +218,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   transition={{ delay: 0.4, duration: 0.6 }}
                   className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
                 >
-                  {company.rationale}
+                  {company.whyThisScore}
                 </motion.p>
                 <p className="mt-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
                   Generated from screened fundamentals. Not investment advice.
@@ -210,7 +246,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
 
           {/* Valuation */}
           <div className="lg:col-span-5">
-            <SectionLabel index="04" label="Indicative Valuation Range" />
+            <SectionLabel index="05" label="Indicative Valuation Range" />
             <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50">
               Two independent estimates of what this company could be worth in an acquisition, based on
               how similar companies have recently been valued. EV/EBITDA values the whole business
@@ -245,7 +281,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         {/* Comparable deals */}
         <div className="mt-20">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <SectionLabel index="05" label="Comparable Deals" />
+            <SectionLabel index="06" label="Comparable Deals" />
             {/* M&A deal values are genuinely reported in USD -- label it so it
                 doesn't read as a mismatch against the rupee-denominated site. */}
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
@@ -285,7 +321,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
 
         {/* Filings, notices & news */}
         <div className="mt-20">
-          <SectionLabel index="06" label="Filings, Notices & News" />
+          <SectionLabel index="07" label="Filings, Notices & News" />
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-12">
             {/* NSE regulatory filings */}
             <NewsColumn title="NSE Filings" count={companyNews.filings.length} emptyLabel="No recent filings found">

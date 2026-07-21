@@ -277,8 +277,19 @@ export interface Company {
     peImplied: string
     note: string
   }
-  rationale: string
-  hasRationale: boolean
+  // Factual "what this company does" -- null until the AI content batch has
+  // processed this company. No fallback-to-something-else here: unlike
+  // whyThisScore below, there's no older field to fall back to for this one.
+  about: string | null
+  hasAbout: boolean
+  // The score explanation shown under "Why This Score". Prefers the new
+  // why_this_score field; falls back to the older single-field `rationale`
+  // for companies processed before the about/why_this_score split (or not
+  // yet reprocessed) so real, already-generated content never reads as
+  // "awaiting generation" just because it's sitting under the old field
+  // name. null only when neither exists.
+  whyThisScore: string | null
+  hasWhyThisScore: boolean
 }
 
 export interface Sector {
@@ -362,6 +373,8 @@ interface CompanyRecord {
   valuation_note: string | null
   as_of_date: string
   rationale: string | null
+  about: string | null
+  why_this_score: string | null
 }
 
 export interface DealRow {
@@ -423,8 +436,10 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       peImplied: formatRange(r.pe_implied_low, r.pe_implied_high),
       note: r.valuation_note ?? "",
     },
-    rationale: r.rationale ?? "AI rationale has not been generated for this company yet.",
-    hasRationale: Boolean(r.rationale),
+    about: r.about ?? null,
+    hasAbout: Boolean(r.about),
+    whyThisScore: r.why_this_score ?? r.rationale ?? null,
+    hasWhyThisScore: Boolean(r.why_this_score ?? r.rationale),
   }
 }
 
@@ -458,6 +473,23 @@ const ALL_INDUSTRIES: IndustryOption[] = (() => {
 })()
 
 const DATA_AS_OF: string = (companiesData as CompanyRecord[])[0]?.as_of_date ?? ""
+
+/** Industry breakdown scoped to a set of broad sectors -- the results page's
+ *  drill-down (sector chip -> its granular industries). Deliberately takes
+ *  the FULL company list, not an already industry-filtered one: this counts
+ *  what's available to narrow into, so selecting one industry can't shrink
+ *  the very list used to offer the others. Global (no sectors given) falls
+ *  back to the same counts as getCompanies().industries. */
+export function getIndustriesForSectors(companies: Company[], sectorNames: string[]): IndustryOption[] {
+  const scoped = sectorNames.length > 0 ? companies.filter((c) => sectorNames.includes(c.sector)) : companies
+  const counts = new Map<string, number>()
+  for (const c of scoped) {
+    if (c.industry) counts.set(c.industry, (counts.get(c.industry) ?? 0) + 1)
+  }
+  return Array.from(counts, ([name, count]) => ({ name, count })).sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+  )
+}
 
 export function getCompanies(): {
   companies: Company[]
