@@ -19,6 +19,7 @@ import {
   EXAMPLE_SCENARIOS,
   getCompanies,
   getDeals,
+  getIndustriesForSectors,
   searchCompaniesDetailed,
   queryHasNumericIntent,
   queryHasComparisonIntent,
@@ -159,6 +160,16 @@ export function DealScopeApp() {
     [debouncedQuery, selectedSectors, weights, filters],
   )
 
+  // Results-page industry drill-down: granular industries within whichever
+  // sector(s) are currently selected (or the whole universe if none are),
+  // scoped from the full company list -- never from `results`, which
+  // already reflects the industry filter itself and would shrink to just
+  // the one selected industry.
+  const industriesForSelectedSectors = useMemo(
+    () => getIndustriesForSectors(companies, selectedSectors),
+    [selectedSectors],
+  )
+
   // Show the "free text is name/ticker/sector only" hint when the query clearly
   // expects numeric filtering: strong comparison/unit words always trigger it;
   // bare digits only trigger it when the query matched nothing and fell back
@@ -186,9 +197,19 @@ export function DealScopeApp() {
   }, [])
 
   const toggleSector = useCallback((sector: string) => {
-    setSelectedSectors((prev) =>
-      prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector],
-    )
+    setSelectedSectors((prev) => {
+      const next = prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector]
+      // The results-page industry drill-down only exists while exactly one
+      // sector is active; leaving that state should drop any industry
+      // selection made within it rather than leave it silently filtering
+      // with no visible control left to see or clear it from -- same
+      // "don't leave an invisible filter active" principle handleQueryChange
+      // already applies when a search query is typed.
+      if (next.length !== 1) {
+        setFilters((f) => (f.industry.length > 0 ? { ...f, industry: [] } : f))
+      }
+      return next
+    })
   }, [])
 
   const handleRun = useCallback(() => {
@@ -258,6 +279,8 @@ export function DealScopeApp() {
                 onToggleSector={toggleSector}
                 weights={weights}
                 filters={filters}
+                onFiltersChange={setFilters}
+                industries={industriesForSelectedSectors}
                 showNumericHint={showNumericHint}
                 onSelectCompany={handleSelectCompany}
                 onOpenWeights={() => setWeightsOpen(true)}
