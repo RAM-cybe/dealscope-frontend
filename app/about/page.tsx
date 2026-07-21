@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Linkedin } from "lucide-react"
+import { Linkedin, Mail } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
 
 export const metadata: Metadata = {
@@ -60,7 +60,7 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-10 flex flex-wrap items-center gap-4">
           <a
             href="https://www.linkedin.com/in/ramsuthakaran-vp-778b4731b/"
             target="_blank"
@@ -69,6 +69,13 @@ export default function AboutPage() {
           >
             <Linkedin className="w-4 h-4" aria-hidden="true" />
             LinkedIn
+          </a>
+          <a
+            href="mailto:vpram2007@gmail.com"
+            className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
+          >
+            <Mail className="w-4 h-4" aria-hidden="true" />
+            Email
           </a>
         </div>
       </div>
