@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/components/split-flap-text"
@@ -8,6 +9,11 @@ import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import type { Sector, ExampleScenario } from "@/lib/dealscope-data"
 import { cn } from "@/lib/utils"
+
+interface TopScored {
+  name: string
+  score: number
+}
 
 interface LandingViewProps {
   query: string
@@ -21,8 +27,7 @@ interface LandingViewProps {
   scenarios: { scenario: ExampleScenario; count: number }[]
   onApplyScenario: (scenario: ExampleScenario) => void
   sectors: Sector[]
-  totalCompanies: number
-  dataAsOf: string
+  topScored: TopScored | null
 }
 
 export function LandingView({
@@ -37,8 +42,7 @@ export function LandingView({
   scenarios,
   onApplyScenario,
   sectors,
-  totalCompanies,
-  dataAsOf,
+  topScored,
 }: LandingViewProps) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
@@ -69,14 +73,47 @@ export function LandingView({
         </SplitFlapAudioProvider>
 
         <h2 className="font-[family-name:var(--font-bebas)] text-muted-foreground text-[clamp(1rem,3vw,2rem)] mt-4 tracking-wide">
-          Controlled Studies in M&amp;A Discovery
+          Screens India&apos;s listed companies for acquisition fit.
         </h2>
 
+        {/* Live proof strip -- reads straight off the bundled dataset (same
+            source as the rest of the page) rather than being hardcoded, so it
+            can never drift out of sync with the actual data. */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
+          className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3"
+        >
+          {topScored && (
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                Top Scored Today
+              </span>
+              <span className="font-mono text-xs text-foreground">
+                {topScored.name} — {topScored.score}/100
+              </span>
+            </div>
+          )}
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              Sectors
+            </span>
+            <span className="font-mono text-xs text-foreground">{sectors.length}</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              Updated
+            </span>
+            <span className="font-mono text-xs text-foreground">Daily</span>
+          </div>
+        </motion.div>
+
         <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
-          DealScope screens all {totalCompanies.toLocaleString("en-IN")} NSE-listed companies for
-          acquisition attractiveness, scoring each on sector-relative fundamentals and attaching an
-          indicative valuation range. Adjust the factor weights, filter the universe, and open any name
-          for a full tear sheet. Free and public — no account, no paywall.
+          DealScope screens the NSE-listed universe for acquisition attractiveness, scoring each
+          company on sector-relative fundamentals and attaching an indicative valuation range. Adjust
+          the factor weights, filter the universe, and open any name for a full tear sheet. Free and
+          public — no account, no paywall.
         </p>
 
         {/* Search + Run */}
@@ -141,13 +178,13 @@ export function LandingView({
               className="group inline-flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-accent transition-colors duration-200"
             >
               <span className="text-foreground">{matchingCount.toLocaleString("en-IN")}</span>
-              <span>of {totalCompanies.toLocaleString("en-IN")} match — view results</span>
+              <span>match — view results</span>
               <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
             </button>
           ) : (
             <span className="font-mono text-xs text-muted-foreground leading-relaxed">
-              Filter all {totalCompanies.toLocaleString("en-IN")} companies by market cap, valuation,
-              growth, quality and risk — no search required.
+              Filter the NSE-listed universe by market cap, valuation, growth, quality and risk — no
+              search required.
             </span>
           )}
         </motion.div>
@@ -189,10 +226,13 @@ export function LandingView({
       {/* Footer data line */}
       <div className="absolute bottom-8 left-6 md:left-28 right-6 md:right-12 flex items-center justify-between">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60">
-          Data as of {dataAsOf} • {totalCompanies.toLocaleString("en-IN")} Companies
+          Screening the NSE-listed universe
         </span>
         <div className="hidden md:block border border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          v.01 / Public Instrument
+          Not investment advice. Built by RAM —{" "}
+          <Link href="/about" className="text-foreground hover:text-accent transition-colors duration-200">
+            About
+          </Link>
         </div>
       </div>
     </section>
@@ -203,37 +243,29 @@ export function LandingView({
     <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
         <div className="lg:col-span-5">
-          <SectionLabel index="01" label="What This Is" />
+          <SectionLabel index="01" label="What This Does" />
           <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-6xl tracking-tight text-balance">
-            A SCREENING INSTRUMENT
+            WHAT THIS DOES
           </h2>
         </div>
         <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/85 text-pretty">
           <RevealItem>
             <p>
-              DealScope runs across the entire NSE-listed universe and ranks companies on
-              sector-relative fundamentals — revenue growth, EBITDA margin, ROCE, and leverage —
-              rather than the raw numbers that flatter large caps and punish everything cyclical.
-              You set the factor weights; it re-ranks {totalCompanies.toLocaleString("en-IN")}{" "}
-              companies instantly.
+              DealScope scores every company on the NSE against its own sector — revenue growth,
+              margins, capital efficiency, debt — so a logistics company is compared to other logistics
+              companies, not to a bank. A score of 80 means the same thing everywhere: top of its
+              actual peer group, not flattered by sitting in a high-margin industry.
             </p>
           </RevealItem>
           <RevealItem delay={0.08}>
             <p className="text-muted-foreground">
-              For any name it surfaces an indicative valuation range benchmarked off precedent
-              M&amp;A in the same sector, and a one-page tear sheet with the factor decomposition,
-              comparable deals, and the latest filings behind it. It is the read a corp-dev desk
-              starts with before it opens a model — not advice, and not a black box.
+              Open any company and you get a full tear sheet — real financials, the scoring breakdown,
+              comparable deals that actually happened, and an estimated valuation range built off
+              precedent transactions in that sector.
             </p>
           </RevealItem>
           <RevealItem delay={0.16}>
-            <p className="text-muted-foreground">
-              Screening for acquisition targets within financial services might mean constraining the
-              universe to companies scoring above the sector median on capital efficiency while keeping
-              leverage low — narrowing 220 names to a short, ranked list in seconds, each with a
-              transparent factor breakdown, an AI-drafted rationale, and an indicative valuation range
-              against recent comparable transactions.
-            </p>
+            <p className="text-muted-foreground">Set your own filters, or start from one of the screens below.</p>
           </RevealItem>
         </div>
       </div>
@@ -258,10 +290,9 @@ export function LandingView({
             into the composite score shown on every tear sheet.
           </p>
           <p className="text-muted-foreground">
-            That equal-weight, sector-relative composite is the default ranking of all{" "}
-            {totalCompanies.toLocaleString("en-IN")} companies. From there you re-weight the factors
-            to reflect your own thesis, or apply min/max range filters to cut the universe down — the
-            ranking recomputes as you go.
+            That equal-weight, sector-relative composite is the default ranking of the entire
+            NSE-listed universe. From there you re-weight the factors to reflect your own thesis, or
+            apply min/max range filters to cut the universe down — the ranking recomputes as you go.
           </p>
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/40 border border-border/40">
             {["Revenue Growth", "EBITDA Margin", "ROCE", "Debt Level"].map((f, i) => (
@@ -281,49 +312,17 @@ export function LandingView({
     </section>
 
     {/* ---------------------------------------------------------------- */}
-    {/* Methodology / data provenance                                    */}
-    {/* ---------------------------------------------------------------- */}
-    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionLabel index="03" label="Methodology & Provenance" />
-          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight text-balance">
-            SECTOR-RELATIVE, FULLY TRANSPARENT
-          </h2>
-        </div>
-        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-base md:text-lg leading-relaxed text-foreground/85 text-pretty">
-          <p>
-            Each factor is a percentile rank within a company&apos;s own EY sector bucket, so a 62 in
-            Industrials and a 62 in Pharma are read against different peer sets. The composite never
-            rewards a company simply for sitting in a structurally high-margin industry.
-          </p>
-          <p>
-            Valuation ranges are anchored to precedent M&amp;A in the same bucket, adjusted for growth
-            and leverage differentials. Fundamentals cover {totalCompanies.toLocaleString("en-IN")}{" "}
-            NSE-listed companies as of <span className="text-accent">{dataAsOf}</span>, and every score
-            on a tear sheet exposes the inputs behind it. None of it is investment advice.
-          </p>
-          <div className="mt-2 grid grid-cols-3 gap-px bg-border/40 border border-border/40">
-            <Stat value={totalCompanies.toLocaleString("en-IN")} label="Companies" />
-            <Stat value="4" label="Weighted Factors" />
-            <Stat value={dataAsOf} label="Data As Of" />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {/* ---------------------------------------------------------------- */}
     {/* Example scenarios -- each sets a sector + real range filters and  */}
     {/* runs live, showing the actual filtered count.                     */}
     {/* ---------------------------------------------------------------- */}
     <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <SectionLabel index="04" label="Example Scenarios" />
+      <SectionLabel index="03" label="Example Scenarios" />
       <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight max-w-2xl text-balance">
-        SCREEN ON REAL CONSTRAINTS
+        START FROM A SCREEN
       </h2>
       <p className="mt-6 max-w-lg font-mono text-xs text-muted-foreground leading-relaxed">
-        Each scenario pins a sector and applies range filters on the scored factors, then runs. The
-        count is live — it is exactly what the results page will return.
+        Each screen pins a sector and applies real constraints on the scored factors, then runs. The
+        count you see is live — it&apos;s exactly what the results page returns.
       </p>
       <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-px bg-border/40 border border-border/40">
         {scenarios.map(({ scenario, count }, i) => (
@@ -355,11 +354,8 @@ export function LandingView({
         ))}
       </div>
 
-      {/* Closing data line */}
-      <div className="mt-24 pt-8 border-t border-border/40 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
-          Data as of {dataAsOf}
-        </span>
+      {/* Closing action */}
+      <div className="mt-24 pt-8 border-t border-border/40 flex items-center justify-end">
         <button
           onClick={onRun}
           className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
@@ -367,6 +363,29 @@ export function LandingView({
           <ScrambleTextOnHover text="Screen All" as="span" duration={0.4} />
           <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
         </button>
+      </div>
+    </section>
+
+    {/* ---------------------------------------------------------------- */}
+    {/* Why sector-relative                                              */}
+    {/* ---------------------------------------------------------------- */}
+    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+        <div className="lg:col-span-5">
+          <SectionLabel index="04" label="Why It Matters" />
+          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-6xl tracking-tight text-balance">
+            WHY SECTOR-RELATIVE
+          </h2>
+        </div>
+        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/85 text-pretty">
+          <RevealItem>
+            <p className="text-muted-foreground">
+              Most screeners rank companies on raw numbers. That flatters large caps and buries
+              anything cyclical or capital-intensive. DealScope ranks within sector instead, so the
+              comparison is always apples to apples.
+            </p>
+          </RevealItem>
+        </div>
       </div>
     </section>
     </>
@@ -378,19 +397,6 @@ function SectionLabel({ index, label }: { index: string; label: string }) {
     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
       {index} / {label}
     </span>
-  )
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="bg-background p-5">
-      <span className="block font-[family-name:var(--font-bebas)] text-2xl md:text-3xl tracking-tight text-foreground leading-none">
-        {value}
-      </span>
-      <span className="mt-2 block font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-        {label}
-      </span>
-    </div>
   )
 }
 

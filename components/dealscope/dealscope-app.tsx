@@ -23,6 +23,7 @@ import {
   queryHasComparisonIntent,
   countActiveBucketFilters,
   countScenario,
+  computeScore,
 } from "@/lib/dealscope-data"
 
 type View = "landing" | "results" | "detail"
@@ -36,13 +37,22 @@ const viewTransition = {
 
 // Data is a bundled local JSON file (no network, no database) -- read once
 // at module load, same on localhost and once deployed.
-const { companies, sectors, dataAsOf } = getCompanies()
+const { companies, sectors } = getCompanies()
 const deals = getDeals()
 
 // Scenario counts depend only on the (immutable) company set, so compute once.
 const scenariosWithCounts: { scenario: ExampleScenario; count: number }[] = EXAMPLE_SCENARIOS.map(
   (scenario) => ({ scenario, count: countScenario(companies, scenario) }),
 )
+
+// Highest composite score under the default (equal) weights, for the landing
+// page's live proof strip. Computed once alongside the scenario counts.
+const topScoredCompany: { name: string; score: number } | null = companies.reduce<
+  { name: string; score: number } | null
+>((best, c) => {
+  const score = computeScore(c.factors, DEFAULT_WEIGHTS)
+  return !best || score > best.score ? { name: c.name, score } : best
+}, null)
 
 export function DealScopeApp() {
   // --- URL as the source of truth for which view is showing -------------------
@@ -55,7 +65,7 @@ export function DealScopeApp() {
   // a company lands on the search that produced it rather than a bare list.
   //
   // Kept as search params on the single existing route rather than splitting
-  // into /results and /company/[ticker] routes: the whole 2,046-company dataset
+  // into /results and /company/[ticker] routes: the whole company dataset
   // is one bundled client-side import, and the cross-view AnimatePresence
   // transitions are part of the design -- separate routes would remount and
   // re-parse per navigation and kill those transitions for no user-facing gain.
@@ -123,6 +133,20 @@ export function DealScopeApp() {
   // count before the user commits to viewing results.
   const activeFilterCount = countActiveBucketFilters(filters)
 
+  // A search query takes priority over any active sector/bucket filters: typing
+  // a company name while, say, "Financial Services" is pinned previously left
+  // the result list stuck on that sector (search only ever narrowed within the
+  // already-filtered base, so a query for a company outside it matched nothing
+  // and silently fell back to showing the filtered set). Entering a non-empty
+  // query now clears both, so search always runs against the full universe.
+  const handleQueryChange = useCallback((q: string) => {
+    setQuery(q)
+    if (q.trim().length > 0) {
+      setSelectedSectors((prev) => (prev.length > 0 ? [] : prev))
+      setFilters((prev) => (countActiveBucketFilters(prev) > 0 ? { ...DEFAULT_BUCKET_FILTERS } : prev))
+    }
+  }, [])
+
   const toggleSector = useCallback((sector: string) => {
     setSelectedSectors((prev) =>
       prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector],
@@ -171,7 +195,7 @@ export function DealScopeApp() {
             <motion.div key="landing" {...viewTransition}>
               <LandingView
                 query={query}
-                onQueryChange={setQuery}
+                onQueryChange={handleQueryChange}
                 selectedSectors={selectedSectors}
                 onToggleSector={toggleSector}
                 onRun={handleRun}
@@ -181,8 +205,7 @@ export function DealScopeApp() {
                 scenarios={scenariosWithCounts}
                 onApplyScenario={handleApplyScenario}
                 sectors={sectors}
-                totalCompanies={companies.length}
-                dataAsOf={dataAsOf}
+                topScored={topScoredCompany}
               />
             </motion.div>
           )}
@@ -192,7 +215,7 @@ export function DealScopeApp() {
               <ResultsView
                 results={results}
                 query={query}
-                onQueryChange={setQuery}
+                onQueryChange={handleQueryChange}
                 selectedSectors={selectedSectors}
                 onToggleSector={toggleSector}
                 weights={weights}
@@ -203,7 +226,6 @@ export function DealScopeApp() {
                 onOpenFilters={() => setFiltersOpen(true)}
                 onBack={handleBackToLanding}
                 sectors={sectors}
-                dataAsOf={dataAsOf}
               />
             </motion.div>
           )}
@@ -216,7 +238,6 @@ export function DealScopeApp() {
                 onBack={handleBackToResults}
                 companies={companies}
                 deals={deals}
-                dataAsOf={dataAsOf}
               />
             </motion.div>
           )}

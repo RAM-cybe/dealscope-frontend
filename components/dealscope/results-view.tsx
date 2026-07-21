@@ -30,7 +30,6 @@ interface ResultsViewProps {
   onOpenFilters: () => void
   onBack: () => void
   sectors: Sector[]
-  dataAsOf: string
 }
 
 const RENDER_CAP = 60
@@ -49,7 +48,6 @@ export function ResultsView({
   onOpenFilters,
   onBack,
   sectors,
-  dataAsOf,
 }: ResultsViewProps) {
   const [showAll, setShowAll] = useState(false)
   const visibleResults = showAll ? results : results.slice(0, RENDER_CAP)
@@ -206,10 +204,7 @@ export function ResultsView({
       )}
 
       {/* Footer */}
-      <div className="mt-16 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60">
-          Data as of {dataAsOf}
-        </span>
+      <div className="mt-16 flex items-center justify-end">
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
           {showAll ? "Full universe shown" : `Showing top ${Math.min(RENDER_CAP, results.length)} of ${results.length}`}
         </span>

@@ -25,8 +25,8 @@ export const DEFAULT_WEIGHTS: Weights = {
 // ---------------------------------------------------------------------------
 
 // Real-value bucket filters. Eight financial fields, each split into buckets
-// whose boundaries are grounded in the real distribution across all 2,046
-// companies. Two interaction styles: multi-select pills (marketCap,
+// whose boundaries are grounded in the real distribution across the full
+// company dataset. Two interaction styles: multi-select pills (marketCap,
 // promoterPledge) store an array of selected bucket keys; single-select
 // segmented controls (the rest) store one key or null.
 
