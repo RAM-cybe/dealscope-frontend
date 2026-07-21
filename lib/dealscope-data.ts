@@ -843,6 +843,66 @@ export function searchCompanies(
   return searchCompaniesDetailed(companies, query, sectors, weights, filters).results
 }
 
+// ---------------------------------------------------------------------------
+// URL <-> local-state reconciliation for the query/sector search box.
+//
+// query/selectedSectors are local React state (typing can't push browser
+// history on every keystroke), seeded from the URL on mount so a shared link
+// restores the search. But the same component instance can later see a
+// DIFFERENT URL without remounting -- back/forward, a restored tab, any
+// navigation that reuses it -- and local state has to notice and reset.
+//
+// This used to happen in a useEffect keyed on the URL's search params. An
+// effect commits one tick after the render that first saw the new URL, which
+// left a real window where the input and the search results still reflected
+// whatever query was active before the URL changed. Confirmed concretely:
+// loading straight into a URL with q=M%26MFIN could show a stale query from
+// earlier in the session (input box and results both reflecting it,
+// consistent with each other but not with the URL) until something else
+// happened to trigger another render.
+//
+// Pulled out as a pure function specifically so this reconciliation decision
+// -- given the URL's current q/sectors and what was last synced, what (if
+// anything) should local state become -- is unit-testable without a browser
+// or a React render. The component calls this directly in its render body
+// (React's documented pattern for adjusting state when an external value
+// changes), not in an effect, so it reconciles synchronously in the same
+// render/commit as the URL change. debouncedQuery is set alongside query,
+// bypassing the typing-debounce timer entirely: an external URL jump isn't a
+// keystroke, so there's no reason to smooth it the way rapid typing needs.
+// ---------------------------------------------------------------------------
+
+export interface QuerySyncState {
+  query: string
+  debouncedQuery: string
+  selectedSectors: string[]
+  syncedQuery: string
+  syncedSectorsRaw: string
+}
+
+/** Returns `prev` unchanged (same reference) if the URL hasn't moved past
+ *  what was last synced -- so calling this on every render is a no-op until
+ *  the URL genuinely changes, and never fights with local typing (typing
+ *  only ever changes `query`/`debouncedQuery` directly, never `syncedQuery`,
+ *  so it can never look like a URL change to this function). */
+export function reconcileQuerySyncState(
+  prev: QuerySyncState,
+  urlQuery: string,
+  urlSectorsRaw: string,
+): QuerySyncState {
+  if (urlQuery === prev.syncedQuery && urlSectorsRaw === prev.syncedSectorsRaw) {
+    return prev
+  }
+  const urlSectors = urlSectorsRaw ? urlSectorsRaw.split(",").filter(Boolean) : []
+  return {
+    query: urlQuery,
+    debouncedQuery: urlQuery,
+    selectedSectors: urlSectors,
+    syncedQuery: urlQuery,
+    syncedSectorsRaw: urlSectorsRaw,
+  }
+}
+
 // The free-text box does substring matching on name / ticker / sector only --
 // it has no numeric parsing. These flags let the UI point such queries at the
 // Range Filters panel instead of leaving the user to wonder why a numeric query

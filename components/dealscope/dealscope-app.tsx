@@ -8,12 +8,12 @@ import { ResultsView } from "@/components/dealscope/results-view"
 import { TearSheetView } from "@/components/dealscope/tear-sheet-view"
 import { WeightsPanel } from "@/components/dealscope/weights-panel"
 import { FiltersPanel } from "@/components/dealscope/filters-panel"
-import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import {
   type Company,
   type Weights,
   type BucketFilters,
   type ExampleScenario,
+  type QuerySyncState,
   DEFAULT_WEIGHTS,
   DEFAULT_BUCKET_FILTERS,
   EXAMPLE_SCENARIOS,
@@ -25,6 +25,7 @@ import {
   countActiveBucketFilters,
   countScenario,
   computeScore,
+  reconcileQuerySyncState,
 } from "@/lib/dealscope-data"
 
 type View = "landing" | "results" | "detail"
@@ -77,13 +78,44 @@ export function DealScopeApp() {
   const viewParam = searchParams.get("view")
   const view: View = tickerParam ? "detail" : viewParam === "results" ? "results" : "landing"
 
-  // Query/sector state stays local (typing must not push history on every
-  // keystroke) but is seeded from the URL so a shared link restores the search.
-  const [query, setQuery] = useState(() => searchParams.get("q") ?? "")
-  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
-    const raw = searchParams.get("sectors")
-    return raw ? raw.split(",").filter(Boolean) : []
-  })
+  // The URL's own q/sectors, recomputed fresh every render -- never stale,
+  // never dependent on an effect having already fired.
+  const urlQuery = searchParams.get("q") ?? ""
+  const urlSectorsRaw = searchParams.get("sectors") ?? ""
+
+  // query/debouncedQuery/selectedSectors are local (typing can't push
+  // history on every keystroke), seeded from the URL so a shared link
+  // restores the search -- but held in one object with syncedQuery/
+  // syncedSectorsRaw so they can only ever be replaced together, atomically,
+  // by reconcileQuerySyncState() below. See that function's doc comment for
+  // why this is a render-time check rather than a useEffect: a previous
+  // useEffect-based version of this left a real window where the input and
+  // the search results still reflected whatever query was active before the
+  // URL changed (confirmed concretely -- loading straight into a URL with
+  // q=M%26MFIN could show a stale query from earlier in the session).
+  const [syncState, setSyncState] = useState<QuerySyncState>(() => ({
+    query: urlQuery,
+    debouncedQuery: urlQuery,
+    selectedSectors: urlSectorsRaw ? urlSectorsRaw.split(",").filter(Boolean) : [],
+    syncedQuery: urlQuery,
+    syncedSectorsRaw: urlSectorsRaw,
+  }))
+  const reconciled = reconcileQuerySyncState(syncState, urlQuery, urlSectorsRaw)
+  if (reconciled !== syncState) {
+    setSyncState(reconciled)
+  }
+  const { query, debouncedQuery, selectedSectors } = reconciled
+
+  const setQuery = useCallback((q: string) => {
+    setSyncState((prev) => ({ ...prev, query: q }))
+  }, [])
+  const setSelectedSectors = useCallback((updater: string[] | ((prev: string[]) => string[])) => {
+    setSyncState((prev) => ({
+      ...prev,
+      selectedSectors: typeof updater === "function" ? updater(prev.selectedSectors) : updater,
+    }))
+  }, [])
+
   const [weights, setWeights] = useState<Weights>({ ...DEFAULT_WEIGHTS })
   const [filters, setFilters] = useState<BucketFilters>({ ...DEFAULT_BUCKET_FILTERS })
   const [weightsOpen, setWeightsOpen] = useState(false)
@@ -93,15 +125,6 @@ export function DealScopeApp() {
     () => (tickerParam ? companies.find((c) => c.ticker === tickerParam) ?? null : null),
     [tickerParam],
   )
-
-  // Back/forward can land on a URL whose q/sectors differ from local state
-  // (e.g. back from a tear sheet to an older search). Re-sync so the inputs and
-  // the result set always reflect the URL actually being displayed.
-  useEffect(() => {
-    setQuery(searchParams.get("q") ?? "")
-    const raw = searchParams.get("sectors")
-    setSelectedSectors(raw ? raw.split(",").filter(Boolean) : [])
-  }, [searchParams])
 
   const navigate = useCallback(
     (params: { view?: string; q?: string; sectors?: string[]; ticker?: string }) => {
@@ -119,10 +142,17 @@ export function DealScopeApp() {
 
   // Debounced so re-searching the full 2,046-company set doesn't run
   // synchronously on every keystroke -- the input itself stays bound to the
-  // raw, un-debounced `query` state below and updates instantly either way;
-  // only the (expensive) recompute of results lags by this ~120ms, which
-  // reads as normal debounce behavior, not lag.
-  const debouncedQuery = useDebouncedValue(query, 120)
+  // raw, un-debounced `query` state and updates instantly either way; only
+  // the (expensive) recompute of results lags by this ~120ms, which reads as
+  // normal debounce behavior, not lag. Only fires for actual typing: an
+  // external URL-driven change is applied immediately above, not through
+  // this timer.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSyncState((prev) => (prev.debouncedQuery === query ? prev : { ...prev, debouncedQuery: query }))
+    }, 120)
+    return () => clearTimeout(timer)
+  }, [query])
 
   const { results, queryFellBack } = useMemo(
     () => searchCompaniesDetailed(companies, debouncedQuery, selectedSectors, weights, filters),
