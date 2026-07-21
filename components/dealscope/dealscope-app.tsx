@@ -37,7 +37,7 @@ const viewTransition = {
 
 // Data is a bundled local JSON file (no network, no database) -- read once
 // at module load, same on localhost and once deployed.
-const { companies, sectors } = getCompanies()
+const { companies, sectors, industries } = getCompanies()
 const deals = getDeals()
 
 // Scenario counts depend only on the (immutable) company set, so compute once.
@@ -256,6 +256,7 @@ export function DealScopeApp() {
         filters={filters}
         onFiltersChange={setFilters}
         onClose={() => setFiltersOpen(false)}
+        industries={industries}
       />
     </main>
   )

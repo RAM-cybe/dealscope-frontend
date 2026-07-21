@@ -1,12 +1,13 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import {
   type BucketFilters,
   type BucketFieldDef,
   type BucketFieldKey,
+  type IndustryOption,
   BUCKET_FIELDS,
   DEFAULT_BUCKET_FILTERS,
   countActiveBucketFilters,
@@ -18,6 +19,7 @@ interface FiltersPanelProps {
   filters: BucketFilters
   onFiltersChange: (filters: BucketFilters) => void
   onClose: () => void
+  industries: IndustryOption[]
 }
 
 const FIELD = Object.fromEntries(BUCKET_FIELDS.map((f) => [f.key, f])) as Record<
@@ -31,7 +33,7 @@ const GROUPS: { index: string; label: string; fields: BucketFieldKey[] }[] = [
   { index: "03", label: "Risk", fields: ["debtLevel", "promoterPledge"] },
 ]
 
-export function FiltersPanel({ open, filters, onFiltersChange, onClose }: FiltersPanelProps) {
+export function FiltersPanel({ open, filters, onFiltersChange, onClose, industries }: FiltersPanelProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -117,6 +119,20 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose }: Filter
                     </div>
                   </div>
                 ))}
+
+                {/* Industry -- exact-match multi-select over ~123 raw values,
+                    too many for fixed pills, so this is search-to-narrow
+                    rather than the numeric fields' small fixed bucket set. */}
+                <div>
+                  <SectionLabel index="04" label="Industry" />
+                  <div className="mt-6">
+                    <IndustryFilterControl
+                      industries={industries}
+                      selected={filters.industry}
+                      onChange={(next) => onFiltersChange({ ...filters, industry: next })}
+                    />
+                  </div>
+                </div>
 
                 {/* Active readout */}
                 <div className="border-t border-border/50 pt-6 flex items-baseline justify-between">
@@ -235,6 +251,89 @@ function PillGroup({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+// Typeahead + multi-select over the ~123 raw industry labels. Too many for
+// fixed pills (unlike the numeric fields' 3-4 buckets), so this is a search
+// box narrowing a scrollable option list, with selected industries surfaced
+// above it as removable pills once search moves them out of view.
+function IndustryFilterControl({
+  industries,
+  selected,
+  onChange,
+}: {
+  industries: IndustryOption[]
+  selected: string[]
+  onChange: (next: string[]) => void
+}) {
+  const [query, setQuery] = useState("")
+  const q = query.trim().toLowerCase()
+  const filtered = q ? industries.filter((ind) => ind.name.toLowerCase().includes(q)) : industries
+
+  const toggle = (name: string) => {
+    onChange(selected.includes(name) ? selected.filter((n) => n !== name) : [...selected, name])
+  }
+
+  return (
+    <div>
+      {selected.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {selected.map((name) => (
+            <button
+              key={name}
+              onClick={() => toggle(name)}
+              className="inline-flex items-center gap-2 border border-accent bg-accent/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-accent hover:bg-accent/20 transition-colors duration-200"
+            >
+              <span>{name}</span>
+              <span aria-hidden="true">×</span>
+              <span className="sr-only">Remove {name} filter</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="relative border border-border focus-within:border-accent transition-colors duration-200">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={`Search ${industries.length} industries…`}
+          aria-label="Search industries"
+          className="w-full bg-transparent px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+        />
+      </div>
+
+      <div className="mt-2 max-h-48 overflow-y-auto border border-border/50 divide-y divide-border/30">
+        {filtered.length === 0 ? (
+          <p className="px-3 py-4 font-mono text-[10px] text-muted-foreground/60 text-center">
+            No industries match &quot;{query}&quot;
+          </p>
+        ) : (
+          filtered.map((ind) => {
+            const active = selected.includes(ind.name)
+            return (
+              <button
+                key={ind.name}
+                onClick={() => toggle(ind.name)}
+                aria-pressed={active}
+                className={cn(
+                  "w-full flex items-center justify-between gap-3 px-3 py-2.5 font-mono text-[11px] text-left transition-colors duration-200",
+                  active
+                    ? "bg-accent/10 text-accent"
+                    : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
+                )}
+              >
+                <span className="truncate">{ind.name}</span>
+                <span className={cn("text-[9px] shrink-0", active ? "text-accent/70" : "text-muted-foreground/60")}>
+                  {ind.count}
+                </span>
+              </button>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
