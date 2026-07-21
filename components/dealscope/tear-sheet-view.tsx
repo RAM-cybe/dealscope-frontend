@@ -85,10 +85,18 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             >
               {company.name.toUpperCase()}
             </motion.h1>
-            <div className="mt-3 flex items-center gap-4">
+            <div className="mt-3 flex flex-wrap items-center gap-4">
               <span className="border border-border px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 NSE: {company.ticker}
               </span>
+              {/* Granular industry, alongside the broad sector already shown in
+                  the kicker above -- omitted entirely (not a broken/empty
+                  label) for the ~74/2,046 companies missing it upstream. */}
+              {company.industry && (
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                  {company.industry}
+                </span>
+              )}
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
                 TTM {company.metrics.revenue}
               </span>

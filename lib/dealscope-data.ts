@@ -169,6 +169,10 @@ export interface BucketFilters {
   roe: string | null
   debtLevel: string | null
   peRatio: string | null
+  // Exact-match multi-select over the ~123 raw industry labels -- doesn't fit
+  // BUCKET_FIELDS' numeric-range abstraction (Bucket.match(v: number)), so
+  // it's handled as its own field rather than forced into that shape.
+  industry: string[]
 }
 
 export const DEFAULT_BUCKET_FILTERS: BucketFilters = {
@@ -180,6 +184,7 @@ export const DEFAULT_BUCKET_FILTERS: BucketFilters = {
   roe: null,
   debtLevel: null,
   peRatio: null,
+  industry: [],
 }
 
 function isFieldActive(sel: string[] | string | null): boolean {
@@ -187,7 +192,8 @@ function isFieldActive(sel: string[] | string | null): boolean {
 }
 
 export function countActiveBucketFilters(f: BucketFilters): number {
-  return (Object.keys(f) as BucketFieldKey[]).reduce((n, key) => n + (isFieldActive(f[key]) ? 1 : 0), 0)
+  const numericCount = BUCKET_FIELDS.reduce((n, def) => n + (isFieldActive(f[def.key]) ? 1 : 0), 0)
+  return numericCount + (f.industry.length > 0 ? 1 : 0)
 }
 
 // A company passes a field's constraint if its real value falls within (any of)
@@ -206,9 +212,10 @@ function passesField(company: Company, def: BucketFieldDef, selection: string[] 
 }
 
 export function passesBucketFilters(company: Company, filters: BucketFilters): boolean {
-  return (Object.keys(filters) as BucketFieldKey[]).every((key) =>
-    passesField(company, BUCKET_FIELD_BY_KEY[key], filters[key]),
-  )
+  const passesNumeric = BUCKET_FIELDS.every((def) => passesField(company, def, filters[def.key]))
+  const passesIndustry =
+    filters.industry.length === 0 || (company.industry !== null && filters.industry.includes(company.industry))
+  return passesNumeric && passesIndustry
 }
 
 export function filterCompanies(companies: Company[], filters: BucketFilters): Company[] {
@@ -227,6 +234,10 @@ export interface Company {
   ticker: string
   sector: string // display name, e.g. "Industrials & Auto"
   sectorKey: string // raw EY-bucket key used to match comparable deals, e.g. "Industrials and Auto"
+  // Granular yfinance-sourced fields, alongside the 6-bucket EY sector above.
+  // null for the ~74/2,046 companies missing them upstream.
+  industry: string | null // e.g. "Specialty Chemicals" (one of 123 distinct values)
+  sectorRaw: string | null // Yahoo's own 11-value sector taxonomy, e.g. "Basic Materials"
   /* Factor scores, 0-100, sector-relative. debtLevel: higher = healthier (lower debt) */
   factors: Weights
   metrics: {
@@ -275,6 +286,11 @@ export interface Sector {
   count: number
 }
 
+export interface IndustryOption {
+  name: string
+  count: number
+}
+
 // ---------------------------------------------------------------------------
 // Formatting helpers -- raw values from data/companies.json are plain rupees
 // / plain percentages; these turn them into the display strings the UI uses
@@ -315,6 +331,8 @@ interface CompanyRecord {
   name: string
   sector: string
   sector_display: string
+  industry: string | null
+  sector_raw: string | null
   revenue: number | null
   ebitda: number | null
   ebitda_margin_pct: number | null
@@ -363,6 +381,8 @@ function mapCompanyRecord(r: CompanyRecord): Company {
     ticker: r.ticker,
     sector: r.sector_display,
     sectorKey: r.sector,
+    industry: r.industry ?? null,
+    sectorRaw: r.sector_raw ?? null,
     factors: {
       revenueGrowth: formatFactor(r.factor_revenue_growth),
       ebitdaMargin: formatFactor(r.factor_ebitda_margin),
@@ -425,10 +445,27 @@ const ALL_SECTORS: Sector[] = (() => {
   return Array.from(counts, ([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count)
 })()
 
+// Sorted by count so the typeahead's default (pre-search) list leads with the
+// most common industries; alphabetical within a tie for stable ordering.
+const ALL_INDUSTRIES: IndustryOption[] = (() => {
+  const counts = new Map<string, number>()
+  for (const c of ALL_COMPANIES) {
+    if (c.industry) counts.set(c.industry, (counts.get(c.industry) ?? 0) + 1)
+  }
+  return Array.from(counts, ([name, count]) => ({ name, count })).sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+  )
+})()
+
 const DATA_AS_OF: string = (companiesData as CompanyRecord[])[0]?.as_of_date ?? ""
 
-export function getCompanies(): { companies: Company[]; sectors: Sector[]; dataAsOf: string } {
-  return { companies: ALL_COMPANIES, sectors: ALL_SECTORS, dataAsOf: DATA_AS_OF }
+export function getCompanies(): {
+  companies: Company[]
+  sectors: Sector[]
+  industries: IndustryOption[]
+  dataAsOf: string
+} {
+  return { companies: ALL_COMPANIES, sectors: ALL_SECTORS, industries: ALL_INDUSTRIES, dataAsOf: DATA_AS_OF }
 }
 
 export function getDeals(): DealRow[] {
