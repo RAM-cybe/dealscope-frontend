@@ -23,10 +23,9 @@ interface TearSheetViewProps {
   onBack: () => void
   companies: Company[]
   deals: DealRow[]
-  dataAsOf: string
 }
 
-export function TearSheetView({ company, weights, onBack, companies, deals, dataAsOf }: TearSheetViewProps) {
+export function TearSheetView({ company, weights, onBack, companies, deals }: TearSheetViewProps) {
   const score = computeScore(company.factors, weights)
   const avg = sectorAverage(companies, company.sector, weights)
   const comparables = comparablesForSector(company.sectorKey, deals)
@@ -117,10 +116,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
         {/* Key financials -- the raw numbers are the headline of the sheet */}
         <div className="mt-16">
           <SectionLabel index="01" label="Key Financials" />
-          <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
-            Fundamentals as of {dataAsOf}
-            {fin.marketCapAsOf ? " · market capitalization refreshes daily" : ""}.
-          </p>
+          {fin.marketCapAsOf && (
+            <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
+              Market capitalization refreshes daily.
+            </p>
+          )}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {financialCards.map((card) => (
               <FinancialCard
@@ -165,7 +165,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
         {/* Rationale */}
         <div className="mt-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
-            <SectionLabel index="03" label="AI-Drafted Rationale" />
+            <SectionLabel index="03" label="Why This Score" />
             {company.hasRationale ? (
               <>
                 <motion.p
@@ -177,7 +177,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
                   {company.rationale}
                 </motion.p>
                 <p className="mt-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
-                  Generated from screened fundamentals • not investment advice
+                  Generated from screened fundamentals. Not investment advice.
                 </p>
               </>
             ) : (
@@ -303,10 +303,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals, data
         </div>
 
         {/* Footer */}
-        <div className="mt-20 flex items-center justify-between">
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60">
-            Data as of {dataAsOf}
-          </span>
+        <div className="mt-20 flex items-center justify-end">
           <button
             onClick={onBack}
             className="border border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"

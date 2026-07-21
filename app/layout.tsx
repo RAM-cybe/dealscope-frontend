@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import Link from "next/link"
 import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
@@ -19,9 +20,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" })
 
 export const metadata: Metadata = {
-  title: "DEALSCOPE — Controlled Studies in M&A Discovery",
+  title: "DEALSCOPE — Screens India's Listed Companies for Acquisition Fit",
   description:
-    "Screen and value 2,046 NSE-listed Indian companies for acquisition attractiveness. Weighted factors, sector-relative scoring, indicative valuation ranges.",
+    "Screen and value NSE-listed Indian companies for acquisition attractiveness. Weighted factors, sector-relative scoring, indicative valuation ranges.",
   generator: "v0.app",
   icons: {
     icon: [
@@ -54,6 +55,12 @@ export default function RootLayout({
       >
         <div className="noise-overlay" aria-hidden="true" />
         <LoadingScreen />
+        <Link
+          href="/about"
+          className="fixed top-4 right-4 md:top-6 md:right-12 z-30 inline-flex items-center gap-2 border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-3.5 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
+        >
+          About
+        </Link>
         <SmoothScroll>{children}</SmoothScroll>
         <Analytics />
       </body>
