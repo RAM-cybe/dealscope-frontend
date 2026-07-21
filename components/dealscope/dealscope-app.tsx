@@ -8,6 +8,7 @@ import { ResultsView } from "@/components/dealscope/results-view"
 import { TearSheetView } from "@/components/dealscope/tear-sheet-view"
 import { WeightsPanel } from "@/components/dealscope/weights-panel"
 import { FiltersPanel } from "@/components/dealscope/filters-panel"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
 import {
   type Company,
   type Weights,
@@ -116,9 +117,16 @@ export function DealScopeApp() {
     [router],
   )
 
+  // Debounced so re-searching the full 2,046-company set doesn't run
+  // synchronously on every keystroke -- the input itself stays bound to the
+  // raw, un-debounced `query` state below and updates instantly either way;
+  // only the (expensive) recompute of results lags by this ~120ms, which
+  // reads as normal debounce behavior, not lag.
+  const debouncedQuery = useDebouncedValue(query, 120)
+
   const { results, queryFellBack } = useMemo(
-    () => searchCompaniesDetailed(companies, query, selectedSectors, weights, filters),
-    [query, selectedSectors, weights, filters],
+    () => searchCompaniesDetailed(companies, debouncedQuery, selectedSectors, weights, filters),
+    [debouncedQuery, selectedSectors, weights, filters],
   )
 
   // Show the "free text is name/ticker/sector only" hint when the query clearly

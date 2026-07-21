@@ -671,23 +671,83 @@ function fuzzyTokenMatches(token: string, words: string[]): boolean {
   return words.some((w) => w.length >= 3 && editDistance(token, w, max) <= max)
 }
 
-/** One token against one company's text. Tokens of 1-2 characters must match a
- *  WHOLE word, not a substring: normalizing "M&M" yields the tokens ["m","and",
- *  "m"], and a bare substring test for "m" matches roughly half the universe
- *  (any name containing the letter m), which swamped the results. Longer tokens
- *  keep substring matching so "pharma" still finds "AARTIPHARM". */
+/** One token against one company's text.
+ *
+ *  Length 1 must match a WHOLE word, not a substring or prefix: normalizing
+ *  "M&M" yields the tokens ["m","and","m"], and a bare substring test for "m"
+ *  matches roughly half the universe (any name containing the letter m, most
+ *  commonly via "Limited"), which swamped the results.
+ *
+ *  Length 2 matches a word PREFIX rather than requiring the whole word --
+ *  typing the first two letters of a name ("re", "ta", "hd"...) is completely
+ *  ordinary short/partial input, and the old whole-word-only rule rejected it
+ *  outright (e.g. "re" matched nothing in "Reliance", since "reliance" is
+ *  never its own whole word). Still anchored to a word boundary, so it can't
+ *  regress to the length-1 bug -- "m" as a *prefix* would still match "Motors"
+ *  etc. and stays restricted to length 1 for that reason.
+ *
+ *  Length 3+ keeps substring matching so "pharma" still finds "AARTIPHARM"
+ *  and "reli" still finds "Reliance" mid-word matches, not just prefixes. */
 function tokenMatches(token: string, haystack: string, words: string[]): boolean {
-  return token.length <= 2 ? words.includes(token) : haystack.includes(token)
+  if (token.length === 1) return words.includes(token)
+  if (token.length === 2) return words.some((w) => w.startsWith(token))
+  return haystack.includes(token)
+}
+
+// ---------------------------------------------------------------------------
+// Per-company search index -- ticker/name/sector normalized once at module
+// load instead of on every matchTier() call. Search runs against the full
+// universe on every keystroke (see the debounce in dealscope-app.tsx for the
+// other half of the fix), so re-running normalizeForSearch's regex chain for
+// every company on every call was pure repeated work: name/ticker/sector
+// never change at runtime, only the query does.
+//
+// Job A's granular `industry` field (123 values) was tried here too, folded
+// into the same haystack -- reverted after it produced a real false positive:
+// "M&M" (tokens ["m","and","m"]) started also matching G.M. Breweries, whose
+// industry label "Beverages - Wineries & Distilleries" normalizes to include
+// the word "and" via its own "&", combined with the lone "m" in "G.M.".
+// Ampersands are common in Yahoo's industry labels, so this wasn't a one-off
+// -- any "X & Y"-shaped query risked spurious matches against unrelated
+// companies via their industry text. Not worth it: industry wasn't the
+// diagnosed cause of any of the four reported problems, so left out.
+// ---------------------------------------------------------------------------
+
+interface SearchIndexEntry {
+  ticker: string
+  name: string
+  haystack: string
+  words: string[]
+}
+
+function buildSearchEntry(company: Company): SearchIndexEntry {
+  const ticker = normalizeForSearch(company.ticker)
+  const name = normalizeForSearch(company.name)
+  const sector = normalizeForSearch(company.sector)
+  const haystack = `${name} ${ticker} ${sector}`
+  return { ticker, name, haystack, words: haystack.split(" ").filter(Boolean) }
+}
+
+const SEARCH_INDEX = new WeakMap<Company, SearchIndexEntry>()
+for (const company of ALL_COMPANIES) {
+  SEARCH_INDEX.set(company, buildSearchEntry(company))
+}
+
+function getSearchEntry(company: Company): SearchIndexEntry {
+  const cached = SEARCH_INDEX.get(company)
+  if (cached) return cached
+  // Defensive fallback, not expected to fire in practice -- every Company
+  // that exists is constructed once in mapCompanyRecord() and indexed below
+  // right after, so this only matters if that invariant ever changes.
+  const entry = buildSearchEntry(company)
+  SEARCH_INDEX.set(company, entry)
+  return entry
 }
 
 /** Relevance tier for one company against one query. Lower is better;
  *  null means no match at all. Tiers are evaluated cheapest-first. */
 function matchTier(company: Company, q: string, tokens: string[]): number | null {
-  const ticker = normalizeForSearch(company.ticker)
-  const name = normalizeForSearch(company.name)
-  const sector = normalizeForSearch(company.sector)
-  const haystack = `${name} ${ticker} ${sector}`
-  const words = haystack.split(" ")
+  const { ticker, name, haystack, words } = getSearchEntry(company)
 
   if (ticker === q) return 0 // exact ticker -- always the top hit
   if (ticker.startsWith(q) || name.startsWith(q)) return 1
@@ -737,7 +797,7 @@ export function searchCompaniesDetailed(
       // Looser ANY-token pass, preserving the original broad behavior for vague
       // multi-word queries that no single company matches on every token.
       const loose = base.filter((c) => {
-        const haystack = normalizeForSearch(`${c.name} ${c.ticker} ${c.sector}`)
+        const { haystack } = getSearchEntry(c)
         return tokens.some((t) => haystack.includes(t))
       })
       if (loose.length > 0) {
@@ -749,14 +809,20 @@ export function searchCompaniesDetailed(
     }
   }
 
-  // Rank by match quality first, then composite score within each tier -- so an
-  // exact ticker hit leads even if its score is low, while an unfiltered browse
-  // (no query) stays purely score-ordered exactly as before.
+  // Rank by match quality first. Within a tier, a shorter name is a *tighter*
+  // textual match for the same query -- e.g. for "reli", tier-1 name-prefix
+  // hits include both "Reliance Power" and "Reliance Industrial
+  // Infrastructure Ltd"; without this, composite score alone (unrelated to
+  // how well the text matches) could rank either one first, so the obvious
+  // "closest" match wasn't reliably on top. Composite score remains the
+  // final tiebreaker for same-tier, same-length ties, and the sole ordering
+  // for an unfiltered browse (no query) exactly as before.
   const sorted = ranked
     ? ranked
         .sort(
           (a, b) =>
             a.tier - b.tier ||
+            a.company.name.length - b.company.name.length ||
             computeScore(b.company.factors, weights) - computeScore(a.company.factors, weights),
         )
         .map((r) => r.company)
