@@ -1,16 +1,18 @@
 "use client"
 
+import type React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import {
   type BucketFilters,
   type BucketFieldDef,
   type BucketFieldKey,
-  type IndustryOption,
+  type IndustryGroup,
   BUCKET_FIELDS,
   DEFAULT_BUCKET_FILTERS,
   countActiveBucketFilters,
+  normalizeForSearch,
 } from "@/lib/dealscope-data"
 import { cn } from "@/lib/utils"
 
@@ -19,7 +21,7 @@ interface FiltersPanelProps {
   filters: BucketFilters
   onFiltersChange: (filters: BucketFilters) => void
   onClose: () => void
-  industries: IndustryOption[]
+  industryGroups: IndustryGroup[]
 }
 
 const FIELD = Object.fromEntries(BUCKET_FIELDS.map((f) => [f.key, f])) as Record<
@@ -33,7 +35,7 @@ const GROUPS: { index: string; label: string; fields: BucketFieldKey[] }[] = [
   { index: "03", label: "Risk", fields: ["debtLevel", "promoterPledge"] },
 ]
 
-export function FiltersPanel({ open, filters, onFiltersChange, onClose, industries }: FiltersPanelProps) {
+export function FiltersPanel({ open, filters, onFiltersChange, onClose, industryGroups }: FiltersPanelProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -127,7 +129,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industri
                   <SectionLabel index="04" label="Industry" />
                   <div className="mt-6">
                     <IndustryFilterControl
-                      industries={industries}
+                      industryGroups={industryGroups}
                       selected={filters.industry}
                       onChange={(next) => onFiltersChange({ ...filters, industry: next })}
                     />
@@ -255,26 +257,66 @@ function PillGroup({
   )
 }
 
-// Typeahead + multi-select over the ~123 raw industry labels. Too many for
-// fixed pills (unlike the numeric fields' 3-4 buckets), so this is a search
-// box narrowing a scrollable option list, with selected industries surfaced
-// above it as removable pills once search moves them out of view.
+// Typeahead + multi-select over the ~123 raw industry labels, grouped under
+// their parent sector and sorted by company count descending within each
+// group -- standard practice for a 100+-item taxonomy: it cuts scan time and
+// helps a user who doesn't know the exact industry name find it via its
+// sector, versus one long flat/alphabetical list. Reuses normalizeForSearch
+// from dealscope-data.ts (the same normalization the main company search
+// applies -- case-fold, "&"/"and" unified, punctuation stripped) so an
+// industry query behaves consistently with the rest of the site rather than
+// a second, differently-behaved matcher. No debounce: unlike the ~2,381-
+// company main search, this filters ~124 short strings already held in
+// memory -- synchronous is instant either way, so a debounce would only add
+// latency with no upside.
 function IndustryFilterControl({
-  industries,
+  industryGroups,
   selected,
   onChange,
 }: {
-  industries: IndustryOption[]
+  industryGroups: IndustryGroup[]
   selected: string[]
   onChange: (next: string[]) => void
 }) {
   const [query, setQuery] = useState("")
-  const q = query.trim().toLowerCase()
-  const filtered = q ? industries.filter((ind) => ind.name.toLowerCase().includes(q)) : industries
+  const [highlighted, setHighlighted] = useState(0)
+  const totalCount = useMemo(() => industryGroups.reduce((n, g) => n + g.industries.length, 0), [industryGroups])
+
+  const filteredGroups = useMemo(() => {
+    const q = normalizeForSearch(query)
+    if (!q) return industryGroups
+    return industryGroups
+      .map((g) => ({ sector: g.sector, industries: g.industries.filter((ind) => normalizeForSearch(ind.name).includes(q)) }))
+      .filter((g) => g.industries.length > 0)
+  }, [industryGroups, query])
+
+  const flatList = useMemo(() => filteredGroups.flatMap((g) => g.industries), [filteredGroups])
 
   const toggle = (name: string) => {
     onChange(selected.includes(name) ? selected.filter((n) => n !== name) : [...selected, name])
   }
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value)
+    setHighlighted(0)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (flatList.length === 0) return
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setHighlighted((i) => Math.min(i + 1, flatList.length - 1))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setHighlighted((i) => Math.max(i - 1, 0))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      const pick = flatList[highlighted]
+      if (pick) toggle(pick.name)
+    }
+  }
+
+  let rowIndex = -1
 
   return (
     <div>
@@ -298,40 +340,59 @@ function IndustryFilterControl({
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Search ${industries.length} industries…`}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={`Search ${totalCount} industries…`}
           aria-label="Search industries"
+          role="combobox"
+          aria-expanded={flatList.length > 0}
           className="w-full bg-transparent px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
         />
       </div>
 
-      <div className="mt-2 max-h-48 overflow-y-auto border border-border/50 divide-y divide-border/30">
-        {filtered.length === 0 ? (
+      <div className="mt-2 max-h-56 overflow-y-auto border border-border/50">
+        {flatList.length === 0 ? (
           <p className="px-3 py-4 font-mono text-[10px] text-muted-foreground/60 text-center">
             No industries match &quot;{query}&quot;
           </p>
         ) : (
-          filtered.map((ind) => {
-            const active = selected.includes(ind.name)
-            return (
-              <button
-                key={ind.name}
-                onClick={() => toggle(ind.name)}
-                aria-pressed={active}
-                className={cn(
-                  "w-full flex items-center justify-between gap-3 px-3 py-2.5 font-mono text-[11px] text-left transition-colors duration-200",
-                  active
-                    ? "bg-accent/10 text-accent"
-                    : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
-                )}
-              >
-                <span className="truncate">{ind.name}</span>
-                <span className={cn("text-[9px] shrink-0", active ? "text-accent/70" : "text-muted-foreground/60")}>
-                  {ind.count}
-                </span>
-              </button>
-            )
-          })
+          filteredGroups.map((group) => (
+            <div key={group.sector} className="border-b border-border/30 last:border-b-0">
+              <div className="sticky top-0 bg-background px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                {group.sector}
+              </div>
+              <div className="divide-y divide-border/20">
+                {group.industries.map((ind) => {
+                  rowIndex += 1
+                  const isHighlighted = rowIndex === highlighted
+                  const active = selected.includes(ind.name)
+                  return (
+                    <button
+                      key={ind.name}
+                      onClick={() => toggle(ind.name)}
+                      onMouseEnter={() => setHighlighted(rowIndex)}
+                      aria-pressed={active}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-3 px-3 py-2.5 font-mono text-[11px] text-left transition-colors duration-200",
+                        active
+                          ? "bg-accent/10 text-accent"
+                          : isHighlighted
+                            ? "bg-foreground/5 text-foreground"
+                            : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
+                      )}
+                    >
+                      <span className="truncate">{ind.name}</span>
+                      <span
+                        className={cn("text-[9px] shrink-0", active ? "text-accent/70" : "text-muted-foreground/60")}
+                      >
+                        {ind.count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

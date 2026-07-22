@@ -7,8 +7,8 @@ import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
-import type { Sector, ExampleScenario } from "@/lib/dealscope-data"
-import { cn } from "@/lib/utils"
+import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
+import type { Sector, ExampleScenario, IndustryGroup, BucketFilters } from "@/lib/dealscope-data"
 
 interface TopScored {
   name: string
@@ -28,6 +28,9 @@ interface LandingViewProps {
   onApplyScenario: (scenario: ExampleScenario) => void
   sectors: Sector[]
   topScored: TopScored | null
+  industryGroups: IndustryGroup[]
+  filters: BucketFilters
+  onFiltersChange: (filters: BucketFilters) => void
 }
 
 export function LandingView({
@@ -43,7 +46,16 @@ export function LandingView({
   onApplyScenario,
   sectors,
   topScored,
+  industryGroups,
+  filters,
+  onFiltersChange,
 }: LandingViewProps) {
+  const toggleIndustry = (name: string) => {
+    const next = filters.industry.includes(name)
+      ? filters.industry.filter((i) => i !== name)
+      : [...filters.industry, name]
+    onFiltersChange({ ...filters, industry: next })
+  }
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
       onRun()
@@ -197,28 +209,16 @@ export function LandingView({
           className="mt-16"
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">Filter by Sector</span>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {sectors.map((sector) => {
-              const active = selectedSectors.includes(sector.name)
-              return (
-                <button
-                  key={sector.name}
-                  onClick={() => onToggleSector(sector.name)}
-                  aria-pressed={active}
-                  className={cn(
-                    "group inline-flex items-baseline gap-2 border px-4 py-2 font-mono text-[11px] uppercase tracking-wider transition-all duration-200",
-                    active
-                      ? "border-accent bg-accent/10 text-accent"
-                      : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground",
-                  )}
-                >
-                  <span>{sector.name}</span>
-                  <span className={cn("text-[9px]", active ? "text-accent/70" : "text-muted-foreground/70")}>
-                    {sector.count}
-                  </span>
-                </button>
-              )
-            })}
+          <div className="mt-6">
+            <SectorIndustryFilter
+              sectors={sectors}
+              selectedSectors={selectedSectors}
+              onToggleSector={onToggleSector}
+              industryGroups={industryGroups}
+              selectedIndustries={filters.industry}
+              onToggleIndustry={toggleIndustry}
+              onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
+            />
           </div>
         </motion.div>
       </div>
