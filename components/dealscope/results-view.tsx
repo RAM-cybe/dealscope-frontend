@@ -6,12 +6,13 @@ import { motion } from "framer-motion"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { ScoreRing } from "@/components/dealscope/score-ring"
+import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
 import {
   type Company,
   type Sector,
   type Weights,
   type BucketFilters,
-  type IndustryOption,
+  type IndustryGroup,
   computeScore,
   countActiveBucketFilters,
 } from "@/lib/dealscope-data"
@@ -26,7 +27,7 @@ interface ResultsViewProps {
   weights: Weights
   filters: BucketFilters
   onFiltersChange: (filters: BucketFilters) => void
-  industries: IndustryOption[]
+  industryGroups: IndustryGroup[]
   showNumericHint: boolean
   onSelectCompany: (company: Company) => void
   onOpenWeights: () => void
@@ -46,7 +47,7 @@ export function ResultsView({
   weights,
   filters,
   onFiltersChange,
-  industries,
+  industryGroups,
   showNumericHint,
   onSelectCompany,
   onOpenWeights,
@@ -58,12 +59,6 @@ export function ResultsView({
   const visibleResults = showAll ? results : results.slice(0, RENDER_CAP)
   const activeFilters = countActiveBucketFilters(filters)
 
-  // The granular industry drill-down only makes sense once the sector chips
-  // above have narrowed things to exactly one sector -- with none selected
-  // it'd be all 123 industries at once (the Filters panel's typeahead
-  // already covers that case), and with 2+ selected there's no single
-  // unambiguous set to drill into.
-  const showIndustryDrilldown = selectedSectors.length === 1
   const toggleIndustry = (name: string) => {
     const next = filters.industry.includes(name)
       ? filters.industry.filter((i) => i !== name)
@@ -156,75 +151,19 @@ export function ResultsView({
         </div>
       </div>
 
-      {/* Sector chips */}
-      <div className={cn("flex flex-wrap gap-2", showIndustryDrilldown ? "mb-4" : "mb-12")}>
-        {sectors.map((sector) => {
-          const active = selectedSectors.includes(sector.name)
-          return (
-            <button
-              key={sector.name}
-              onClick={() => onToggleSector(sector.name)}
-              aria-pressed={active}
-              className={cn(
-                "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-200",
-                active
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
-              )}
-            >
-              {sector.name}
-              <span className={cn("text-[9px]", active ? "text-accent/70" : "text-muted-foreground/70")}>
-                {sector.count}
-              </span>
-            </button>
-          )
-        })}
+      {/* Sector + industry filter -- both levels visible together, no click
+          on a sector pill required to see what industries exist under it. */}
+      <div className="mb-12">
+        <SectorIndustryFilter
+          sectors={sectors}
+          selectedSectors={selectedSectors}
+          onToggleSector={onToggleSector}
+          industryGroups={industryGroups}
+          selectedIndustries={filters.industry}
+          onToggleIndustry={toggleIndustry}
+          onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
+        />
       </div>
-
-      {/* Industry drill-down -- granular (123-value) taxonomy within the one
-          selected sector, second-level to the broad sector chips above.
-          Indented + left-bordered to read as nested under the active sector
-          rather than a second, unrelated chip row. */}
-      {showIndustryDrilldown && (
-        <div className="mb-12 border-l border-border/40 pl-4">
-          <div className="mb-3 flex items-baseline justify-between gap-4">
-            <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">
-              Industry within {selectedSectors[0]}
-            </span>
-            {filters.industry.length > 0 && (
-              <button
-                onClick={() => onFiltersChange({ ...filters, industry: [] })}
-                className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
-              >
-                Clear ({filters.industry.length})
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {industries.map((ind) => {
-              const active = filters.industry.includes(ind.name)
-              return (
-                <button
-                  key={ind.name}
-                  onClick={() => toggleIndustry(ind.name)}
-                  aria-pressed={active}
-                  className={cn(
-                    "inline-flex items-baseline gap-1.5 border px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider transition-all duration-200",
-                    active
-                      ? "border-accent bg-accent/10 text-accent"
-                      : "border-border/50 text-muted-foreground/80 hover:border-foreground/40 hover:text-foreground",
-                  )}
-                >
-                  {ind.name}
-                  <span className={cn("text-[8px]", active ? "text-accent/70" : "text-muted-foreground/60")}>
-                    {ind.count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Results list */}
       {results.length === 0 ? (

@@ -19,7 +19,7 @@ import {
   EXAMPLE_SCENARIOS,
   getCompanies,
   getDeals,
-  getIndustriesForSectors,
+  getIndustryGroups,
   searchCompaniesDetailed,
   queryHasNumericIntent,
   queryHasComparisonIntent,
@@ -40,7 +40,7 @@ const viewTransition = {
 
 // Data is a bundled local JSON file (no network, no database) -- read once
 // at module load, same on localhost and once deployed.
-const { companies, sectors, industries } = getCompanies()
+const { companies, sectors, industryGroups } = getCompanies()
 const deals = getDeals()
 
 // Scenario counts depend only on the (immutable) company set, so compute once.
@@ -160,13 +160,14 @@ export function DealScopeApp() {
     [debouncedQuery, selectedSectors, weights, filters],
   )
 
-  // Results-page industry drill-down: granular industries within whichever
-  // sector(s) are currently selected (or the whole universe if none are),
-  // scoped from the full company list -- never from `results`, which
-  // already reflects the industry filter itself and would shrink to just
-  // the one selected industry.
-  const industriesForSelectedSectors = useMemo(
-    () => getIndustriesForSectors(companies, selectedSectors),
+  // Industry breakdown, grouped by sector, for whichever sector(s) are
+  // currently selected (or every sector if none are) -- shared by the
+  // landing page and results page so both show the same always-visible
+  // sector/industry structure. Scoped from the full company list -- never
+  // from `results`, which already reflects the industry filter itself and
+  // would shrink to just the selected industry/industries.
+  const industryGroupsForSelectedSectors = useMemo(
+    () => getIndustryGroups(companies, selectedSectors),
     [selectedSectors],
   )
 
@@ -196,20 +197,14 @@ export function DealScopeApp() {
     }
   }, [])
 
+  // The industry breakdown is now always visible regardless of how many
+  // sectors are selected (see SectorIndustryFilter), with its own always-
+  // reachable "Clear" control -- unlike the old single-sector-gated
+  // drill-down, changing sector selection no longer needs to silently drop
+  // an industry filter, since there's never a point where it becomes
+  // invisible or uncontrollable.
   const toggleSector = useCallback((sector: string) => {
-    setSelectedSectors((prev) => {
-      const next = prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector]
-      // The results-page industry drill-down only exists while exactly one
-      // sector is active; leaving that state should drop any industry
-      // selection made within it rather than leave it silently filtering
-      // with no visible control left to see or clear it from -- same
-      // "don't leave an invisible filter active" principle handleQueryChange
-      // already applies when a search query is typed.
-      if (next.length !== 1) {
-        setFilters((f) => (f.industry.length > 0 ? { ...f, industry: [] } : f))
-      }
-      return next
-    })
+    setSelectedSectors((prev) => (prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector]))
   }, [])
 
   const handleRun = useCallback(() => {
@@ -265,6 +260,9 @@ export function DealScopeApp() {
                 onApplyScenario={handleApplyScenario}
                 sectors={sectors}
                 topScored={topScoredCompany}
+                industryGroups={industryGroupsForSelectedSectors}
+                filters={filters}
+                onFiltersChange={setFilters}
               />
             </motion.div>
           )}
@@ -280,7 +278,7 @@ export function DealScopeApp() {
                 weights={weights}
                 filters={filters}
                 onFiltersChange={setFilters}
-                industries={industriesForSelectedSectors}
+                industryGroups={industryGroupsForSelectedSectors}
                 showNumericHint={showNumericHint}
                 onSelectCompany={handleSelectCompany}
                 onOpenWeights={() => setWeightsOpen(true)}
@@ -317,7 +315,7 @@ export function DealScopeApp() {
         filters={filters}
         onFiltersChange={setFilters}
         onClose={() => setFiltersOpen(false)}
-        industries={industries}
+        industryGroups={industryGroups}
       />
     </main>
   )

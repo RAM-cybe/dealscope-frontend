@@ -1,6 +1,7 @@
 import companiesData from "@/data/companies.json"
 import dealsData from "@/data/deals.json"
 import newsData from "@/data/news.json"
+import filterBandsData from "@/data/filter-bands.json"
 
 export interface Weights {
   revenueGrowth: number
@@ -55,79 +56,88 @@ export interface BucketFieldDef {
   buckets: Bucket[]
 }
 
-export const BUCKET_FIELDS: BucketFieldDef[] = [
-  {
-    key: "marketCap",
-    label: "Market Cap",
-    select: "multi",
-    getValue: (c) => c.raw.marketCap,
-    buckets: [
-      { key: "small", name: "Small", range: "< ₹700 Cr", match: (v) => v < 700 },
-      { key: "mid", name: "Mid", range: "₹700–2,900 Cr", match: (v) => v >= 700 && v < 2900 },
-      { key: "large", name: "Large", range: "₹2,900–13,000 Cr", match: (v) => v >= 2900 && v < 13000 },
-      { key: "mega", name: "Mega", range: "> ₹13,000 Cr", match: (v) => v >= 13000 },
-    ],
-  },
-  {
-    key: "peRatio",
-    label: "P/E Ratio",
-    select: "single",
-    getValue: (c) => c.raw.peRatio,
-    buckets: [
-      { key: "value", name: "Value", range: "< 16x", match: (v) => v < 16 },
-      { key: "moderate", name: "Moderate", range: "16–29x", match: (v) => v >= 16 && v < 29 },
-      { key: "growth", name: "Growth", range: "29–51x", match: (v) => v >= 29 && v < 51 },
-      { key: "premium", name: "Premium", range: "> 51x", match: (v) => v >= 51 },
-    ],
-  },
-  {
-    key: "revenueGrowth",
-    label: "Revenue Growth",
-    select: "single",
-    getValue: (c) => c.raw.revenueGrowth,
-    buckets: [
-      { key: "declining", name: "Declining", range: "< 0%", match: (v) => v < 0 },
-      { key: "flat", name: "Flat", range: "0–12%", match: (v) => v >= 0 && v < 12 },
-      { key: "growing", name: "Growing", range: "12–28%", match: (v) => v >= 12 && v < 28 },
-      { key: "highGrowth", name: "High Growth", range: "> 28%", match: (v) => v >= 28 },
-    ],
-  },
-  {
-    key: "ebitdaMargin",
-    label: "EBITDA Margin",
-    select: "single",
-    getValue: (c) => c.raw.ebitdaMargin,
-    buckets: [
-      { key: "thin", name: "Thin", range: "< 6%", match: (v) => v < 6 },
-      { key: "moderate", name: "Moderate", range: "6–12%", match: (v) => v >= 6 && v < 12 },
-      { key: "healthy", name: "Healthy", range: "12–20%", match: (v) => v >= 12 && v < 20 },
-      { key: "high", name: "High", range: "> 20%", match: (v) => v >= 20 },
-    ],
-  },
-  {
-    key: "roce",
-    label: "ROCE",
-    select: "single",
-    getValue: (c) => c.raw.roce,
-    buckets: [
-      { key: "weak", name: "Weak", range: "< 6%", match: (v) => v < 6 },
-      { key: "average", name: "Average", range: "6–13%", match: (v) => v >= 6 && v < 13 },
-      { key: "strong", name: "Strong", range: "13–19%", match: (v) => v >= 13 && v < 19 },
-      { key: "excellent", name: "Excellent", range: "> 19%", match: (v) => v >= 19 },
-    ],
-  },
-  {
-    key: "roe",
-    label: "ROE",
-    select: "single",
-    getValue: (c) => c.raw.roe,
-    buckets: [
-      { key: "weak", name: "Weak", range: "< 5%", match: (v) => v < 5 },
-      { key: "average", name: "Average", range: "5–11%", match: (v) => v >= 5 && v < 11 },
-      { key: "strong", name: "Strong", range: "11–17%", match: (v) => v >= 11 && v < 17 },
-      { key: "excellent", name: "Excellent", range: "> 17%", match: (v) => v >= 17 },
-    ],
-  },
+// ---------------------------------------------------------------------------
+// Bucket edges for 7 of the 8 fields below are data-driven, read from
+// data/filter-bands.json (winsorized p25/p50/p75 across the live company
+// universe, written by the backend's compute_filter_bands.py -- see that
+// script for the winsorization/rounding methodology). Bundled at build time,
+// same static-import pattern as companies.json/deals.json -- no runtime
+// fetch. Tier names/count and the field's label/select-mode stay hardcoded
+// here (filter-bands.json only supplies the 3 numeric cutpoints + tier
+// *keys*); only the numeric edges move when the underlying data does.
+//
+// promoterPledge is the one exception, left fully hardcoded: its real
+// distribution is zero-heavy (most companies report no pledge at all), so
+// filter-bands.json's own p25/p50/p75 for it collapse to 0/0/0 -- a
+// confirmed, disclosed non-fit for percentile tiering (see the field's
+// `note` in the JSON), not an oversight. The existing 3-tier None/Low/
+// Elevated categorical split is a real distinction the data supports;
+// wiring it to degenerate quartiles would not be.
+// ---------------------------------------------------------------------------
+
+interface FilterBandField {
+  frontend_key: string
+  unit: string
+  tiers: string[]
+  p25: number
+  p50: number
+  p75: number
+  sample_size: number
+  note?: string
+}
+
+interface FilterBandsFile {
+  generated_at: string
+  universe_size: number
+  winsorize_percentiles: number[]
+  fields: Record<string, FilterBandField>
+}
+
+const FILTER_BANDS = filterBandsData as FilterBandsFile
+
+/** "highGrowth" -> "High Growth"; "small" -> "Small". Tier keys in
+ *  filter-bands.json are the same camelCase strings as the old hardcoded
+ *  bucket keys, just without a separate display name alongside them. */
+function tierDisplayName(tierKey: string): string {
+  const spaced = tierKey.replace(/([A-Z])/g, " $1")
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+}
+
+// Bound (single-sided "< X" / "> X") and range (two-sided "X–Y") formatters
+// are separate on purpose: the existing bucket convention puts the unit
+// suffix once, at the end of a two-sided range ("₹700–2,900 Cr", "16–29x"),
+// not on each side ("₹700 Cr–₹2,900 Cr") -- matching that exactly, not just
+// "close enough", since it's copied verbatim from the previous hardcoded
+// strings this replaces.
+const crFormat = {
+  bound: (v: number) => `₹${Math.round(v).toLocaleString("en-IN")} Cr`,
+  range: (lo: number, hi: number) => `₹${Math.round(lo).toLocaleString("en-IN")}–${Math.round(hi).toLocaleString("en-IN")} Cr`,
+}
+const ratioFormat = {
+  bound: (v: number) => `${v.toFixed(1)}x`,
+  range: (lo: number, hi: number) => `${lo.toFixed(1)}–${hi.toFixed(1)}x`,
+}
+const pctFormat = {
+  bound: (v: number) => `${v.toFixed(1)}%`,
+  range: (lo: number, hi: number) => `${lo.toFixed(1)}–${hi.toFixed(1)}%`,
+}
+
+interface DataDrivenFieldSpec {
+  key: Exclude<BucketFieldKey, "promoterPledge">
+  label: string
+  select: "multi" | "single"
+  getValue: (c: Company) => number | null
+  backendKey: string // key into FILTER_BANDS.fields
+  format: { bound: (v: number) => string; range: (lo: number, hi: number) => string }
+}
+
+const DATA_DRIVEN_FIELD_SPECS: DataDrivenFieldSpec[] = [
+  { key: "marketCap", label: "Market Cap", select: "multi", getValue: (c) => c.raw.marketCap, backendKey: "market_cap", format: crFormat },
+  { key: "peRatio", label: "P/E Ratio", select: "single", getValue: (c) => c.raw.peRatio, backendKey: "trailing_pe", format: ratioFormat },
+  { key: "revenueGrowth", label: "Revenue Growth", select: "single", getValue: (c) => c.raw.revenueGrowth, backendKey: "revenue_growth_pct", format: pctFormat },
+  { key: "ebitdaMargin", label: "EBITDA Margin", select: "single", getValue: (c) => c.raw.ebitdaMargin, backendKey: "ebitda_margin_pct", format: pctFormat },
+  { key: "roce", label: "ROCE", select: "single", getValue: (c) => c.raw.roce, backendKey: "return_on_capital_employed_pct", format: pctFormat },
+  { key: "roe", label: "ROE", select: "single", getValue: (c) => c.raw.roe, backendKey: "return_on_equity_pct", format: pctFormat },
   {
     // Low debt reads as favorable, consistent with the "higher = healthier"
     // debtLevel factor convention -- but here we filter the real ₹ Cr figure.
@@ -135,13 +145,59 @@ export const BUCKET_FIELDS: BucketFieldDef[] = [
     label: "Debt Level",
     select: "single",
     getValue: (c) => c.raw.totalDebt,
-    buckets: [
-      { key: "low", name: "Low", range: "< ₹40 Cr", match: (v) => v < 40 },
-      { key: "moderate", name: "Moderate", range: "₹40–210 Cr", match: (v) => v >= 40 && v < 210 },
-      { key: "elevated", name: "Elevated", range: "₹210–935 Cr", match: (v) => v >= 210 && v < 935 },
-      { key: "high", name: "High", range: "> ₹935 Cr", match: (v) => v >= 935 },
-    ],
+    backendKey: "total_debt",
+    format: crFormat,
   },
+]
+
+/** 4 half-open bands from 3 ascending cutpoints: [< c0], [c0, c1), [c1, c2),
+ *  [c2, ∞) -- same boundary convention (upper-exclusive except the last
+ *  band) as the previous hardcoded buckets. */
+function buildDataDrivenBuckets(spec: DataDrivenFieldSpec, band: FilterBandField): Bucket[] {
+  const cuts = [band.p25, band.p50, band.p75]
+  return band.tiers.map((tierKey, i) => {
+    const lo = i === 0 ? null : cuts[i - 1]
+    const hi = i === band.tiers.length - 1 ? null : cuts[i]
+    const range =
+      lo === null ? `< ${spec.format.bound(hi as number)}` : hi === null ? `> ${spec.format.bound(lo)}` : spec.format.range(lo, hi)
+    return {
+      key: tierKey,
+      name: tierDisplayName(tierKey),
+      range,
+      match: (v: number) => (lo === null || v >= lo) && (hi === null || v < hi),
+    }
+  })
+}
+
+function buildDataDrivenField(spec: DataDrivenFieldSpec): BucketFieldDef {
+  const band = FILTER_BANDS.fields[spec.backendKey]
+  if (!band) {
+    // filter-bands.json is generated alongside companies.json by the same
+    // backend export -- a missing field means that export broke, not a
+    // recoverable runtime state. Warn loudly in dev, degrade to "no buckets"
+    // (field never constrains) rather than crash the whole app.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`filter-bands.json has no entry for "${spec.backendKey}" -- ${spec.key} filter will not constrain anything.`)
+    }
+    return { key: spec.key, label: spec.label, select: spec.select, getValue: spec.getValue, buckets: [] }
+  }
+  if (process.env.NODE_ENV !== "production" && !(band.p25 < band.p50 && band.p50 < band.p75)) {
+    console.warn(
+      `filter-bands.json field "${spec.backendKey}" has non-ascending cutpoints ` +
+        `(p25=${band.p25}, p50=${band.p50}, p75=${band.p75}) -- buckets may overlap or be empty.`,
+    )
+  }
+  return {
+    key: spec.key,
+    label: spec.label,
+    select: spec.select,
+    getValue: spec.getValue,
+    buckets: buildDataDrivenBuckets(spec, band),
+  }
+}
+
+export const BUCKET_FIELDS: BucketFieldDef[] = [
+  ...DATA_DRIVEN_FIELD_SPECS.map(buildDataDrivenField),
   {
     key: "promoterPledge",
     label: "Promoter Pledge",
@@ -507,13 +563,44 @@ export function getIndustriesForSectors(companies: Company[], sectorNames: strin
   )
 }
 
+export interface IndustryGroup {
+  sector: string
+  industries: IndustryOption[]
+}
+
+/** Full industry breakdown grouped under its parent sector, industries sorted
+ *  by count descending within each group -- powers both the always-visible
+ *  sector/industry filter (results + landing pages) and the Filters panel's
+ *  grouped industry search, so there's one grouping source instead of two.
+ *  Groups are ordered the same as `sectors` (count descending, matching the
+ *  sector pills everywhere else). Sectors with zero industries (currently
+ *  just "Unclassified" -- its companies have no industry data by definition)
+ *  are omitted rather than rendered as an empty group. `sectorNames` scopes
+ *  which sectors get a group at all (empty = every sector), independent of
+ *  the sector-level company counts, same convention as getIndustriesForSectors. */
+export function getIndustryGroups(companies: Company[], sectorNames: string[] = []): IndustryGroup[] {
+  const scopedSectors = sectorNames.length > 0 ? ALL_SECTORS.filter((s) => sectorNames.includes(s.name)) : ALL_SECTORS
+  return scopedSectors
+    .map((sector) => ({ sector: sector.name, industries: getIndustriesForSectors(companies, [sector.name]) }))
+    .filter((group) => group.industries.length > 0)
+}
+
+const ALL_INDUSTRY_GROUPS: IndustryGroup[] = getIndustryGroups(ALL_COMPANIES)
+
 export function getCompanies(): {
   companies: Company[]
   sectors: Sector[]
   industries: IndustryOption[]
+  industryGroups: IndustryGroup[]
   dataAsOf: string
 } {
-  return { companies: ALL_COMPANIES, sectors: ALL_SECTORS, industries: ALL_INDUSTRIES, dataAsOf: DATA_AS_OF }
+  return {
+    companies: ALL_COMPANIES,
+    sectors: ALL_SECTORS,
+    industries: ALL_INDUSTRIES,
+    industryGroups: ALL_INDUSTRY_GROUPS,
+    dataAsOf: DATA_AS_OF,
+  }
 }
 
 export function getDeals(): DealRow[] {
@@ -682,7 +769,7 @@ export interface SearchOutcome {
 
 /** Lowercase, unify "&"/"and", strip punctuation, collapse whitespace, so
  *  "M&M", "M & M" and "m and m" all normalize to the same thing. */
-function normalizeForSearch(value: string): string {
+export function normalizeForSearch(value: string): string {
   return value
     .toLowerCase()
     .replace(/&/g, " and ")
