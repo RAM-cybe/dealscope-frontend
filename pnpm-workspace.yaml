@@ -1,2 +1,8 @@
 allowBuilds:
   sharp: true
+  # Native postinstall for eslint's import resolver. Left off: lint runs
+  # correctly without it (verified), so there's no reason to execute a native
+  # build script for a dev-only dependency. pnpm wrote this key in as an
+  # unresolved "set this to true or false" placeholder when eslint was added;
+  # answering it explicitly keeps `pnpm install` from prompting again.
+  unrs-resolver: false

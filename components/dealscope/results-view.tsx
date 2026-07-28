@@ -16,7 +16,6 @@ import {
   computeScore,
   countActiveBucketFilters,
 } from "@/lib/dealscope-data"
-import { cn } from "@/lib/utils"
 
 interface ResultsViewProps {
   results: Company[]
@@ -28,6 +27,7 @@ interface ResultsViewProps {
   filters: BucketFilters
   onFiltersChange: (filters: BucketFilters) => void
   industryGroups: IndustryGroup[]
+  unclassifiedCount: number
   showNumericHint: boolean
   onSelectCompany: (company: Company) => void
   onOpenWeights: () => void
@@ -48,6 +48,7 @@ export function ResultsView({
   filters,
   onFiltersChange,
   industryGroups,
+  unclassifiedCount,
   showNumericHint,
   onSelectCompany,
   onOpenWeights,
@@ -159,6 +160,7 @@ export function ResultsView({
           selectedSectors={selectedSectors}
           onToggleSector={onToggleSector}
           industryGroups={industryGroups}
+          unclassifiedCount={unclassifiedCount}
           selectedIndustries={filters.industry}
           onToggleIndustry={toggleIndustry}
           onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
