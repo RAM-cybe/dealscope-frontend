@@ -12,7 +12,7 @@ import {
   BUCKET_FIELDS,
   DEFAULT_BUCKET_FILTERS,
   countActiveBucketFilters,
-  normalizeForSearch,
+  filterIndustryGroups,
 } from "@/lib/dealscope-data"
 import { cn } from "@/lib/utils"
 
@@ -282,13 +282,7 @@ function IndustryFilterControl({
   const [highlighted, setHighlighted] = useState(0)
   const totalCount = useMemo(() => industryGroups.reduce((n, g) => n + g.industries.length, 0), [industryGroups])
 
-  const filteredGroups = useMemo(() => {
-    const q = normalizeForSearch(query)
-    if (!q) return industryGroups
-    return industryGroups
-      .map((g) => ({ sector: g.sector, industries: g.industries.filter((ind) => normalizeForSearch(ind.name).includes(q)) }))
-      .filter((g) => g.industries.length > 0)
-  }, [industryGroups, query])
+  const filteredGroups = useMemo(() => filterIndustryGroups(industryGroups, query), [industryGroups, query])
 
   const flatList = useMemo(() => filteredGroups.flatMap((g) => g.industries), [filteredGroups])
 
@@ -346,11 +340,12 @@ function IndustryFilterControl({
           aria-label="Search industries"
           role="combobox"
           aria-expanded={flatList.length > 0}
+          aria-controls="industry-listbox"
           className="w-full bg-transparent px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
         />
       </div>
 
-      <div className="mt-2 max-h-56 overflow-y-auto border border-border/50">
+      <div id="industry-listbox" role="listbox" className="mt-2 max-h-56 overflow-y-auto border border-border/50">
         {flatList.length === 0 ? (
           <p className="px-3 py-4 font-mono text-[10px] text-muted-foreground/60 text-center">
             No industries match &quot;{query}&quot;

@@ -19,7 +19,6 @@ import {
   EXAMPLE_SCENARIOS,
   getCompanies,
   getDeals,
-  getIndustryGroups,
   searchCompaniesDetailed,
   queryHasNumericIntent,
   queryHasComparisonIntent,
@@ -160,15 +159,12 @@ export function DealScopeApp() {
     [debouncedQuery, selectedSectors, weights, filters],
   )
 
-  // Industry breakdown, grouped by sector, for whichever sector(s) are
-  // currently selected (or every sector if none are) -- shared by the
-  // landing page and results page so both show the same always-visible
-  // sector/industry structure. Scoped from the full company list -- never
-  // from `results`, which already reflects the industry filter itself and
-  // would shrink to just the selected industry/industries.
-  const industryGroupsForSelectedSectors = useMemo(
-    () => getIndustryGroups(companies, selectedSectors),
-    [selectedSectors],
+  // Companies with no industry at all (89, a confirmed upstream data-source
+  // gap). Surfaced only inside the industry panel now, rather than sitting on
+  // the page permanently.
+  const unclassifiedCount = useMemo(
+    () => sectors.find((s) => s.name === "Unclassified")?.count ?? 0,
+    [],
   )
 
   // Show the "free text is name/ticker/sector only" hint when the query clearly
@@ -260,7 +256,8 @@ export function DealScopeApp() {
                 onApplyScenario={handleApplyScenario}
                 sectors={sectors}
                 topScored={topScoredCompany}
-                industryGroups={industryGroupsForSelectedSectors}
+                industryGroups={industryGroups}
+                unclassifiedCount={unclassifiedCount}
                 filters={filters}
                 onFiltersChange={setFilters}
               />
@@ -278,7 +275,8 @@ export function DealScopeApp() {
                 weights={weights}
                 filters={filters}
                 onFiltersChange={setFilters}
-                industryGroups={industryGroupsForSelectedSectors}
+                industryGroups={industryGroups}
+                unclassifiedCount={unclassifiedCount}
                 showNumericHint={showNumericHint}
                 onSelectCompany={handleSelectCompany}
                 onOpenWeights={() => setWeightsOpen(true)}

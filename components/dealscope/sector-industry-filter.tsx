@@ -1,27 +1,33 @@
 "use client"
 
-import { useState } from "react"
-import { type Sector, type IndustryGroup } from "@/lib/dealscope-data"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { type Sector, type IndustryGroup, filterIndustryGroups } from "@/lib/dealscope-data"
 import { cn } from "@/lib/utils"
-
-const COLLAPSED_COUNT = 6
 
 interface SectorIndustryFilterProps {
   sectors: Sector[]
   selectedSectors: string[]
   onToggleSector: (sector: string) => void
+  /** Every sector's industries. The panel narrows this to the selected
+   *  sectors for its default view and keeps the rest reachable behind a
+   *  toggle -- so this is deliberately the full list, not a pre-scoped one. */
   industryGroups: IndustryGroup[]
   selectedIndustries: string[]
   onToggleIndustry: (name: string) => void
   onClearIndustries: () => void
+  /** Shown inside the panel only, so it stops being permanent page furniture. */
+  unclassifiedCount?: number
 }
 
-/** Sector pill row + the full industry breakdown underneath, always visible --
- *  no click on a sector pill required to see that industries exist under it.
- *  Shared between the landing page and the results page so both read the
- *  same taxonomy the same way (previously the results page gated the
- *  industry rows behind selecting exactly one sector, and the landing page
- *  didn't show industries at all). */
+/** Sector pills, plus an on-demand industry browser.
+ *
+ *  Supersedes the previous always-visible layout: every industry for every
+ *  sector used to render inline under the pills on both the landing and
+ *  results pages. Seen live that read as sprawl -- a wall of ~124 tiny chips
+ *  the user has to scroll past to reach anything else -- so industries are
+ *  now tucked behind one toggle, closed by default, and the type inside is
+ *  sized to actually be read (11px labels / 10px counts, up from 9px / 8px).
+ */
 export function SectorIndustryFilter({
   sectors,
   selectedSectors,
@@ -30,14 +36,50 @@ export function SectorIndustryFilter({
   selectedIndustries,
   onToggleIndustry,
   onClearIndustries,
+  unclassifiedCount,
 }: SectorIndustryFilterProps) {
-  const unclassified = sectors.find((s) => s.name === "Unclassified")
-  const showUnclassifiedNote =
-    unclassified && (selectedSectors.length === 0 || selectedSectors.includes("Unclassified"))
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const [showOtherSectors, setShowOtherSectors] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Close on Escape and on click-outside. Both are registered only while the
+  // panel is open, so there's no always-on document listener.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    const onDown = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    document.addEventListener("mousedown", onDown)
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      document.removeEventListener("mousedown", onDown)
+    }
+  }, [open])
+
+  // Default the panel to whatever sectors are pinned, but never hard-lock it:
+  // the remaining sectors stay one click away inside the open panel.
+  const [inSelected, otherSectors] = useMemo(() => {
+    if (selectedSectors.length === 0) return [industryGroups, [] as IndustryGroup[]]
+    return [
+      industryGroups.filter((g) => selectedSectors.includes(g.sector)),
+      industryGroups.filter((g) => !selectedSectors.includes(g.sector)),
+    ]
+  }, [industryGroups, selectedSectors])
+
+  const primary = useMemo(() => filterIndustryGroups(inSelected, query), [inSelected, query])
+  const secondary = useMemo(() => filterIndustryGroups(otherSectors, query), [otherSectors, query])
+
+  const selectedCount = selectedIndustries.length
+  const totalIndustries = industryGroups.reduce((n, g) => n + g.industries.length, 0)
 
   return (
-    <div>
-      {/* Sector pills */}
+    <div ref={containerRef}>
+      {/* Sector pills -- unchanged */}
       <div className="flex flex-wrap gap-2">
         {sectors.map((sector) => {
           const active = selectedSectors.includes(sector.name)
@@ -62,38 +104,102 @@ export function SectorIndustryFilter({
         })}
       </div>
 
-      {/* Industry breakdown -- always visible, grouped by sector. */}
-      <div className="mt-5 flex flex-col gap-5 border-l border-border/40 pl-4">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">
-            Industry
-          </span>
-          {selectedIndustries.length > 0 && (
-            <button
-              onClick={onClearIndustries}
-              className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
-            >
-              Clear ({selectedIndustries.length})
-            </button>
+      {/* Toggle + active-industry summary */}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className={cn(
+            "inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-200",
+            open || selectedCount > 0
+              ? "border-accent text-accent"
+              : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
           )}
-        </div>
+        >
+          <span>Browse Industries</span>
+          {selectedCount > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-accent text-accent-foreground text-[9px] leading-none">
+              {selectedCount}
+            </span>
+          )}
+          <span aria-hidden="true" className={cn("transition-transform duration-200", open && "rotate-90")}>
+            ›
+          </span>
+        </button>
 
-        {industryGroups.map((group) => (
-          <IndustryGroupBlock
-            key={group.sector}
-            group={group}
-            selected={selectedIndustries}
-            onToggle={onToggleIndustry}
-          />
-        ))}
-
-        {showUnclassifiedNote && (
-          <p className="font-mono text-[9px] text-muted-foreground/50 leading-relaxed">
-            Unclassified ({unclassified!.count}) — no industry data available for these companies
-            (confirmed data-source gap, not a filter you can narrow further).
-          </p>
+        {selectedCount > 0 && (
+          <button
+            onClick={onClearIndustries}
+            className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
+          >
+            Clear industries
+          </button>
         )}
       </div>
+
+      {open && (
+        <div className="mt-3 border border-border/60 bg-background">
+          {/* Search */}
+          <div className="border-b border-border/60">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={`Search ${totalIndustries} industries…`}
+              aria-label="Search industries"
+              autoFocus
+              className="w-full bg-transparent px-4 py-3 font-mono text-[11px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent"
+            />
+          </div>
+
+          <div className="max-h-[22rem] overflow-y-auto px-4 py-5">
+            {primary.length === 0 && secondary.length === 0 ? (
+              <p className="py-6 text-center font-mono text-[11px] text-muted-foreground">
+                No industries match &quot;{query}&quot;
+              </p>
+            ) : (
+              <div className="flex flex-col gap-7">
+                {primary.map((group) => (
+                  <IndustryGroupBlock
+                    key={group.sector}
+                    group={group}
+                    selected={selectedIndustries}
+                    onToggle={onToggleIndustry}
+                  />
+                ))}
+
+                {otherSectors.length > 0 && !showOtherSectors && (
+                  <button
+                    onClick={() => setShowOtherSectors(true)}
+                    className="self-start border border-dashed border-border/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-all duration-200"
+                  >
+                    Browse other sectors ({otherSectors.length})
+                  </button>
+                )}
+
+                {showOtherSectors &&
+                  secondary.map((group) => (
+                    <IndustryGroupBlock
+                      key={group.sector}
+                      group={group}
+                      selected={selectedIndustries}
+                      onToggle={onToggleIndustry}
+                      dimmedHeader
+                    />
+                  ))}
+
+                {unclassifiedCount != null && unclassifiedCount > 0 && (
+                  <p className="border-t border-border/40 pt-4 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                    Unclassified ({unclassifiedCount}) — no industry data available for these
+                    companies. Confirmed gap in the upstream data source, not a filter that can be
+                    narrowed further.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -102,22 +208,25 @@ function IndustryGroupBlock({
   group,
   selected,
   onToggle,
+  dimmedHeader = false,
 }: {
   group: IndustryGroup
   selected: string[]
   onToggle: (name: string) => void
+  dimmedHeader?: boolean
 }) {
-  const [expanded, setExpanded] = useState(false)
-  const visible = expanded ? group.industries : group.industries.slice(0, COLLAPSED_COUNT)
-  const hiddenCount = group.industries.length - visible.length
-
   return (
     <div>
-      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+      <span
+        className={cn(
+          "font-mono text-[10px] uppercase tracking-[0.2em]",
+          dimmedHeader ? "text-muted-foreground/70" : "text-accent",
+        )}
+      >
         {group.sector}
       </span>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {visible.map((ind) => {
+      <div className="mt-3 flex flex-wrap gap-2">
+        {group.industries.map((ind) => {
           const active = selected.includes(ind.name)
           return (
             <button
@@ -125,35 +234,19 @@ function IndustryGroupBlock({
               onClick={() => onToggle(ind.name)}
               aria-pressed={active}
               className={cn(
-                "inline-flex items-baseline gap-1.5 border px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider transition-all duration-200",
+                "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-[11px] transition-all duration-200",
                 active
                   ? "border-accent bg-accent/10 text-accent"
-                  : "border-border/50 text-muted-foreground/80 hover:border-foreground/40 hover:text-foreground",
+                  : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
               )}
             >
               {ind.name}
-              <span className={cn("text-[8px]", active ? "text-accent/70" : "text-muted-foreground/60")}>
+              <span className={cn("text-[10px]", active ? "text-accent/80" : "text-muted-foreground/80")}>
                 {ind.count}
               </span>
             </button>
           )
         })}
-        {hiddenCount > 0 && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="inline-flex items-center border border-border/50 border-dashed px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70 hover:border-foreground/40 hover:text-foreground transition-all duration-200"
-          >
-            +{hiddenCount} more
-          </button>
-        )}
-        {expanded && group.industries.length > COLLAPSED_COUNT && (
-          <button
-            onClick={() => setExpanded(false)}
-            className="inline-flex items-center px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/50 hover:text-accent transition-colors duration-200"
-          >
-            Show less
-          </button>
-        )}
       </div>
     </div>
   )

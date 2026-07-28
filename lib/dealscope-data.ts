@@ -211,11 +211,6 @@ export const BUCKET_FIELDS: BucketFieldDef[] = [
   },
 ]
 
-const BUCKET_FIELD_BY_KEY = Object.fromEntries(BUCKET_FIELDS.map((f) => [f.key, f])) as Record<
-  BucketFieldKey,
-  BucketFieldDef
->
-
 export interface BucketFilters {
   marketCap: string[] // multi-select
   promoterPledge: string[] // multi-select
@@ -583,6 +578,26 @@ export function getIndustryGroups(companies: Company[], sectorNames: string[] = 
   return scopedSectors
     .map((sector) => ({ sector: sector.name, industries: getIndustriesForSectors(companies, [sector.name]) }))
     .filter((group) => group.industries.length > 0)
+}
+
+/** Narrow already-grouped industries to those matching a free-text query,
+ *  dropping groups left with nothing. Uses the same normalizeForSearch() the
+ *  company search uses (case-fold, "&"/"and" unified, punctuation stripped),
+ *  so typing "oil and gas" or "Oil & Gas" behaves identically here, in the
+ *  Filters drawer, and in the main search box.
+ *
+ *  Shared by the Filters drawer's industry typeahead and the results/landing
+ *  "Browse industries" panel so the grouping + count-ordering + matching rules
+ *  exist once. Pure and synchronous on purpose: this filters ~124 short
+ *  strings already in memory, so there's nothing to debounce -- a timer would
+ *  only add latency (unlike the 2,381-company search, which is debounced in
+ *  dealscope-app.tsx). */
+export function filterIndustryGroups(groups: IndustryGroup[], query: string): IndustryGroup[] {
+  const q = normalizeForSearch(query)
+  if (!q) return groups
+  return groups
+    .map((g) => ({ sector: g.sector, industries: g.industries.filter((ind) => normalizeForSearch(ind.name).includes(q)) }))
+    .filter((g) => g.industries.length > 0)
 }
 
 const ALL_INDUSTRY_GROUPS: IndustryGroup[] = getIndustryGroups(ALL_COMPANIES)

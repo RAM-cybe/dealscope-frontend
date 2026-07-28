@@ -55,12 +55,32 @@ export default function RootLayout({
       >
         <div className="noise-overlay" aria-hidden="true" />
         <LoadingScreen />
-        <Link
-          href="/about"
-          className="fixed top-4 right-4 md:top-6 md:right-12 z-30 inline-flex items-center gap-2 border border-border/60 bg-background/80 backdrop-blur-sm px-4 py-3.5 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
-        >
-          About
-        </Link>
+        {/* Real header bar, not a floating chip.
+            This was `position: fixed` with a semi-transparent blurred
+            background and no reserved space anywhere in the layout, so it
+            floated over whatever scrolled beneath it -- confirmed overlapping
+            "Adjust Weights" on the results page, industry pill rows, homepage
+            prose, and the About page's own content.
+            `sticky` (not `fixed`) is the fix: a sticky element stays in normal
+            document flow, so it occupies its own 56px of height and pushes all
+            page content down by exactly that much. Nothing can render
+            underneath it -- that's a structural property of the layout now,
+            not per-page padding that the next new page could forget to add.
+            Background is fully opaque (`bg-background`, no backdrop-blur) so
+            content scrolling under it is hidden rather than showing through.
+            z-40 keeps it above page content but below the filters/weights
+            drawers (z-[60]/z-[70]) and the loading screen (z-[200]), so a
+            modal still covers it, as it should. */}
+        <header className="sticky top-0 z-40 h-14 w-full bg-background border-b border-border/60">
+          <div className="flex h-full items-center justify-end pl-6 pr-6 md:pr-12">
+            <Link
+              href="/about"
+              className="inline-flex items-center border border-border/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
+            >
+              About
+            </Link>
+          </div>
+        </header>
         <SmoothScroll>{children}</SmoothScroll>
         <Analytics />
       </body>

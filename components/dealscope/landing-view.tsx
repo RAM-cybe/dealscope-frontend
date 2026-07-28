@@ -29,6 +29,7 @@ interface LandingViewProps {
   sectors: Sector[]
   topScored: TopScored | null
   industryGroups: IndustryGroup[]
+  unclassifiedCount: number
   filters: BucketFilters
   onFiltersChange: (filters: BucketFilters) => void
 }
@@ -47,6 +48,7 @@ export function LandingView({
   sectors,
   topScored,
   industryGroups,
+  unclassifiedCount,
   filters,
   onFiltersChange,
 }: LandingViewProps) {
@@ -215,6 +217,7 @@ export function LandingView({
               selectedSectors={selectedSectors}
               onToggleSector={onToggleSector}
               industryGroups={industryGroups}
+              unclassifiedCount={unclassifiedCount}
               selectedIndustries={filters.industry}
               onToggleIndustry={toggleIndustry}
               onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
