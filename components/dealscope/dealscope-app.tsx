@@ -12,21 +12,27 @@ import {
   type Company,
   type Weights,
   type BucketFilters,
-  type ExampleScenario,
   type QuerySyncState,
   DEFAULT_WEIGHTS,
   DEFAULT_BUCKET_FILTERS,
-  EXAMPLE_SCENARIOS,
   getCompanies,
   getDeals,
-  searchCompaniesDetailed,
-  queryHasNumericIntent,
-  queryHasComparisonIntent,
   countActiveBucketFilters,
-  countScenario,
   computeScore,
   reconcileQuerySyncState,
 } from "@/lib/dealscope-data"
+import {
+  type ScreenFilters,
+  type FilterChip,
+  type NumericFieldKey,
+  type NumericConstraint,
+  makeScreen,
+  runScreen,
+  countScreen,
+  removeChip as removeChipFrom,
+} from "@/lib/screener"
+import { parseQuery } from "@/lib/query-parser"
+import { type ExampleScreen, EXAMPLE_SCREENS } from "@/lib/example-screens"
 
 type View = "landing" | "results" | "detail"
 
@@ -42,9 +48,12 @@ const viewTransition = {
 const { companies, sectors, industryGroups } = getCompanies()
 const deals = getDeals()
 
-// Scenario counts depend only on the (immutable) company set, so compute once.
-const scenariosWithCounts: { scenario: ExampleScenario; count: number }[] = EXAMPLE_SCENARIOS.map(
-  (scenario) => ({ scenario, count: countScenario(companies, scenario) }),
+// Example-screen counts depend only on the (immutable) company set, so they
+// are computed once at module load -- but through the SAME parser + screener
+// the search bar uses, so a card can never advertise a number the results
+// page wouldn't return.
+const screensWithCounts: { screen: ExampleScreen; count: number }[] = EXAMPLE_SCREENS.map(
+  (screen) => ({ screen, count: countScreen(companies, parseQuery(screen.query).filters) }),
 )
 
 // Highest composite score under the default (equal) weights, for the landing
@@ -154,10 +163,55 @@ export function DealScopeApp() {
     return () => clearTimeout(timer)
   }, [query])
 
-  const { results, queryFellBack } = useMemo(
-    () => searchCompaniesDetailed(companies, debouncedQuery, selectedSectors, weights, filters),
-    [debouncedQuery, selectedSectors, weights, filters],
+  // --- The screen -------------------------------------------------------
+  // `manualNumeric` holds continuous constraints that came from editing chips
+  // rather than from the query text. Sector/industry/bucket state already has
+  // homes (selectedSectors, filters.industry, filters), so this is the only
+  // new piece of state the screener needs.
+  const [manualNumeric, setManualNumeric] = useState<Partial<Record<NumericFieldKey, NumericConstraint>>>({})
+
+  const parsed = useMemo(() => parseQuery(debouncedQuery), [debouncedQuery])
+
+  // The canonical screen, assembled from both entry points every render.
+  // Typed constraints and visually-selected ones are unioned rather than one
+  // overriding the other, so a query and a sector pill compose instead of
+  // fighting. The bucket drawer is passed through untouched and still
+  // evaluated by the original passesBucketFilters(), which is what keeps the
+  // visual filters working even if the parser understands nothing.
+  const screen: ScreenFilters = useMemo(() => {
+    const union = (a: string[], b: string[]) => Array.from(new Set([...a, ...b]))
+    return makeScreen({
+      text: parsed.filters.text,
+      sectors: union(parsed.filters.sectors, selectedSectors),
+      industries: union(parsed.filters.industries, filters.industry),
+      numeric: { ...parsed.filters.numeric, ...manualNumeric },
+      buckets: filters,
+    })
+  }, [parsed, selectedSectors, filters, manualNumeric])
+
+  const { results, matchCount } = useMemo(
+    () => runScreen(companies, screen, weights),
+    [screen, weights],
   )
+
+  /**
+   * Write the current screen back into the visual controls and drop the query
+   * text.
+   *
+   * Every chip edit goes through this. A chip can originate either from typed
+   * text or from a visual control, and there is no way to "partially un-type"
+   * a sentence -- so instead of trying, the screen is materialised into the
+   * visual state that can represent it exactly, and the now-inaccurate query
+   * string is cleared. The result is that what you see (chips) always equals
+   * what is applied, which is the property that makes the natural-language box
+   * trustworthy.
+   */
+  const materialize = useCallback((next: ScreenFilters) => {
+    setSelectedSectors(next.sectors)
+    setManualNumeric(next.numeric)
+    setFilters({ ...next.buckets, industry: next.industries })
+    setQuery("")
+  }, [])
 
   // Companies with no industry at all (89, a confirmed upstream data-source
   // gap). Surfaced only inside the industry panel now, rather than sitting on
@@ -167,30 +221,22 @@ export function DealScopeApp() {
     [],
   )
 
-  // Show the "free text is name/ticker/sector only" hint when the query clearly
-  // expects numeric filtering: strong comparison/unit words always trigger it;
-  // bare digits only trigger it when the query matched nothing and fell back
-  // (so "3M India" / "360 One" don't get falsely flagged).
-  const showNumericHint =
-    query.trim().length > 0 &&
-    (queryHasComparisonIntent(query) || (queryFellBack && queryHasNumericIntent(query)))
+  // The old "free text only searches name/ticker/sector" hint is gone: numeric
+  // queries are now first-class, so the condition it warned about no longer
+  // exists. `parsed.recognised` replaces it as the signal the UI surfaces.
 
   // Surfaced on the landing page so "Screen Companies" can show a live match
   // count before the user commits to viewing results.
   const activeFilterCount = countActiveBucketFilters(filters)
 
-  // A search query takes priority over any active sector/bucket filters: typing
-  // a company name while, say, "Financial Services" is pinned previously left
-  // the result list stuck on that sector (search only ever narrowed within the
-  // already-filtered base, so a query for a company outside it matched nothing
-  // and silently fell back to showing the filtered set). Entering a non-empty
-  // query now clears both, so search always runs against the full universe.
+  // Typing no longer wipes the visual filters. It used to have to: free text
+  // could only ever narrow within an already-filtered base, so a name query
+  // while a sector was pinned silently returned nothing useful. Now the query
+  // contributes its own constraints to the same screen, so the two compose --
+  // and every constraint from either source is visible as a chip, which is
+  // what makes composing them safe rather than confusing.
   const handleQueryChange = useCallback((q: string) => {
     setQuery(q)
-    if (q.trim().length > 0) {
-      setSelectedSectors((prev) => (prev.length > 0 ? [] : prev))
-      setFilters((prev) => (countActiveBucketFilters(prev) > 0 ? { ...DEFAULT_BUCKET_FILTERS } : prev))
-    }
   }, [])
 
   // The industry breakdown is now always visible regardless of how many
@@ -203,19 +249,34 @@ export function DealScopeApp() {
     setSelectedSectors((prev) => (prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector]))
   }, [])
 
+  const handleRemoveChip = useCallback(
+    (chip: FilterChip) => materialize(removeChipFrom(screen, chip)),
+    [materialize, screen],
+  )
+
+  const handleClearAll = useCallback(() => {
+    setSelectedSectors([])
+    setManualNumeric({})
+    setFilters({ ...DEFAULT_BUCKET_FILTERS })
+    setQuery("")
+  }, [])
+
   const handleRun = useCallback(() => {
     navigate({ view: "results", q: query, sectors: selectedSectors })
   }, [navigate, query, selectedSectors])
 
-  // Apply an example scenario atomically: clear any free text, pin the sector,
-  // set the range filters, then jump to results. This is the live regression
-  // check that the filters actually narrow the set.
-  const handleApplyScenario = useCallback(
-    (scenario: ExampleScenario) => {
-      setQuery("")
-      setSelectedSectors([scenario.sector])
-      setFilters(scenario.filters)
-      navigate({ view: "results", sectors: [scenario.sector] })
+  // Applying an example screen is literally "type this query and run it" --
+  // same parser, same screener, no private code path. That's what keeps the
+  // examples honest: if a parsing rule regresses, the example screens visibly
+  // break with it instead of quietly continuing to work via a shortcut.
+  const handleApplyScreen = useCallback(
+    (example: ExampleScreen) => {
+      setSelectedSectors([])
+      setManualNumeric({})
+      setFilters({ ...DEFAULT_BUCKET_FILTERS })
+      setQuery(example.query)
+      setSyncState((prev) => ({ ...prev, query: example.query, debouncedQuery: example.query }))
+      navigate({ view: "results", q: example.query })
     },
     [navigate],
   )
@@ -251,9 +312,14 @@ export function DealScopeApp() {
                 onRun={handleRun}
                 onOpenFilters={() => setFiltersOpen(true)}
                 activeFilterCount={activeFilterCount}
-                matchingCount={results.length}
-                scenarios={scenariosWithCounts}
-                onApplyScenario={handleApplyScenario}
+                matchingCount={matchCount}
+                totalCount={companies.length}
+                screen={screen}
+                onRemoveChip={handleRemoveChip}
+                onClearAll={handleClearAll}
+                recognised={parsed.recognised}
+                screens={screensWithCounts}
+                onApplyScreen={handleApplyScreen}
                 sectors={sectors}
                 topScored={topScoredCompany}
                 industryGroups={industryGroups}
@@ -277,7 +343,14 @@ export function DealScopeApp() {
                 onFiltersChange={setFilters}
                 industryGroups={industryGroups}
                 unclassifiedCount={unclassifiedCount}
-                showNumericHint={showNumericHint}
+                screen={screen}
+                matchCount={matchCount}
+                totalCount={companies.length}
+                onRemoveChip={handleRemoveChip}
+                onClearAll={handleClearAll}
+                recognised={parsed.recognised}
+                screens={screensWithCounts}
+                onApplyScreen={handleApplyScreen}
                 onSelectCompany={handleSelectCompany}
                 onOpenWeights={() => setWeightsOpen(true)}
                 onOpenFilters={() => setFiltersOpen(true)}
