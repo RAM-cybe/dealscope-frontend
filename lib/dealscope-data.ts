@@ -315,6 +315,7 @@ export interface Company {
   // null = missing, so such a company never falls inside any bucket for that field.
   raw: {
     marketCap: number | null // ₹ Cr
+    revenue: number | null // ₹ Cr
     peRatio: number | null
     revenueGrowth: number | null // %
     ebitdaMargin: number | null // %
@@ -490,6 +491,10 @@ function mapCompanyRecord(r: CompanyRecord): Company {
     },
     raw: {
       marketCap: isNum(r.market_cap) ? r.market_cap / 1e7 : null,
+      // Added for the screener: "under 2000 Cr revenue" needs revenue as a
+      // filterable number, not just the pre-formatted `metrics.revenue`
+      // string. Same rupees -> Rs Cr scaling as marketCap/totalDebt above.
+      revenue: isNum(r.revenue) ? r.revenue / 1e7 : null,
       peRatio: isNum(r.trailing_pe) ? r.trailing_pe : null,
       revenueGrowth: isNum(r.revenue_growth_pct) ? r.revenue_growth_pct : null,
       ebitdaMargin: isNum(r.ebitda_margin_pct) ? r.ebitda_margin_pct : null,

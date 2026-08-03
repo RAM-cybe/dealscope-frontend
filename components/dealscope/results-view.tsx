@@ -7,6 +7,15 @@ import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { ScoreRing } from "@/components/dealscope/score-ring"
 import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
+import { ScreenBar } from "@/components/dealscope/screen-bar"
+import { ExampleScreens } from "@/components/dealscope/example-screens"
+import {
+  type ScreenFilters,
+  type FilterChip,
+  passReasons,
+} from "@/lib/screener"
+import { type ExampleScreen } from "@/lib/example-screens"
+import { cn } from "@/lib/utils"
 import {
   type Company,
   type Sector,
@@ -28,7 +37,14 @@ interface ResultsViewProps {
   onFiltersChange: (filters: BucketFilters) => void
   industryGroups: IndustryGroup[]
   unclassifiedCount: number
-  showNumericHint: boolean
+  screen: ScreenFilters
+  matchCount: number
+  totalCount: number
+  onRemoveChip: (chip: FilterChip) => void
+  onClearAll: () => void
+  recognised: boolean
+  screens: { screen: ExampleScreen; count: number }[]
+  onApplyScreen: (screen: ExampleScreen) => void
   onSelectCompany: (company: Company) => void
   onOpenWeights: () => void
   onOpenFilters: () => void
@@ -49,7 +65,14 @@ export function ResultsView({
   onFiltersChange,
   industryGroups,
   unclassifiedCount,
-  showNumericHint,
+  screen,
+  matchCount,
+  totalCount,
+  onRemoveChip,
+  onClearAll,
+  recognised,
+  screens,
+  onApplyScreen,
   onSelectCompany,
   onOpenWeights,
   onOpenFilters,
@@ -101,12 +124,6 @@ export function ResultsView({
           <p className="mt-2 font-mono text-xs text-muted-foreground">
             {results.length} {results.length === 1 ? "study" : "studies"} • ranked by composite score
           </p>
-          {showNumericHint && (
-            <p className="mt-3 max-w-md font-mono text-[11px] leading-relaxed text-muted-foreground/80">
-              <span className="text-accent">Try Filters for numeric constraints</span> — free text
-              searches name, ticker, and sector only.
-            </p>
-          )}
         </div>
 
         <div className="flex items-center gap-3 self-start md:self-auto">
@@ -134,21 +151,29 @@ export function ResultsView({
         </div>
       </div>
 
-      {/* Search refine */}
-      <div className="mb-8 max-w-xl">
-        <div className="relative border border-border focus-within:border-accent transition-colors duration-200">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 pointer-events-none">
-            Q_
-          </span>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Refine query"
-            aria-label="Refine search"
-            className="w-full bg-transparent pl-12 pr-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-          />
+      {/* Screening bar: natural-language query, active-filter chips, live count */}
+      <div className="mb-8 max-w-3xl">
+        <ScreenBar
+          query={query}
+          onQueryChange={onQueryChange}
+          filters={screen}
+          onRemoveChip={onRemoveChip}
+          onClearAll={onClearAll}
+          matchCount={matchCount}
+          totalCount={totalCount}
+          recognised={recognised}
+          size="sm"
+          placeholder="Refine — name, ticker, or a screen like “roce over 20 low debt”"
+        />
+      </div>
+
+      {/* Example screens, compact on this view */}
+      <div className="mb-10">
+        <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">
+          Example Screens
+        </span>
+        <div className="mt-3">
+          <ExampleScreens screens={screens} onApply={onApplyScreen} variant="pills" />
         </div>
       </div>
 
@@ -190,6 +215,7 @@ export function ResultsView({
               company={company}
               index={index}
               weights={weights}
+              reasons={passReasons(company, screen)}
               onSelect={() => onSelectCompany(company)}
             />
           ))}
@@ -221,11 +247,13 @@ function ResultRow({
   company,
   index,
   weights,
+  reasons,
   onSelect,
 }: {
   company: Company
   index: number
   weights: Weights
+  reasons: ReturnType<typeof passReasons>
   onSelect: () => void
 }) {
   const score = computeScore(company.factors, weights)
@@ -265,6 +293,28 @@ function ResultRow({
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
             {company.sector}
           </span>
+
+          {/* Why this company passed -- one chip per active constraint it
+              satisfied. Derived only from constraints that are actually
+              applied, so a chip is always a true statement about why this row
+              is in this list, never a generic compliment. */}
+          {reasons.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {reasons.map((r) => (
+                <span
+                  key={r.label}
+                  className={cn(
+                    "inline-flex items-center border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider",
+                    r.tone === "good"
+                      ? "border-accent/40 text-accent/90"
+                      : "border-border/60 text-muted-foreground",
+                  )}
+                >
+                  {r.label}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Metrics */}

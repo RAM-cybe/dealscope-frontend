@@ -8,7 +8,11 @@ import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/co
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
-import type { Sector, ExampleScenario, IndustryGroup, BucketFilters } from "@/lib/dealscope-data"
+import type { Sector, IndustryGroup, BucketFilters } from "@/lib/dealscope-data"
+import { ScreenBar } from "@/components/dealscope/screen-bar"
+import { ExampleScreens } from "@/components/dealscope/example-screens"
+import type { ScreenFilters, FilterChip } from "@/lib/screener"
+import type { ExampleScreen } from "@/lib/example-screens"
 
 interface TopScored {
   name: string
@@ -24,8 +28,13 @@ interface LandingViewProps {
   onOpenFilters: () => void
   activeFilterCount: number
   matchingCount: number
-  scenarios: { scenario: ExampleScenario; count: number }[]
-  onApplyScenario: (scenario: ExampleScenario) => void
+  totalCount: number
+  screen: ScreenFilters
+  onRemoveChip: (chip: FilterChip) => void
+  onClearAll: () => void
+  recognised: boolean
+  screens: { screen: ExampleScreen; count: number }[]
+  onApplyScreen: (screen: ExampleScreen) => void
   sectors: Sector[]
   topScored: TopScored | null
   industryGroups: IndustryGroup[]
@@ -43,8 +52,13 @@ export function LandingView({
   onOpenFilters,
   activeFilterCount,
   matchingCount,
-  scenarios,
-  onApplyScenario,
+  totalCount,
+  screen,
+  onRemoveChip,
+  onClearAll,
+  recognised,
+  screens,
+  onApplyScreen,
   sectors,
   topScored,
   industryGroups,
@@ -58,12 +72,6 @@ export function LandingView({
       : [...filters.industry, name]
     onFiltersChange({ ...filters, industry: next })
   }
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-      onRun()
-    }
-  }
-
   return (
     <>
     <section className="relative min-h-screen flex flex-col justify-center pl-6 md:pl-28 pr-6 md:pr-12 py-24">
@@ -135,29 +143,30 @@ export function LandingView({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
-          className="mt-12 flex flex-col sm:flex-row items-stretch gap-0 max-w-2xl"
+          className="mt-12 max-w-2xl"
         >
-          <div className="relative flex-1 border border-foreground/20 focus-within:border-accent transition-colors duration-200">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 pointer-events-none hidden sm:block">
-              Q_
-            </span>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Company, ticker, or plain-language query"
-              aria-label="Search companies"
-              className="w-full bg-transparent px-4 sm:pl-12 py-4 font-mono text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-            />
+          <div className="flex flex-col sm:flex-row items-stretch gap-0">
+            <div className="flex-1 min-w-0">
+              <ScreenBar
+                query={query}
+                onQueryChange={onQueryChange}
+                onSubmit={onRun}
+                filters={screen}
+                onRemoveChip={onRemoveChip}
+                onClearAll={onClearAll}
+                matchCount={matchingCount}
+                totalCount={totalCount}
+                recognised={recognised}
+              />
+            </div>
+            <button
+              onClick={onRun}
+              className="group inline-flex items-center justify-center gap-3 border border-foreground/20 sm:border-l-0 px-8 py-4 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 h-[58px] shrink-0"
+            >
+              <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
+              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+            </button>
           </div>
-          <button
-            onClick={onRun}
-            className="group inline-flex items-center justify-center gap-3 border border-foreground/20 sm:border-l-0 px-8 py-4 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
-          >
-            <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
-            <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-          </button>
         </motion.div>
 
         {/* Screen Companies -- filters as a primary, first-class entry point.
@@ -315,46 +324,21 @@ export function LandingView({
     </section>
 
     {/* ---------------------------------------------------------------- */}
-    {/* Example scenarios -- each sets a sector + real range filters and  */}
-    {/* runs live, showing the actual filtered count.                     */}
+    {/* Example screens -- each is a natural-language query run through the  */}
+    {/* same parser as the search bar, with a live count.                    */}
     {/* ---------------------------------------------------------------- */}
     <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <SectionLabel index="03" label="Example Scenarios" />
+      <SectionLabel index="03" label="Example Screens" />
       <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight max-w-2xl text-balance">
         START FROM A SCREEN
       </h2>
       <p className="mt-6 max-w-lg font-mono text-xs text-muted-foreground leading-relaxed">
-        Each screen pins a sector and applies real constraints on the scored factors, then runs. The
-        count you see is live — it&apos;s exactly what the results page returns.
+        Each screen is a real natural-language query, run through the same parser the search bar
+        uses — click one and you&apos;ll see the sentence that produced it. The count is live: it&apos;s
+        exactly what the results page returns.
       </p>
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-px bg-border/40 border border-border/40">
-        {scenarios.map(({ scenario, count }, i) => (
-          <RevealItem key={scenario.id} delay={i * 0.08}>
-            <button
-              onClick={() => onApplyScenario(scenario)}
-              className="group bg-background h-full w-full text-left p-8 flex flex-col gap-5 hover:bg-accent/5 transition-colors duration-300"
-            >
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="font-[family-name:var(--font-bebas)] text-3xl md:text-4xl tracking-tight leading-none text-accent">
-                  {count}
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                  {count === 1 ? "match" : "matches"}
-                </span>
-              </div>
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-foreground leading-relaxed">
-                {scenario.label}
-              </h3>
-              <p className="font-mono text-xs text-muted-foreground leading-relaxed flex-1">
-                {scenario.description}
-              </p>
-              <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-accent transition-colors duration-200">
-                Run scenario
-                <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-              </span>
-            </button>
-          </RevealItem>
-        ))}
+      <div className="mt-10">
+        <ExampleScreens screens={screens} onApply={onApplyScreen} variant="cards" />
       </div>
 
       {/* Closing action */}
