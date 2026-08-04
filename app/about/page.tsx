@@ -167,7 +167,7 @@ export default function AboutPage() {
 
         <div className="mt-16 border-t border-border/40 pt-8">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-            Built by Ram Suthakaran
+            Built by Ram
           </span>
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <a
