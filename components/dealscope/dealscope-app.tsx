@@ -12,26 +12,23 @@ import {
   type Company,
   type Weights,
   type BucketFilters,
-  type QuerySyncState,
   DEFAULT_WEIGHTS,
   DEFAULT_BUCKET_FILTERS,
   getCompanies,
   getDeals,
   countActiveBucketFilters,
   computeScore,
-  reconcileQuerySyncState,
 } from "@/lib/dealscope-data"
 import {
   type ScreenFilters,
   type FilterChip,
-  type NumericFieldKey,
-  type NumericConstraint,
   makeScreen,
   runScreen,
   countScreen,
   removeChip as removeChipFrom,
 } from "@/lib/screener"
 import { parseQuery } from "@/lib/query-parser"
+import { encodeUrlState, decodeUrlState } from "@/lib/url-state"
 import { type ExampleScreen, EXAMPLE_SCREENS } from "@/lib/example-screens"
 
 type View = "landing" | "results" | "detail"
@@ -48,16 +45,12 @@ const viewTransition = {
 const { companies, sectors, industryGroups } = getCompanies()
 const deals = getDeals()
 
-// Example-screen counts depend only on the (immutable) company set, so they
-// are computed once at module load -- but through the SAME parser + screener
-// the search bar uses, so a card can never advertise a number the results
-// page wouldn't return.
+// Example-screen counts run through the SAME parser + screener the search bar
+// uses, so a card can never advertise a number the results page wouldn't return.
 const screensWithCounts: { screen: ExampleScreen; count: number }[] = EXAMPLE_SCREENS.map(
   (screen) => ({ screen, count: countScreen(companies, parseQuery(screen.query).filters) }),
 )
 
-// Highest composite score under the default (equal) weights, for the landing
-// page's live proof strip. Computed once alongside the scenario counts.
 const topScoredCompany: { name: string; score: number } | null = companies.reduce<
   { name: string; score: number } | null
 >((best, c) => {
@@ -65,70 +58,91 @@ const topScoredCompany: { name: string; score: number } | null = companies.reduc
   return !best || score > best.score ? { name: c.name, score } : best
 }, null)
 
+const UNCLASSIFIED_COUNT = sectors.find((s) => s.name === "Unclassified")?.count ?? 0
+
 export function DealScopeApp() {
-  // --- URL as the source of truth for which view is showing -------------------
-  // Each view has its own URL, so browser back/forward and trackpad swipe work
-  // like any normal site, and a results/tear-sheet URL is shareable:
-  //   /                                        landing
-  //   /?view=results&q=pharma&sectors=A,B      results (query + sectors restored)
-  //   /?view=results&q=...&ticker=TCS          tear sheet
-  // The tear-sheet URL deliberately keeps the results params, so going back from
-  // a company lands on the search that produced it rather than a bare list.
+  // --- URL <-> screen, single source of truth --------------------------------
   //
-  // Kept as search params on the single existing route rather than splitting
-  // into /results and /company/[ticker] routes: the whole company dataset
-  // is one bundled client-side import, and the cross-view AnimatePresence
-  // transitions are part of the design -- separate routes would remount and
-  // re-parse per navigation and kill those transitions for no user-facing gain.
+  // `screen` is the one authoritative filter state. The URL mirrors it, and
+  // carries the WHOLE thing -- q, sectors, industries, numeric constraints and
+  // band selections (see lib/url-state.ts). Previously only q+sectors reached
+  // the URL, so a screen built by editing chips or by the filters drawer was
+  // invisible to a refresh or a shared link: the recipient got a different
+  // screen than the one that produced the link.
+  //
+  // State writes the URL and the URL writes state, so exactly one direction
+  // wins per render, decided against the last string we synced:
+  //   * URL differs from what we last wrote -> it came from the user (fresh
+  //     load, shared link, back/forward). Decode it in.
+  //   * Otherwise -> state is authoritative; re-encode and replace() only if
+  //     the string actually changed.
+  // encodeUrlState() emits keys in a fixed order, so "changed" is a plain
+  // string compare and a steady screen re-encodes byte-identically -- no loop.
   const router = useRouter()
   const searchParams = useSearchParams()
+  const urlString = searchParams.toString()
 
-  const tickerParam = searchParams.get("ticker")
-  const viewParam = searchParams.get("view")
-  const view: View = tickerParam ? "detail" : viewParam === "results" ? "results" : "landing"
+  const [state, setState] = useState(() => {
+    const decoded = decodeUrlState(searchParams)
+    return { screen: decoded.screen, text: decoded.screen.text, debounced: decoded.screen.text, syncedUrl: urlString }
+  })
 
-  // The URL's own q/sectors, recomputed fresh every render -- never stale,
-  // never dependent on an effect having already fired.
-  const urlQuery = searchParams.get("q") ?? ""
-  const urlSectorsRaw = searchParams.get("sectors") ?? ""
-
-  // query/debouncedQuery/selectedSectors are local (typing can't push
-  // history on every keystroke), seeded from the URL so a shared link
-  // restores the search -- but held in one object with syncedQuery/
-  // syncedSectorsRaw so they can only ever be replaced together, atomically,
-  // by reconcileQuerySyncState() below. See that function's doc comment for
-  // why this is a render-time check rather than a useEffect: a previous
-  // useEffect-based version of this left a real window where the input and
-  // the search results still reflected whatever query was active before the
-  // URL changed (confirmed concretely -- loading straight into a URL with
-  // q=M%26MFIN could show a stale query from earlier in the session).
-  const [syncState, setSyncState] = useState<QuerySyncState>(() => ({
-    query: urlQuery,
-    debouncedQuery: urlQuery,
-    selectedSectors: urlSectorsRaw ? urlSectorsRaw.split(",").filter(Boolean) : [],
-    syncedQuery: urlQuery,
-    syncedSectorsRaw: urlSectorsRaw,
-  }))
-  const reconciled = reconcileQuerySyncState(syncState, urlQuery, urlSectorsRaw)
-  if (reconciled !== syncState) {
-    setSyncState(reconciled)
+  // Render-time reconciliation rather than an effect: an effect commits one
+  // tick late, which previously left a real window where the input and the
+  // results still showed the previous query (loading straight into
+  // ?q=M%26MFIN could display a stale query until something forced a
+  // re-render). Reconciling here means the very first paint is already correct.
+  let current = state
+  if (urlString !== state.syncedUrl) {
+    const decoded = decodeUrlState(searchParams)
+    current = { screen: decoded.screen, text: decoded.screen.text, debounced: decoded.screen.text, syncedUrl: urlString }
+    setState(current)
   }
-  const { query, debouncedQuery, selectedSectors } = reconciled
 
-  const setQuery = useCallback((q: string) => {
-    setSyncState((prev) => ({ ...prev, query: q }))
-  }, [])
-  const setSelectedSectors = useCallback((updater: string[] | ((prev: string[]) => string[])) => {
-    setSyncState((prev) => ({
-      ...prev,
-      selectedSectors: typeof updater === "function" ? updater(prev.selectedSectors) : updater,
-    }))
-  }, [])
+  const { screen, text: queryText, debounced: debouncedText } = current
+  const tickerParam = searchParams.get("ticker")
+  const view: View = tickerParam ? "detail" : searchParams.get("view") === "results" ? "results" : "landing"
 
   const [weights, setWeights] = useState<Weights>({ ...DEFAULT_WEIGHTS })
-  const [filters, setFilters] = useState<BucketFilters>({ ...DEFAULT_BUCKET_FILTERS })
   const [weightsOpen, setWeightsOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+
+  // Push the screen into the URL whenever state moved it. replace(), not
+  // push(), so refining a screen doesn't bury the back button under one entry
+  // per keystroke -- back still steps between the views you actually navigated.
+  useEffect(() => {
+    const next = encodeUrlState({ view, ticker: tickerParam, screen })
+    if (next === state.syncedUrl) return
+    setState((prev) => ({ ...prev, syncedUrl: next }))
+    router.replace(next ? `/?${next}` : "/", { scroll: false })
+  }, [screen, view, tickerParam, state.syncedUrl, router])
+
+  // Debounce only the expensive part. The input stays bound to the raw text so
+  // typing always feels instant; only the re-parse + re-screen of 2,381
+  // companies waits ~120ms.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setState((prev) => (prev.debounced === prev.text ? prev : { ...prev, debounced: prev.text }))
+    }, 120)
+    return () => clearTimeout(t)
+  }, [queryText])
+
+  const parsed = useMemo(() => parseQuery(debouncedText), [debouncedText])
+
+  // Typed constraints replace the query-owned half of the screen; the filters
+  // drawer owns `buckets` and survives typing, since it is a separate,
+  // explicitly-operated surface.
+  useEffect(() => {
+    setState((prev) => {
+      const next = makeScreen({ ...parsed.filters, buckets: prev.screen.buckets })
+      return encodeUrlState({ view: "results", ticker: null, screen: next }) ===
+        encodeUrlState({ view: "results", ticker: null, screen: prev.screen })
+        ? prev
+        : { ...prev, screen: next }
+    })
+  }, [parsed])
+
+  const { results, matchCount } = useMemo(() => runScreen(companies, screen, weights), [screen, weights])
 
   const selectedCompany: Company | null = useMemo(
     () => (tickerParam ? companies.find((c) => c.ticker === tickerParam) ?? null : null),
@@ -136,117 +150,45 @@ export function DealScopeApp() {
   )
 
   const navigate = useCallback(
-    (params: { view?: string; q?: string; sectors?: string[]; ticker?: string }) => {
-      const sp = new URLSearchParams()
-      if (params.view) sp.set("view", params.view)
-      if (params.q) sp.set("q", params.q)
-      if (params.sectors && params.sectors.length > 0) sp.set("sectors", params.sectors.join(","))
-      if (params.ticker) sp.set("ticker", params.ticker)
-      const qs = sp.toString()
+    (params: { view?: View; ticker?: string | null; screen?: ScreenFilters }) => {
+      const qs = encodeUrlState({
+        view: params.view ?? view,
+        ticker: params.ticker ?? null,
+        screen: params.screen ?? screen,
+      })
+      setState((prev) => ({ ...prev, syncedUrl: qs }))
       router.push(qs ? `/?${qs}` : "/", { scroll: false })
       window.scrollTo({ top: 0 })
     },
-    [router],
-  )
-
-  // Debounced so re-searching the full 2,046-company set doesn't run
-  // synchronously on every keystroke -- the input itself stays bound to the
-  // raw, un-debounced `query` state and updates instantly either way; only
-  // the (expensive) recompute of results lags by this ~120ms, which reads as
-  // normal debounce behavior, not lag. Only fires for actual typing: an
-  // external URL-driven change is applied immediately above, not through
-  // this timer.
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSyncState((prev) => (prev.debouncedQuery === query ? prev : { ...prev, debouncedQuery: query }))
-    }, 120)
-    return () => clearTimeout(timer)
-  }, [query])
-
-  // --- The screen -------------------------------------------------------
-  // `manualNumeric` holds continuous constraints that came from editing chips
-  // rather than from the query text. Sector/industry/bucket state already has
-  // homes (selectedSectors, filters.industry, filters), so this is the only
-  // new piece of state the screener needs.
-  const [manualNumeric, setManualNumeric] = useState<Partial<Record<NumericFieldKey, NumericConstraint>>>({})
-
-  const parsed = useMemo(() => parseQuery(debouncedQuery), [debouncedQuery])
-
-  // The canonical screen, assembled from both entry points every render.
-  // Typed constraints and visually-selected ones are unioned rather than one
-  // overriding the other, so a query and a sector pill compose instead of
-  // fighting. The bucket drawer is passed through untouched and still
-  // evaluated by the original passesBucketFilters(), which is what keeps the
-  // visual filters working even if the parser understands nothing.
-  const screen: ScreenFilters = useMemo(() => {
-    const union = (a: string[], b: string[]) => Array.from(new Set([...a, ...b]))
-    return makeScreen({
-      text: parsed.filters.text,
-      sectors: union(parsed.filters.sectors, selectedSectors),
-      industries: union(parsed.filters.industries, filters.industry),
-      numeric: { ...parsed.filters.numeric, ...manualNumeric },
-      buckets: filters,
-    })
-  }, [parsed, selectedSectors, filters, manualNumeric])
-
-  const { results, matchCount } = useMemo(
-    () => runScreen(companies, screen, weights),
-    [screen, weights],
+    [router, view, screen],
   )
 
   /**
-   * Write the current screen back into the visual controls and drop the query
-   * text.
+   * Apply a screen built by a visual control (chip removal, sector pill,
+   * filters drawer) and drop the query text.
    *
-   * Every chip edit goes through this. A chip can originate either from typed
-   * text or from a visual control, and there is no way to "partially un-type"
-   * a sentence -- so instead of trying, the screen is materialised into the
-   * visual state that can represent it exactly, and the now-inaccurate query
-   * string is cleared. The result is that what you see (chips) always equals
-   * what is applied, which is the property that makes the natural-language box
-   * trustworthy.
+   * A chip can originate either from typed text or from a visual control, and
+   * there is no way to partially un-type a sentence -- so rather than trying,
+   * the screen is materialised into the state that represents it exactly and
+   * the now-inaccurate query string is cleared. What you see (chips) therefore
+   * always equals what is applied, which is the property that makes a
+   * natural-language box trustworthy at all.
    */
   const materialize = useCallback((next: ScreenFilters) => {
-    setSelectedSectors(next.sectors)
-    setManualNumeric(next.numeric)
-    setFilters({ ...next.buckets, industry: next.industries })
-    setQuery("")
+    setState((prev) => ({ ...prev, screen: { ...next, text: "" }, text: "", debounced: "" }))
   }, [])
 
-  // Companies with no industry at all (89, a confirmed upstream data-source
-  // gap). Surfaced only inside the industry panel now, rather than sitting on
-  // the page permanently.
-  const unclassifiedCount = useMemo(
-    () => sectors.find((s) => s.name === "Unclassified")?.count ?? 0,
-    [],
-  )
-
-  // The old "free text only searches name/ticker/sector" hint is gone: numeric
-  // queries are now first-class, so the condition it warned about no longer
-  // exists. `parsed.recognised` replaces it as the signal the UI surfaces.
-
-  // Surfaced on the landing page so "Screen Companies" can show a live match
-  // count before the user commits to viewing results.
-  const activeFilterCount = countActiveBucketFilters(filters)
-
-  // Typing no longer wipes the visual filters. It used to have to: free text
-  // could only ever narrow within an already-filtered base, so a name query
-  // while a sector was pinned silently returned nothing useful. Now the query
-  // contributes its own constraints to the same screen, so the two compose --
-  // and every constraint from either source is visible as a chip, which is
-  // what makes composing them safe rather than confusing.
   const handleQueryChange = useCallback((q: string) => {
-    setQuery(q)
+    setState((prev) => ({ ...prev, text: q }))
   }, [])
 
-  // The industry breakdown is now always visible regardless of how many
-  // sectors are selected (see SectorIndustryFilter), with its own always-
-  // reachable "Clear" control -- unlike the old single-sector-gated
-  // drill-down, changing sector selection no longer needs to silently drop
-  // an industry filter, since there's never a point where it becomes
-  // invisible or uncontrollable.
   const toggleSector = useCallback((sector: string) => {
-    setSelectedSectors((prev) => (prev.includes(sector) ? prev.filter((s) => s !== sector) : [...prev, sector]))
+    setState((prev) => {
+      const sectorsNext = prev.screen.sectors.includes(sector)
+        ? prev.screen.sectors.filter((s) => s !== sector)
+        : [...prev.screen.sectors, sector]
+      return { ...prev, screen: { ...prev.screen, sectors: sectorsNext, text: "" }, text: "", debounced: "" }
+    })
   }, [])
 
   const handleRemoveChip = useCallback(
@@ -254,47 +196,43 @@ export function DealScopeApp() {
     [materialize, screen],
   )
 
-  const handleClearAll = useCallback(() => {
-    setSelectedSectors([])
-    setManualNumeric({})
-    setFilters({ ...DEFAULT_BUCKET_FILTERS })
-    setQuery("")
+  const handleClearAll = useCallback(() => materialize(makeScreen()), [materialize])
+
+  // The drawer owns `buckets`; `industry` inside it is mirrored onto the
+  // screen's own industries list so both entry points agree.
+  const handleBucketsChange = useCallback((buckets: BucketFilters) => {
+    setState((prev) => ({
+      ...prev,
+      screen: { ...prev.screen, buckets, industries: buckets.industry, text: "" },
+      text: "",
+      debounced: "",
+    }))
   }, [])
 
-  const handleRun = useCallback(() => {
-    navigate({ view: "results", q: query, sectors: selectedSectors })
-  }, [navigate, query, selectedSectors])
+  const handleRun = useCallback(() => navigate({ view: "results" }), [navigate])
 
   // Applying an example screen is literally "type this query and run it" --
-  // same parser, same screener, no private code path. That's what keeps the
-  // examples honest: if a parsing rule regresses, the example screens visibly
-  // break with it instead of quietly continuing to work via a shortcut.
+  // same parser, same screener, no private code path.
   const handleApplyScreen = useCallback(
     (example: ExampleScreen) => {
-      setSelectedSectors([])
-      setManualNumeric({})
-      setFilters({ ...DEFAULT_BUCKET_FILTERS })
-      setQuery(example.query)
-      setSyncState((prev) => ({ ...prev, query: example.query, debouncedQuery: example.query }))
-      navigate({ view: "results", q: example.query })
+      const next = parseQuery(example.query).filters
+      setState((prev) => ({ ...prev, screen: next, text: example.query, debounced: example.query }))
+      navigate({ view: "results", screen: next })
     },
     [navigate],
   )
 
   const handleSelectCompany = useCallback(
-    (company: Company) => {
-      navigate({ view: "results", q: query, sectors: selectedSectors, ticker: company.ticker })
-    },
-    [navigate, query, selectedSectors],
+    (company: Company) => navigate({ view: "detail", ticker: company.ticker }),
+    [navigate],
+  )
+  const handleBackToResults = useCallback(() => navigate({ view: "results", ticker: null }), [navigate])
+  const handleBackToLanding = useCallback(
+    () => navigate({ view: "landing", ticker: null, screen: makeScreen() }),
+    [navigate],
   )
 
-  const handleBackToResults = useCallback(() => {
-    navigate({ view: "results", q: query, sectors: selectedSectors })
-  }, [navigate, query, selectedSectors])
-
-  const handleBackToLanding = useCallback(() => {
-    navigate({})
-  }, [navigate])
+  const activeFilterCount = countActiveBucketFilters(screen.buckets)
 
   return (
     <main className="relative min-h-screen">
@@ -305,9 +243,9 @@ export function DealScopeApp() {
           {view === "landing" && (
             <motion.div key="landing" {...viewTransition}>
               <LandingView
-                query={query}
+                query={queryText}
                 onQueryChange={handleQueryChange}
-                selectedSectors={selectedSectors}
+                selectedSectors={screen.sectors}
                 onToggleSector={toggleSector}
                 onRun={handleRun}
                 onOpenFilters={() => setFiltersOpen(true)}
@@ -323,9 +261,9 @@ export function DealScopeApp() {
                 sectors={sectors}
                 topScored={topScoredCompany}
                 industryGroups={industryGroups}
-                unclassifiedCount={unclassifiedCount}
-                filters={filters}
-                onFiltersChange={setFilters}
+                unclassifiedCount={UNCLASSIFIED_COUNT}
+                filters={screen.buckets}
+                onFiltersChange={handleBucketsChange}
               />
             </motion.div>
           )}
@@ -334,15 +272,15 @@ export function DealScopeApp() {
             <motion.div key="results" {...viewTransition}>
               <ResultsView
                 results={results}
-                query={query}
+                query={queryText}
                 onQueryChange={handleQueryChange}
-                selectedSectors={selectedSectors}
+                selectedSectors={screen.sectors}
                 onToggleSector={toggleSector}
                 weights={weights}
-                filters={filters}
-                onFiltersChange={setFilters}
+                filters={screen.buckets}
+                onFiltersChange={handleBucketsChange}
                 industryGroups={industryGroups}
-                unclassifiedCount={unclassifiedCount}
+                unclassifiedCount={UNCLASSIFIED_COUNT}
                 screen={screen}
                 matchCount={matchCount}
                 totalCount={companies.length}
@@ -383,8 +321,8 @@ export function DealScopeApp() {
 
       <FiltersPanel
         open={filtersOpen}
-        filters={filters}
-        onFiltersChange={setFilters}
+        filters={screen.buckets}
+        onFiltersChange={handleBucketsChange}
         onClose={() => setFiltersOpen(false)}
         industryGroups={industryGroups}
       />

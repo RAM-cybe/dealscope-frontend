@@ -95,7 +95,7 @@ export function LandingView({
         </SplitFlapAudioProvider>
 
         <h2 className="font-[family-name:var(--font-bebas)] text-muted-foreground text-[clamp(1rem,3vw,2rem)] mt-4 tracking-wide">
-          Screens India&apos;s listed companies for acquisition fit.
+          Acquisition screening for {totalCount.toLocaleString("en-IN")} NSE-listed companies.
         </h2>
 
         {/* Live proof strip -- reads straight off the bundled dataset (same
@@ -107,35 +107,38 @@ export function LandingView({
           transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
           className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3"
         >
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              Universe
+            </span>
+            <span className="font-mono text-xs text-foreground">
+              {totalCount.toLocaleString("en-IN")} companies
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              Prices
+            </span>
+            <span className="font-mono text-xs text-foreground">Refreshed daily</span>
+          </div>
           {topScored && (
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                Top Scored Today
+                Top Composite
               </span>
               <span className="font-mono text-xs text-foreground">
                 {topScored.name} — {topScored.score}/100
               </span>
             </div>
           )}
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              Sectors
-            </span>
-            <span className="font-mono text-xs text-foreground">{sectors.length}</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              Updated
-            </span>
-            <span className="font-mono text-xs text-foreground">Daily</span>
-          </div>
         </motion.div>
 
         <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
-          DealScope screens the NSE-listed universe for acquisition attractiveness, scoring each
-          company on sector-relative fundamentals and attaching an indicative valuation range. Adjust
-          the factor weights, filter the universe, and open any name for a full tear sheet. Free and
-          public — no account, no paywall.
+          Every company is ranked against its own sector on growth, margin, ROCE and leverage — so a
+          margin reads as strong or weak relative to real peers, not to the whole market. Describe a
+          screen in plain English, adjust the factor weights, and open any name for a full tear sheet
+          with an indicative valuation range from precedent M&amp;A. Free and public — no account, no
+          paywall.
         </p>
 
         {/* Search + Run */}

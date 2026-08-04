@@ -165,6 +165,26 @@ console.log("\n=== No silent constraint drops ===")
   check("high pledge -> pledged only", (num(parseQuery("high pledge").filters, "promoterPledge")?.min ?? 0) > 0)
 }
 
+console.log("\n=== Bare rupee amounts ===")
+{
+  // Regression: "logistics under 2000 Cr low debt" names no metric for the
+  // 2000, so every metric-specific pattern skipped it and the residual-text
+  // filter then swallowed the number -- the constraint vanished with no chip
+  // and no warning. Bare amounts now default to market cap and surface as a
+  // removable chip so the assumption is visible.
+  const bare = parseQuery("logistics under 2000 Cr low debt").filters
+  check("bare amount becomes a market-cap ceiling", num(bare, "marketCap")?.max === 2000,
+    JSON.stringify(bare.numeric))
+  check("bare amount does not leak into free text", bare.text === "", JSON.stringify(bare.text))
+}
+{
+  // An explicitly named metric must still win over the bare-amount default.
+  const explicit = parseQuery("FMCG under 2000 Cr revenue low debt").filters
+  check("explicit 'revenue' is not reinterpreted as market cap",
+    num(explicit, "revenue")?.max === 2000 && num(explicit, "marketCap") == null,
+    JSON.stringify(explicit.numeric))
+}
+
 console.log("\n=== Round-trip ===")
 {
   const original = parseQuery("industrials revenue between 500 and 3000 Cr strong ROCE").filters

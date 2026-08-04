@@ -24,6 +24,20 @@ export function LoadingScreen() {
     return () => clearTimeout(t)
   }, [])
 
+  // Unmount on a timer as well as on transitionend, never on transitionend
+  // alone. `transitionend` does not fire if the opacity change is never
+  // actually animated -- which happens whenever `done` flips in the same commit
+  // as the first paint (the reduced-motion path sets it at 0ms). The overlay
+  // then stayed mounted forever: invisible and click-through, so users never
+  // saw it, but still in the DOM. Confirmed on the live site -- crawlers and
+  // link-preview bots read "Initializing / DEALSCOPE / Compiling screened
+  // universe" as the page's main content on every route, including /about.
+  useEffect(() => {
+    if (!done) return
+    const t = setTimeout(() => setRemoved(true), 700)
+    return () => clearTimeout(t)
+  }, [done])
+
   if (removed) return null
 
   return (
@@ -42,11 +56,16 @@ export function LoadingScreen() {
       <div className="grid-bg absolute inset-0 opacity-30" aria-hidden="true" />
       <div className="ds-loading-scan absolute inset-x-0 top-0 h-px bg-accent/60" aria-hidden="true" />
 
+      {/* No <h1> here. This overlay is chrome, not content -- an <h1> inside it
+          competed with each page's real heading (every route shipped two: this
+          one and the page's own), which is exactly the kind of thing a link
+          preview or search result picks the wrong one from. A div carries the
+          same type with none of the document semantics. */}
       <div className="relative flex flex-col items-center gap-7 px-6 text-center">
         <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-accent">Initializing</span>
-        <h1 className="ds-loading-pulse font-[family-name:var(--font-bebas)] text-[clamp(3rem,12vw,8rem)] leading-none tracking-tight text-foreground">
+        <div className="ds-loading-pulse font-[family-name:var(--font-bebas)] text-[clamp(3rem,12vw,8rem)] leading-none tracking-tight text-foreground">
           DEALSCOPE
-        </h1>
+        </div>
         <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           <span className="ds-loading-dot" aria-hidden="true" />
           Compiling screened universe
