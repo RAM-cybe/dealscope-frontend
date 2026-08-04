@@ -19,6 +19,13 @@ interface ScreenBarProps {
   placeholder?: string
   autoFocus?: boolean
   size?: "lg" | "sm"
+  /**
+   * Optional control rendered in the same row as the input (e.g. homepage
+   * RUN). Placed here — not as a sibling of the whole bar — so it shares the
+   * input's height and baseline instead of sitting against the taller
+   * count/chips stack underneath.
+   */
+  trailing?: React.ReactNode
 }
 
 /**
@@ -45,6 +52,7 @@ export function ScreenBar({
   placeholder = "Company, ticker, or a screen like “pharma high margin low debt”",
   autoFocus = false,
   size = "lg",
+  trailing,
 }: ScreenBarProps) {
   const chips = screenChips(filters)
   const activeCount = countActiveConstraints(filters)
@@ -58,34 +66,43 @@ export function ScreenBar({
 
   return (
     <div>
-      <div
-        className={cn(
-          "relative border transition-colors duration-200",
-          recognised ? "border-accent/60" : "border-border focus-within:border-accent",
-        )}
-      >
-        <span
+      {/* Input row: input + optional trailing action share one baseline.
+          items-stretch makes both boxes the same height; the action must not
+          set a conflicting fixed height. Count/chips live BELOW this row. */}
+      <div className="flex flex-col sm:flex-row items-stretch gap-0">
+        <div
           className={cn(
-            "absolute left-4 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.3em] pointer-events-none",
-            recognised ? "text-accent" : "text-muted-foreground/60",
+            "relative flex-1 min-w-0 border transition-colors duration-200",
+            recognised ? "border-accent/60" : "border-border focus-within:border-accent",
+            trailing && "sm:border-r-0",
           )}
-          aria-hidden="true"
         >
-          {recognised ? "FX" : "Q_"}
-        </span>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          aria-label="Search companies or describe a screen"
-          autoFocus={autoFocus}
-          className={cn(
-            "w-full bg-transparent pl-12 pr-4 font-mono text-foreground placeholder:text-muted-foreground/60 focus:outline-none",
-            size === "lg" ? "py-4 text-sm" : "py-3 text-sm",
-          )}
-        />
+          <span
+            className={cn(
+              "absolute left-4 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.3em] pointer-events-none",
+              recognised ? "text-accent" : "text-muted-foreground/60",
+            )}
+            aria-hidden="true"
+          >
+            {recognised ? "FX" : "Q_"}
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            aria-label="Search companies or describe a screen"
+            autoFocus={autoFocus}
+            className={cn(
+              "w-full h-full bg-transparent pl-12 pr-4 font-mono text-foreground placeholder:text-muted-foreground/60 focus:outline-none",
+              size === "lg" ? "py-4 text-sm" : "py-3 text-sm",
+            )}
+          />
+        </div>
+        {trailing ? (
+          <div className="shrink-0 flex self-stretch items-stretch">{trailing}</div>
+        ) : null}
       </div>
 
       {/* Live count + parse feedback */}

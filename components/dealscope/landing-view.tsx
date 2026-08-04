@@ -138,35 +138,35 @@ export function LandingView({
           paywall.
         </p>
 
-        {/* Search + Run */}
+        {/* Search + Run — Run is a ScreenBar trailing slot so it shares the
+            input row's height. A fixed h-[58px] sibling of the whole bar
+            (input + count + chips) is what made the button look uneven. */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="mt-12 max-w-2xl"
         >
-          <div className="flex flex-col sm:flex-row items-stretch gap-0">
-            <div className="flex-1 min-w-0">
-              <ScreenBar
-                query={query}
-                onQueryChange={onQueryChange}
-                onSubmit={onRun}
-                filters={screen}
-                onRemoveChip={onRemoveChip}
-                onClearAll={onClearAll}
-                matchCount={matchingCount}
-                totalCount={totalCount}
-                recognised={recognised}
-              />
-            </div>
-            <button
-              onClick={onRun}
-              className="group inline-flex items-center justify-center gap-3 border border-foreground/20 sm:border-l-0 px-8 py-4 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 h-[58px] shrink-0"
-            >
-              <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
-              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-            </button>
-          </div>
+          <ScreenBar
+            query={query}
+            onQueryChange={onQueryChange}
+            onSubmit={onRun}
+            filters={screen}
+            onRemoveChip={onRemoveChip}
+            onClearAll={onClearAll}
+            matchCount={matchingCount}
+            totalCount={totalCount}
+            recognised={recognised}
+            trailing={
+              <button
+                onClick={onRun}
+                className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-3 border border-foreground/20 border-t-0 sm:border-t sm:border-l-0 px-8 py-4 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
+              >
+                <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
+                <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+              </button>
+            }
+          />
         </motion.div>
 
         {/* Screen Companies -- filters as a primary, first-class entry point.
