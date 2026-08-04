@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og"
 // the rest of the site.
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
-export const alt = "DealScope — acquisition screening for NSE-listed companies"
+export const alt = "DealScope — Every NSE-listed company, ranked the way a deal team would."
 
 // Hex equivalents of the site's oklch tokens. Satori (the renderer behind
 // ImageResponse) does not support oklch(), so these are pinned here
