@@ -112,18 +112,21 @@ export function ResultsView({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
+          {/* Eyebrow label doubles as the back control (onClick={onBack}
+              unchanged) -- restyled to match the SectionLabel pattern used
+              elsewhere on the site (e.g. "01 / What This Does") instead of
+              the old muted "← Entry State" back-link treatment. */}
           <button
             onClick={onBack}
-            className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent transition-colors duration-200"
+            className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent hover:text-foreground transition-colors duration-200"
           >
-            ← Entry State
+            Entry State / Screened Set
           </button>
-          <h1 className="mt-4 font-[family-name:var(--font-bebas)] text-5xl md:text-7xl tracking-tight">
-            SCREENED SET
+          <h1 className="mt-4 font-[family-name:var(--font-bebas)] text-5xl md:text-7xl tracking-tight text-balance">
+            {results.length.toLocaleString("en-IN")}{" "}
+            {results.length === 1 ? "company matches" : "companies match"}
           </h1>
-          <p className="mt-2 font-mono text-xs text-muted-foreground">
-            {results.length.toLocaleString("en-IN")} {results.length === 1 ? "company" : "companies"} • ranked by composite score
-          </p>
+          <p className="mt-2 font-mono text-xs text-muted-foreground">ranked by composite score</p>
         </div>
 
         <div className="flex items-center gap-3 self-start md:self-auto">

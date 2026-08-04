@@ -17,7 +17,6 @@ import {
   getCompanies,
   getDeals,
   countActiveBucketFilters,
-  computeScore,
 } from "@/lib/dealscope-data"
 import {
   type ScreenFilters,
@@ -50,13 +49,6 @@ const deals = getDeals()
 const screensWithCounts: { screen: ExampleScreen; count: number }[] = EXAMPLE_SCREENS.map(
   (screen) => ({ screen, count: countScreen(companies, parseQuery(screen.query).filters) }),
 )
-
-const topScoredCompany: { name: string; score: number } | null = companies.reduce<
-  { name: string; score: number } | null
->((best, c) => {
-  const score = computeScore(c.factors, DEFAULT_WEIGHTS)
-  return !best || score > best.score ? { name: c.name, score } : best
-}, null)
 
 const UNCLASSIFIED_COUNT = sectors.find((s) => s.name === "Unclassified")?.count ?? 0
 
@@ -259,7 +251,7 @@ export function DealScopeApp() {
                 screens={screensWithCounts}
                 onApplyScreen={handleApplyScreen}
                 sectors={sectors}
-                topScored={topScoredCompany}
+                dealCount={deals.length}
                 industryGroups={industryGroups}
                 unclassifiedCount={UNCLASSIFIED_COUNT}
                 filters={screen.buckets}

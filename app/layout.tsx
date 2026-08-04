@@ -19,7 +19,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" })
 
 const SITE_URL = "https://dealscope-screener.vercel.app"
-const SITE_TITLE = "DealScope — Acquisition screening for NSE-listed companies"
+const SITE_TITLE = "DealScope — Every NSE-listed company, ranked the way a deal team would."
 const SITE_DESCRIPTION =
   "Screen 2,381 NSE-listed Indian companies for acquisition fit. Sector-relative scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from precedent M&A. Free, no account required."
 

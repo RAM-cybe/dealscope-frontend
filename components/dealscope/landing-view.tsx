@@ -14,11 +14,6 @@ import { ExampleScreens } from "@/components/dealscope/example-screens"
 import type { ScreenFilters, FilterChip } from "@/lib/screener"
 import type { ExampleScreen } from "@/lib/example-screens"
 
-interface TopScored {
-  name: string
-  score: number
-}
-
 interface LandingViewProps {
   query: string
   onQueryChange: (q: string) => void
@@ -36,7 +31,7 @@ interface LandingViewProps {
   screens: { screen: ExampleScreen; count: number }[]
   onApplyScreen: (screen: ExampleScreen) => void
   sectors: Sector[]
-  topScored: TopScored | null
+  dealCount: number
   industryGroups: IndustryGroup[]
   unclassifiedCount: number
   filters: BucketFilters
@@ -60,7 +55,7 @@ export function LandingView({
   screens,
   onApplyScreen,
   sectors,
-  topScored,
+  dealCount,
   industryGroups,
   unclassifiedCount,
   filters,
@@ -94,9 +89,14 @@ export function LandingView({
           </div>
         </SplitFlapAudioProvider>
 
-        <h2 className="font-[family-name:var(--font-bebas)] text-muted-foreground text-[clamp(1rem,3vw,2rem)] mt-4 tracking-wide">
-          Acquisition screening for {totalCount.toLocaleString("en-IN")} NSE-listed companies.
-        </h2>
+        <h1 className="font-[family-name:var(--font-bebas)] text-muted-foreground text-[clamp(1rem,3vw,2rem)] mt-4 tracking-wide">
+          Every NSE-listed company, ranked the way a deal team would.
+        </h1>
+
+        <p className="mt-3 font-mono text-sm text-foreground/90 tracking-wide">
+          {totalCount.toLocaleString("en-IN")} companies. {dealCount.toLocaleString("en-IN")} real M&amp;A
+          deals. Updated daily.
+        </p>
 
         {/* Live proof strip -- reads straight off the bundled dataset (same
             source as the rest of the page) rather than being hardcoded, so it
@@ -121,23 +121,19 @@ export function LandingView({
             </span>
             <span className="font-mono text-xs text-foreground">Refreshed daily</span>
           </div>
-          {topScored && (
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-                Top Composite
-              </span>
-              <span className="font-mono text-xs text-foreground">
-                {topScored.name} — {topScored.score}/100
-              </span>
-            </div>
-          )}
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              Deals
+            </span>
+            <span className="font-mono text-xs text-foreground">
+              {dealCount.toLocaleString("en-IN")} precedent M&amp;A transactions
+            </span>
+          </div>
         </motion.div>
 
         <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
-          Every company is ranked against its own sector on growth, margin, ROCE and leverage — so a
-          margin reads as strong or weak relative to real peers, not to the whole market. Describe a
-          screen in plain English, adjust the factor weights, and open any name for a full tear sheet
-          with an indicative valuation range from precedent M&amp;A. Free and public — no account, no
+          DealScope scores every company against its own sector — growth, margin, capital efficiency,
+          and debt — so the comparison is always apples to apples. Free and public. No account, no
           paywall.
         </p>
 
@@ -248,6 +244,32 @@ export function LandingView({
           <Link href="/about" className="text-foreground hover:text-accent transition-colors duration-200">
             About
           </Link>
+        </div>
+      </div>
+    </section>
+
+    {/* ---------------------------------------------------------------- */}
+    {/* Why sector-relative -- hook version, ahead of the detailed one    */}
+    {/* under "04 / Why It Matters" further down the page. Same core      */}
+    {/* claim shown twice on purpose: once early as a hook, once later    */}
+    {/* with full context.                                                */}
+    {/* ---------------------------------------------------------------- */}
+    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+        <div className="lg:col-span-5">
+          <SectionLabel index="00" label="Why Sector-Relative" />
+          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-6xl tracking-tight text-balance">
+            WHY IT&apos;S DIFFERENT
+          </h2>
+        </div>
+        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/85 text-pretty">
+          <RevealItem>
+            <p className="text-muted-foreground">
+              Most screeners rank companies on raw numbers. That flatters large caps and buries
+              anything cyclical or capital-intensive. DealScope ranks within sector instead, so the
+              comparison is always apples to apples.
+            </p>
+          </RevealItem>
         </div>
       </div>
     </section>
