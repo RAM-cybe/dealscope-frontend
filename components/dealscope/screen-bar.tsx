@@ -64,17 +64,29 @@ export function ScreenBar({
     }
   }
 
+  // One outer border shell; both cells use the same fixed height so their top
+  // and bottom edges are identical. Never put a separate outer border on the
+  // button (that made it 2px taller than the input content box on production).
+  //
+  // Do NOT use flex-1 on the input cell when the shell is a column (mobile +
+  // trailing): flex-1 → flex-shrink:1 with basis 0% lets the column axis crush
+  // the cell below h-14. Horizontal growth only on the sm+ row layout.
+  const rowH = size === "lg" ? "h-14" : "h-12"
+
   return (
     <div>
-      {/* Input row: input + optional trailing action share one baseline.
-          items-stretch makes both boxes the same height; the action must not
-          set a conflicting fixed height. Count/chips live BELOW this row. */}
-      <div className="flex flex-col sm:flex-row items-stretch gap-0">
+      <div
+        className={cn(
+          "flex items-stretch border transition-colors duration-200",
+          trailing ? "flex-col sm:flex-row" : "flex-row",
+          recognised ? "border-accent/60" : "border-border focus-within:border-accent",
+        )}
+      >
         <div
           className={cn(
-            "relative flex-1 min-w-0 border transition-colors duration-200",
-            recognised ? "border-accent/60" : "border-border focus-within:border-accent",
-            trailing && "sm:border-r-0",
+            "relative min-w-0",
+            rowH,
+            trailing ? "w-full sm:flex-1 sm:min-w-0" : "flex-1",
           )}
         >
           <span
@@ -94,18 +106,26 @@ export function ScreenBar({
             placeholder={placeholder}
             aria-label="Search companies or describe a screen"
             autoFocus={autoFocus}
-            className={cn(
-              "w-full h-full bg-transparent pl-12 pr-4 font-mono text-foreground placeholder:text-muted-foreground/60 focus:outline-none",
-              size === "lg" ? "py-4 text-sm" : "py-3 text-sm",
-            )}
+            className="box-border w-full h-full bg-transparent pl-12 pr-4 font-mono text-sm leading-none text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
         </div>
         {trailing ? (
-          <div className="shrink-0 flex self-stretch items-stretch">{trailing}</div>
+          <div
+            className={cn(
+              "flex shrink-0 items-stretch",
+              rowH,
+              "w-full sm:w-auto",
+              // Continuous frame: internal divider only — no second outer border.
+              "border-t sm:border-t-0 sm:border-l",
+              recognised ? "border-accent/60" : "border-border",
+            )}
+          >
+            {trailing}
+          </div>
         ) : null}
       </div>
 
-      {/* Live count + parse feedback */}
+      {/* Live count + parse feedback — always under the full control row */}
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="font-mono text-xs">
           <span className={cn(isFiltered ? "text-accent" : "text-foreground")}>
