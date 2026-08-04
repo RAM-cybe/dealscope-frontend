@@ -40,10 +40,10 @@ export function ExampleScreens({ screens, onApply, variant = "cards" }: ExampleS
       {screens.map(({ screen, count }, i) => (
         <motion.div
           key={screen.id}
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-60px" }}
-          transition={{ delay: Math.min(i, 6) * 0.05, duration: 0.4, ease: [0.22, 0.61, 0.36, 1] }}
+          transition={{ delay: Math.min(i, 4) * 0.03, duration: 0.18, ease: "easeOut" }}
         >
           <button
             onClick={() => onApply(screen)}

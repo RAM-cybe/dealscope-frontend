@@ -84,9 +84,14 @@ const METRIC_ALIASES: [string, NumericFieldKey][] = [
   ["operating margin", "ebitdaMargin"],
   ["margin", "ebitdaMargin"],
   ["market cap", "marketCap"],
+  ["market capitalisation", "marketCap"],
+  ["market capitalization", "marketCap"],
   ["marketcap", "marketCap"],
   ["mcap", "marketCap"],
-  ["valuation", "peRatio"],
+  // "valuation" in size language ("valuation under 2000 Cr") means market
+  // cap, not P/E -- same rule as the bare-amount default. P/E still binds via
+  // "pe", "p/e", "price to earnings".
+  ["valuation", "marketCap"],
   ["price to earnings", "peRatio"],
   ["pe ratio", "peRatio"],
   ["p e ratio", "peRatio"],
@@ -119,7 +124,14 @@ const SECTOR_ALIASES: [string, string][] = [
   ["industrials and auto", "Industrials & Auto"],
   ["consumer products and retail", "Consumer Products"],
   ["consumer products", "Consumer Products"],
+  // Longest FMCG forms first so "fast moving consumer goods" is consumed as
+  // one sector token rather than matching the shorter "consumer" alias and
+  // leaving "fast moving goods" as residual free text.
+  ["fast moving consumer goods", "Consumer Products"],
+  ["fastmoving consumer goods", "Consumer Products"],
+  ["consumer staples", "Consumer Products"],
   ["consumer", "Consumer Products"],
+  ["fmcgs", "Consumer Products"],
   ["fmcg", "Consumer Products"],
   ["staples", "Consumer Products"],
   ["financial services", "Financial Services"],
@@ -207,6 +219,12 @@ const INDUSTRY_ALIASES: [string, string[], string][] = [
   ["airlines", ["Airlines"], "Industrials & Auto"],
   ["paints", ["Specialty Chemicals"], "Industrials & Auto"],
   ["packaging", ["Packaging & Containers"], "Industrials & Auto"],
+  // FMCG industries -- when someone wants the packaged-goods slice rather
+  // than the whole Consumer Products sector. The sector aliases still catch
+  // a bare "FMCG"; these catch more specific phrasing.
+  ["packaged foods", ["Packaged Foods"], "Consumer Products"],
+  ["personal care", ["Household & Personal Products"], "Consumer Products"],
+  ["household products", ["Household & Personal Products"], "Consumer Products"],
 ]
 
 /** Market-cap classes, in ₹ Cr. Deliberately absolute rather than percentile:
@@ -312,12 +330,35 @@ export function parseQuery(raw: string): ParseResult {
   if (!raw || !raw.trim()) return { filters, recognised: false, matched }
 
   let q = normalizeQuery(raw)
-  const consume = (re: RegExp, note: (m: RegExpMatchArray) => void) => {
+
+  /** Run `note` on every match. Returning false means "I did not understand
+   *  this", and the matched text is put back so a later rule still gets a
+   *  chance at it. Previously every match was consumed unconditionally even
+   *  when the callback bailed, which silently ate the query: in "FMCG high
+   *  margin under 5000 Cr" the metric-adjacent rule matched "margin under 5000
+   *  cr", produced a nonsensical margin <= 5000 constraint, and left a bare
+   *  "high" behind for the name search to choke on. */
+  const consume = (re: RegExp, note: (m: RegExpMatchArray) => boolean | void) => {
     q = q.replace(re, (...args) => {
       const m = args.slice(0, -2) as unknown as RegExpMatchArray
-      note(m)
-      return " "
+      return note(m) === false ? m[0] : " "
     })
+  }
+
+  /** Currency units may only constrain currency metrics.
+   *
+   *  "high margin under 5000 Cr" is not a claim that EBITDA margin is under
+   *  5000% -- the "Cr" says the amount is money, so it cannot belong to a
+   *  percentage or ratio metric. Rejecting the pair here (rather than
+   *  producing an impossible constraint) leaves the words in place, so the
+   *  qualitative rule reads "high margin" and the bare-amount rule reads
+   *  "under 5000 Cr" as the size constraint the user meant. */
+  const CURRENCY_FIELDS = new Set<NumericFieldKey>(["revenue", "marketCap", "totalDebt"])
+  const unitFits = (unit: string | undefined, key: NumericFieldKey): boolean => {
+    if (!unit) return true
+    const u = unit.trim()
+    const isCurrencyUnit = /^(lakh|lac)?\s*cr/.test(u) || u === "k"
+    return isCurrencyUnit ? CURRENCY_FIELDS.has(key) : true
   }
 
   // --- 1. Sector, so later percentile lookups can be sector-scoped ---------
@@ -403,13 +444,13 @@ export function parseQuery(raw: string): ParseResult {
 
   consume(new RegExp(`(${METRIC_PATTERN})\\s*(?:of\\s*)?${MORE}\\s*${NUM}${UNIT}`, "g"), (m) => {
     const key = metricFor(m[1])
-    if (!key) return
+    if (!key || !unitFits(m[3], key)) return false
     mergeConstraint(filters.numeric, key, { min: scaleAmount(parseFloat(m[2]), m[3], key) })
     matched.push(`min:${key}`)
   })
   consume(new RegExp(`(${METRIC_PATTERN})\\s*(?:of\\s*)?${LESS}\\s*${NUM}${UNIT}`, "g"), (m) => {
     const key = metricFor(m[1])
-    if (!key) return
+    if (!key || !unitFits(m[3], key)) return false
     mergeConstraint(filters.numeric, key, { max: scaleAmount(parseFloat(m[2]), m[3], key) })
     matched.push(`max:${key}`)
   })
@@ -417,13 +458,13 @@ export function parseQuery(raw: string): ParseResult {
   // Comparator first: "under 2000 cr revenue", "over 20% roce"
   consume(new RegExp(`${MORE}\\s*${NUM}${UNIT}\\s*(${METRIC_PATTERN})`, "g"), (m) => {
     const key = metricFor(m[3])
-    if (!key) return
+    if (!key || !unitFits(m[2], key)) return false
     mergeConstraint(filters.numeric, key, { min: scaleAmount(parseFloat(m[1]), m[2], key) })
     matched.push(`min:${key}`)
   })
   consume(new RegExp(`${LESS}\\s*${NUM}${UNIT}\\s*(${METRIC_PATTERN})`, "g"), (m) => {
     const key = metricFor(m[3])
-    if (!key) return
+    if (!key || !unitFits(m[2], key)) return false
     mergeConstraint(filters.numeric, key, { max: scaleAmount(parseFloat(m[1]), m[2], key) })
     matched.push(`max:${key}`)
   })
@@ -432,28 +473,59 @@ export function parseQuery(raw: string): ParseResult {
   // "logistics under 2000 Cr low debt" names no metric for the 2000, so every
   // metric-specific pattern above skips it -- and the leftover number was then
   // swallowed by the residual-text filter, silently dropping a constraint the
-  // user clearly intended. Defaulting to market cap follows how size is
-  // normally expressed about an Indian listed company ("a 2,000 crore
-  // company"), and because the assumption surfaces as a removable chip, a user
-  // who meant revenue can see the interpretation and correct it. Runs after
-  // the explicit forms so "under 2000 cr revenue" is never reinterpreted.
+  // user clearly intended.
+  //
+  // THE SIZE RULE, stated once so it is not guessed at anywhere else:
+  //
+  //   A rupee amount with no metric attached means REVENUE.
+  //   Market cap is used only when the query says so ("market cap", "mcap",
+  //   "valuation", "market capitalisation").
+  //
+  // Previously this defaulted to market cap, which made size language
+  // non-deterministic from the user's side: "revenue under 2000 cr" bound to
+  // revenue, "under 2000 cr revenue" bound to revenue, but "IT revenue company
+  // under 2,000 crores" and a bare "under 2000 cr" bound to market cap -- the
+  // same sentence meaning different things depending on word order. Revenue is
+  // the better default for an M&A screener (it is the size measure that
+  // survives a re-rating, and it is what "a 2,000 crore company" means to an
+  // operator rather than an investor). Either way the choice is visible as a
+  // removable chip, so a user who meant the other one can see and correct it.
   const CR_ONLY = "(?:\\s*(lakh\\s*cr(?:ore)?|lac\\s*cr(?:ore)?|cr(?:ore)?s?))"
 
-  // Market cap is only the right default when the query hasn't already said
-  // what the amount measures. "IT revenue company under 2,000 crores" names
-  // revenue, but too far from the number for the metric-adjacent patterns
-  // above to bind it, so the amount was landing on market cap and screening
-  // for the wrong thing entirely.
-  //
-  // Deliberately narrow: only revenue, and only when market cap isn't also
-  // named. Debt is excluded because it usually appears as the qualitative
-  // "low debt" rather than as a claim about the number -- reading "logistics
-  // under 2000 Cr low debt" as debt ≤ 2000 Cr would be a clear regression.
-  // An explicit "debt under 500 cr" still binds via the metric patterns above.
   const bareKey: NumericFieldKey =
-    /\b(revenue|sales|topline)\b/.test(q) && !/\b(market\s*cap|marketcap|mcap)\b/.test(q)
-      ? "revenue"
-      : "marketCap"
+    /\b(?:market\s*cap|marketcap|mcap|market\s*capitali[sz]ation|valuation)\b/.test(q)
+      ? "marketCap"
+      : "revenue"
+
+  // Bare "between X and Y Cr" -- the metric-bound between patterns above
+  // require a metric word, so "between 500 and 3000 Cr" used to vanish.
+  consume(
+    new RegExp(`between\\s+${NUM}${CR_ONLY}\\s+and\\s+${NUM}${CR_ONLY}`, "g"),
+    (m) => {
+      const lo = scaleAmount(parseFloat(m[1]), m[2], bareKey)
+      const hi = scaleAmount(parseFloat(m[3]), m[4], bareKey)
+      mergeConstraint(filters.numeric, bareKey, {
+        min: Math.min(lo, hi),
+        max: Math.max(lo, hi),
+      })
+      matched.push(`bare:${bareKey}:range`)
+    },
+  )
+  // Same without an explicit Cr on each side but with a trailing Cr: "between
+  // 500 and 3000 cr".
+  consume(
+    new RegExp(`between\\s+${NUM}\\s+and\\s+${NUM}${CR_ONLY}`, "g"),
+    (m) => {
+      const unit = m[3]
+      const lo = scaleAmount(parseFloat(m[1]), unit, bareKey)
+      const hi = scaleAmount(parseFloat(m[2]), unit, bareKey)
+      mergeConstraint(filters.numeric, bareKey, {
+        min: Math.min(lo, hi),
+        max: Math.max(lo, hi),
+      })
+      matched.push(`bare:${bareKey}:range`)
+    },
+  )
 
   consume(new RegExp(`${LESS}\\s*${NUM}${CR_ONLY}`, "g"), (m) => {
     mergeConstraint(filters.numeric, bareKey, {
@@ -534,16 +606,59 @@ export function parseQuery(raw: string): ParseResult {
   })
 
   // --- 8. Whatever is left is a name/ticker search -----------------------
+  //
+  // Critical: incomplete screening vocabulary must NEVER become free-text
+  // name tokens. Typing "high" or "growth" alone used to collapse the list
+  // to the 1–2 companies whose name happens to contain that word (HIGH
+  // Energy, Growth Tech, …) -- the opposite of a useful screen. Those words
+  // are either consumed by a complete phrase above, or dropped here until
+  // the user finishes the phrase.
   const STOPWORDS = new Set([
     "companies", "company", "stocks", "stock", "with", "and", "the", "a", "an", "in", "of",
     "that", "have", "has", "having", "for", "me", "show", "find", "list", "all", "sector",
     "sectors", "industry", "industries", "which", "are", "is", "cr", "crore", "crores", "rs",
-    "under", "over", "above", "below", "between", "than", "more", "less",
+    "under", "over", "above", "below", "between", "than", "more", "less", "at", "least",
+    "most", "minimum", "maximum", "min", "max", "upto", "up", "to", "from", "by", "on",
+    "or", "vs", "versus", "like", "such", "as", "very", "really", "quite", "please",
+    "looking", "look", "want", "need", "get", "give", "screen", "screener", "filter",
+    "filters", "only", "also", "both", "either", "any", "some", "those", "these", "this",
+    "their", "its", "our", "my",
   ])
+
+  // Qualitative adjectives and bare metric names. Alone they are unfinished
+  // screens, not company-name fragments. Multi-word metric aliases are split
+  // so each token is covered ("revenue", "growth", "market", "cap", …).
+  const SCREEN_VOCAB = new Set<string>([
+    ...HIGH_WORDS,
+    ...LOW_WORDS,
+    "quality",
+    "profitable",
+    "undervalued",
+    "value",
+    "mid",
+    "mega",
+    "large",
+    "small",
+    "micro",
+    "cap",
+    "caps",
+  ])
+  for (const [alias] of METRIC_ALIASES) {
+    for (const tok of alias.split(/\s+/)) {
+      if (tok.length > 0) SCREEN_VOCAB.add(tok)
+    }
+  }
+
   const residual = q
     .split(/\s+/)
     .map((t) => t.trim())
-    .filter((t) => t.length > 0 && !STOPWORDS.has(t) && !/^[\d.<>%+-]+$/.test(t))
+    .filter(
+      (t) =>
+        t.length > 0 &&
+        !STOPWORDS.has(t) &&
+        !SCREEN_VOCAB.has(t) &&
+        !/^[\d.<>%+-]+$/.test(t),
+    )
     .join(" ")
     .trim()
 

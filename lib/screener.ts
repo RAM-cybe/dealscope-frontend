@@ -419,21 +419,38 @@ export function runScreen(
 
   if (q.length > 0) {
     const tokens = q.split(" ").filter(Boolean)
-    const hits = base.filter((c) => {
-      const hay = `${normalizeForSearch(c.name)} ${normalizeForSearch(c.ticker)} ${normalizeForSearch(c.sector)}`
-      return tokens.every((t) => hay.includes(t))
-    })
-    if (hits.length > 0) {
-      pool = hits
+    // Refuse to treat pure screening vocabulary as a company-name query.
+    // The parser already strips these from residual text; this is the
+    // last-line defence so a future residual leak can never collapse the
+    // result set to the 1–2 name coincidences ("high" → Gayatri Highways).
+    const SCREENISH = new Set([
+      "high", "low", "strong", "weak", "good", "great", "excellent", "top", "best",
+      "healthy", "rich", "poor", "minimal", "small", "little", "cheap", "light",
+      "growth", "margin", "debt", "leverage", "quality", "value", "valuation",
+      "revenue", "sales", "roce", "roe", "pe", "pledge", "cap", "mid", "mega",
+      "large", "micro", "profitable", "undervalued",
+    ])
+    const allScreenish = tokens.length > 0 && tokens.every((t) => SCREENISH.has(t) || t.length <= 2)
+
+    if (allScreenish) {
+      textFellBack = true
     } else {
-      const loose = base.filter((c) => {
-        const hay = `${normalizeForSearch(c.name)} ${normalizeForSearch(c.ticker)}`
-        return tokens.some((t) => t.length >= 3 && hay.includes(t))
+      const hits = base.filter((c) => {
+        const hay = `${normalizeForSearch(c.name)} ${normalizeForSearch(c.ticker)} ${normalizeForSearch(c.sector)}`
+        return tokens.every((t) => hay.includes(t))
       })
-      if (loose.length > 0) {
-        pool = loose
+      if (hits.length > 0) {
+        pool = hits
       } else {
-        textFellBack = true
+        const loose = base.filter((c) => {
+          const hay = `${normalizeForSearch(c.name)} ${normalizeForSearch(c.ticker)}`
+          return tokens.some((t) => t.length >= 3 && hay.includes(t))
+        })
+        if (loose.length > 0) {
+          pool = loose
+        } else {
+          textFellBack = true
+        }
       }
     }
   }

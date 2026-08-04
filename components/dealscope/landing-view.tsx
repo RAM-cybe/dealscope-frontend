@@ -102,9 +102,9 @@ export function LandingView({
             source as the rest of the page) rather than being hardcoded, so it
             can never drift out of sync with the actual data. */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12, duration: 0.4, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3"
         >
           <div className="flex items-baseline gap-2">
@@ -140,9 +140,9 @@ export function LandingView({
 
         {/* Search + Run */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.4, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="mt-12 max-w-2xl"
         >
           <div className="flex flex-col sm:flex-row items-stretch gap-0">
@@ -176,9 +176,9 @@ export function LandingView({
             call to action right beside the search bar, with a live match count
             so the effect of a filter is visible before committing to results. */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.24, duration: 0.4, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 max-w-2xl"
         >
           <button
@@ -214,9 +214,9 @@ export function LandingView({
 
         {/* Sector filter */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="mt-16"
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">Filter by Sector</span>
@@ -416,10 +416,10 @@ function SectionLabel({ index, label }: { index: string; label: string }) {
 function RevealItem({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-80px" }}
-      transition={{ delay, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+      transition={{ delay: Math.min(delay, 0.12), duration: 0.25, ease: "easeOut" }}
     >
       {children}
     </motion.div>

@@ -20,7 +20,9 @@ export function LoadingScreen() {
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
     // Hold a short brand moment so the mark registers instead of flickering,
     // but keep it brief -- this is a cover, not a gate.
-    const t = setTimeout(() => setDone(true), reduce ? 0 : 850)
+    // Brief brand cover only -- long enough to hide the JSON parse flash,
+    // short enough that a hard refresh doesn't feel like a gate.
+    const t = setTimeout(() => setDone(true), reduce ? 0 : 400)
     return () => clearTimeout(t)
   }, [])
 
