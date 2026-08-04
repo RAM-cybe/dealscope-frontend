@@ -11,10 +11,16 @@
  */
 
 import { parseQuery, screenToQuery } from "../query-parser"
-import { countScreen, NUMERIC_FIELD_KEYS, type ScreenFilters } from "../screener"
-import { getCompanies } from "../dealscope-data"
+import { countScreen, runScreen, NUMERIC_FIELD_KEYS, type ScreenFilters } from "../screener"
+import { getCompanies, DEFAULT_WEIGHTS } from "../dealscope-data"
 
 const { companies } = getCompanies()
+
+/** Ranked result length (after free-text name narrowing) -- the number the
+ *  results list actually shows, not just the hard-constraint count. */
+function runScreenCount(companies: ReturnType<typeof getCompanies>["companies"], f: ScreenFilters) {
+  return runScreen(companies, f, DEFAULT_WEIGHTS).results.length
+}
 
 let failures = 0
 let checks = 0
@@ -165,24 +171,76 @@ console.log("\n=== No silent constraint drops ===")
   check("high pledge -> pledged only", (num(parseQuery("high pledge").filters, "promoterPledge")?.min ?? 0) > 0)
 }
 
-console.log("\n=== Bare rupee amounts ===")
+console.log("\n=== Bare rupee amounts (default = revenue) ===")
 {
-  // Regression: "logistics under 2000 Cr low debt" names no metric for the
-  // 2000, so every metric-specific pattern skipped it and the residual-text
-  // filter then swallowed the number -- the constraint vanished with no chip
-  // and no warning. Bare amounts now default to market cap and surface as a
-  // removable chip so the assumption is visible.
+  // Size rule: bare rupee amounts mean REVENUE unless the query names market
+  // cap / mcap / valuation. Surface as a removable chip so the assumption is
+  // visible and correctable.
   const bare = parseQuery("logistics under 2000 Cr low debt").filters
-  check("bare amount becomes a market-cap ceiling", num(bare, "marketCap")?.max === 2000,
+  check("bare amount becomes a revenue ceiling", num(bare, "revenue")?.max === 2000,
     JSON.stringify(bare.numeric))
   check("bare amount does not leak into free text", bare.text === "", JSON.stringify(bare.text))
 }
 {
-  // An explicitly named metric must still win over the bare-amount default.
   const explicit = parseQuery("FMCG under 2000 Cr revenue low debt").filters
   check("explicit 'revenue' is not reinterpreted as market cap",
     num(explicit, "revenue")?.max === 2000 && num(explicit, "marketCap") == null,
     JSON.stringify(explicit.numeric))
+}
+{
+  const mcap = parseQuery("under 5000 Cr market cap").filters
+  check("explicit market-cap wins the size default",
+    num(mcap, "marketCap")?.max === 5000 && num(mcap, "revenue") == null,
+    JSON.stringify(mcap.numeric))
+}
+{
+  const between = parseQuery("between 500 and 3000 Cr").filters
+  check("bare between-range defaults to revenue",
+    num(between, "revenue")?.min === 500 && num(between, "revenue")?.max === 3000,
+    JSON.stringify(between.numeric))
+}
+
+console.log("\n=== FMCG + short-word collapse ===")
+{
+  for (const q of ["FMCG", "fmcg", "FMCGs", "fast moving consumer goods"]) {
+    const { filters, recognised } = parseQuery(q)
+    check(`${JSON.stringify(q)} -> Consumer Products`,
+      recognised && filters.sectors.includes("Consumer Products") && filters.text === "",
+      JSON.stringify({ sectors: filters.sectors, text: filters.text }))
+  }
+}
+{
+  // "high" / "growth" alone must NOT collapse to a name-search of 1–2 cos.
+  for (const q of ["high", "growth", "strong", "low"]) {
+    const { filters, recognised } = parseQuery(q)
+    const n = countScreen(companies, filters)
+    const results = runScreenCount(companies, filters)
+    check(`${JSON.stringify(q)} does not name-collapse`,
+      filters.text === "" && n === companies.length && results === companies.length,
+      `text=${JSON.stringify(filters.text)} recognised=${recognised} n=${n} results=${results}`)
+  }
+}
+{
+  const compound = parseQuery("FMCG high margin under 5000 Cr").filters
+  check("FMCG high margin under 5000 Cr: sector + margin + revenue",
+    compound.sectors.includes("Consumer Products") &&
+      (num(compound, "ebitdaMargin")?.min ?? 0) > 0 &&
+      num(compound, "revenue")?.max === 5000 &&
+      compound.text === "",
+    JSON.stringify(compound))
+}
+{
+  for (const [q, pred] of [
+    ["banks high ROE", (f: ScreenFilters) => f.industries.includes("Banks - Regional") && (num(f, "roe")?.min ?? 0) > 0],
+    ["auto parts revenue under 1000 Cr", (f: ScreenFilters) => f.industries.includes("Auto Parts") && num(f, "revenue")?.max === 1000],
+    ["steel companies with low leverage", (f: ScreenFilters) => f.industries.includes("Steel") && (num(f, "totalDebt")?.max ?? -1) >= 0],
+    ["consumer under 2000 Cr high quality", (f: ScreenFilters) => f.sectors.includes("Consumer Products") && num(f, "revenue")?.max === 2000 && (num(f, "roce")?.min ?? 0) > 0],
+    ["pharma ROCE above 20 low debt", (f: ScreenFilters) => f.industries.length === 2 && num(f, "roce")?.min === 20 && (num(f, "totalDebt")?.max ?? -1) >= 0],
+  ] as [string, (f: ScreenFilters) => boolean][]) {
+    const { filters, recognised } = parseQuery(q)
+    check(`stress: ${q}`, recognised && pred(filters) && filters.text === "",
+      JSON.stringify({ numeric: filters.numeric, sectors: filters.sectors, industries: filters.industries, text: filters.text }))
+  }
 }
 
 console.log("\n=== Round-trip ===")

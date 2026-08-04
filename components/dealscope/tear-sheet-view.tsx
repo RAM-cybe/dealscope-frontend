@@ -78,9 +78,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               Study / {company.sector}
             </span>
             <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="mt-4 font-[family-name:var(--font-bebas)] text-[clamp(2.5rem,7vw,6.5rem)] leading-[0.95] tracking-tight text-balance"
             >
               {company.name.toUpperCase()}
@@ -105,9 +105,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
 
           {/* Score */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.06, duration: 0.35, ease: "easeOut" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             className="flex items-center gap-6 shrink-0"
           >
             <ScoreRing score={score} size={140} strokeWidth={3} sectorAverage={avg} />
@@ -179,8 +179,8 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           <SectionLabel index="03" label="About The Company" />
           {company.hasAbout ? (
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ delay: 0.06, duration: 0.35 }}
               className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
             >
@@ -213,8 +213,8 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             {company.hasWhyThisScore ? (
               <>
                 <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.08, duration: 0.35 }}
                   className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
                 >
@@ -304,8 +304,8 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               comparables.map((deal, i) => (
                 <motion.div
                   key={`${deal.target}-${deal.year}-${i}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 + Math.min(i, 8) * 0.03, duration: 0.3 }}
                   className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b border-border/30 py-4 font-mono text-xs hover:bg-accent/5 transition-colors duration-300"
                 >
@@ -444,8 +444,8 @@ function NewsRow({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      initial={{ opacity: 0, x: -16 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ delay: 0.1 + Math.min(index, 6) * 0.03, duration: 0.3 }}
       className="group block border-b border-border/30 py-4 hover:bg-accent/5 transition-colors duration-300"
     >

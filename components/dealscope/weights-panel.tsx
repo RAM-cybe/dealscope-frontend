@@ -43,7 +43,7 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
             // Same scroll-trap fix as the filters panel: keep Lenis from
             // capturing wheel events over this overlay and scrolling the page
             // behind it, and stop native scroll chaining at the panel boundary.

@@ -33,21 +33,24 @@ import { type ExampleScreen, EXAMPLE_SCREENS } from "@/lib/example-screens"
 
 type View = "landing" | "results" | "detail"
 
-// Pure opacity, and short.
+// Pure opacity, very short, enter and exit simultaneous.
 //
-// Two things made view changes feel laggy rather than smooth. First the
-// duration: `mode="wait"` runs exit and enter in sequence, so a 0.45s pair was
-// ~0.9s of dead time between clicking and seeing the new view. Second the
-// y-translate: these subtrees are the whole page (the results view alone
-// mounts 60 rows), and translating one costs a full-page repaint every frame,
-// where a plain opacity change stays on the compositor. Fading in place at
-// ~0.4s total reads as immediate; the vertical drift is what was being
-// perceived as "bumpy" anyway.
+// History of the jank here:
+//   * `mode="wait"` sequenced exit+enter (~0.9s dead air).
+//   * y-translate on a 60-row results tree forced full-page layout every frame.
+//   * `mode="popLayout"` still remounted whole subtrees and re-ran every
+//     staggered child animation on every back navigation.
+// Opacity-only on the compositor, both sides overlapping for ~120ms, is what
+// "instant but not a hard cut" feels like. Child views must not re-introduce
+// y/x drift of their own on mount (see landing/results/tear-sheet).
 const viewTransition = {
   initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-  transition: { duration: 0.2, ease: "easeOut" as const },
+  animate: { opacity: 1, position: "relative" as const },
+  // Absolute on exit so the outgoing and incoming views can crossfade in the
+  // same frame without stacking two full page heights (the "jump" that made
+  // back-from-tear-sheet feel broken even when opacity was short).
+  exit: { opacity: 0, position: "absolute" as const, left: 0, right: 0, top: 0 },
+  transition: { duration: 0.12, ease: "easeOut" as const },
 }
 
 // Data is a bundled local JSON file (no network, no database) -- read once
@@ -216,7 +219,26 @@ export function DealScopeApp() {
     [updateScreen],
   )
 
-  const handleQueryChange = useCallback((q: string) => setRawText(q), [])
+  // Emptying the search box is a full reset, not a residual-text edit.
+  // Without this, deleting "FMCG high margin under 5000 Cr" character by
+  // character left the last-committed URL screen (chips, num=, sectors=)
+  // sitting under an empty input -- live count and chips out of sync with
+  // what the user just erased.
+  const handleQueryChange = useCallback(
+    (q: string) => {
+      setRawText(q)
+      if (!q.trim()) {
+        setDebouncedText("")
+        const empty = makeScreen()
+        if (tickerParam) {
+          navigate({ view: "results", ticker: null, screen: empty })
+        } else {
+          updateScreen(empty)
+        }
+      }
+    },
+    [tickerParam, navigate, updateScreen],
+  )
 
   const toggleSector = useCallback(
     (sector: string) => {
@@ -233,7 +255,19 @@ export function DealScopeApp() {
     [materialize, screen],
   )
 
-  const handleClearAll = useCallback(() => materialize(makeScreen()), [materialize])
+  // Full wipe: chips, live count, URL params, local text. Zero residual.
+  // Detail view drops back to clean results so the user is never stranded
+  // on a tear sheet whose screen no longer exists.
+  const handleClearAll = useCallback(() => {
+    setRawText("")
+    setDebouncedText("")
+    const empty = makeScreen()
+    if (view === "detail" || tickerParam) {
+      navigate({ view: "results", ticker: null, screen: empty })
+    } else {
+      updateScreen(empty)
+    }
+  }, [view, tickerParam, navigate, updateScreen])
 
   // The drawer owns `buckets`; `industry` inside it is mirrored onto the
   // screen's own industries list so both entry points agree.
@@ -267,10 +301,11 @@ export function DealScopeApp() {
     [navigate],
   )
   const handleBackToResults = useCallback(() => navigate({ view: "results", ticker: null }), [navigate])
-  const handleBackToLanding = useCallback(
-    () => navigate({ view: "landing", ticker: null, screen: makeScreen() }),
-    [navigate],
-  )
+  const handleBackToLanding = useCallback(() => {
+    setRawText("")
+    setDebouncedText("")
+    navigate({ view: "landing", ticker: null, screen: makeScreen() })
+  }, [navigate])
 
   const activeFilterCount = countActiveBucketFilters(screen.buckets)
   const queryText = rawText
@@ -280,7 +315,7 @@ export function DealScopeApp() {
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
 
       <div className="relative z-10">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence initial={false}>
           {view === "landing" && (
             <motion.div key="landing" {...viewTransition}>
               <LandingView

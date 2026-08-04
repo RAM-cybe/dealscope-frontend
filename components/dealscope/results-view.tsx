@@ -286,13 +286,12 @@ function ResultRow({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      // Cap the stagger so a 60-row set settles fast instead of trickling in
-      // over ~3.5s, and drop the `layout` prop: with `layout`, every weight or
-      // filter change re-sorted the list and animated all rows to new
-      // positions at once -- the biggest scroll/interaction jank source here.
-      transition={{ delay: Math.min(index, 10) * 0.02, duration: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
+      // Opacity only, no y-drift, no stagger past the first few rows. A y
+      // translate on 60 rows forces layout work every frame; a staggered
+      // entrance on every re-screen made successive searches feel laggy.
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: Math.min(index, 6) * 0.015, duration: 0.15, ease: "easeOut" }}
     >
       <button
         onClick={onSelect}

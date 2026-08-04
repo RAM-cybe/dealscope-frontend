@@ -66,7 +66,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
             // overscroll-contain stops native scroll chaining to the body when
             // this panel reaches its scroll boundary; data-lenis-prevent tells
             // the Lenis smooth-scroll to ignore wheel events that originate in
