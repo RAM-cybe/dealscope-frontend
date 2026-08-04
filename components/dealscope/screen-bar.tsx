@@ -124,10 +124,10 @@ export function ScreenBar({
             <button
               key={chip.id}
               onClick={() => onRemoveChip(chip)}
-              className="group inline-flex items-center gap-2 border border-accent/50 bg-accent/10 px-3 py-1.5 font-mono text-[10px] text-accent hover:bg-accent/20 hover:border-accent transition-colors duration-200"
+              className="group inline-flex max-w-full items-center gap-2 border border-accent/50 bg-accent/10 px-3 py-1.5 font-mono text-[10px] text-accent hover:bg-accent/20 hover:border-accent transition-colors duration-200"
               aria-label={`Remove filter: ${chip.label}`}
             >
-              <span>{chip.label}</span>
+              <span className="truncate">{chip.label}</span>
               <span aria-hidden="true" className="text-accent/70 group-hover:text-accent">
                 ×
               </span>
