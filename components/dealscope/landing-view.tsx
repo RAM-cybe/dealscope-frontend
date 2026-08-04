@@ -244,7 +244,7 @@ export function LandingView({
           Screening the NSE-listed universe
         </span>
         <div className="hidden md:block border border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          Not investment advice. Built by RAM —{" "}
+          Not investment advice. Built by Ram Suthakaran —{" "}
           <Link href="/about" className="text-foreground hover:text-accent transition-colors duration-200">
             About
           </Link>
