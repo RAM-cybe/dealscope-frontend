@@ -139,6 +139,10 @@ const SECTOR_ALIASES: [string, string][] = [
   ["technology", "Technology"],
   ["tech", "Technology"],
   ["it services", "Technology"],
+  // "IT" is how the sector is normally named in India ("IT company", "IT
+  // stocks"). Matched on word boundaries, so it can't fire inside another
+  // word; a bare English "it" in a screening query is not a realistic input.
+  ["it", "Technology"],
   ["software", "Technology"],
 ]
 
@@ -434,17 +438,34 @@ export function parseQuery(raw: string): ParseResult {
   // who meant revenue can see the interpretation and correct it. Runs after
   // the explicit forms so "under 2000 cr revenue" is never reinterpreted.
   const CR_ONLY = "(?:\\s*(lakh\\s*cr(?:ore)?|lac\\s*cr(?:ore)?|cr(?:ore)?s?))"
+
+  // Market cap is only the right default when the query hasn't already said
+  // what the amount measures. "IT revenue company under 2,000 crores" names
+  // revenue, but too far from the number for the metric-adjacent patterns
+  // above to bind it, so the amount was landing on market cap and screening
+  // for the wrong thing entirely.
+  //
+  // Deliberately narrow: only revenue, and only when market cap isn't also
+  // named. Debt is excluded because it usually appears as the qualitative
+  // "low debt" rather than as a claim about the number -- reading "logistics
+  // under 2000 Cr low debt" as debt ≤ 2000 Cr would be a clear regression.
+  // An explicit "debt under 500 cr" still binds via the metric patterns above.
+  const bareKey: NumericFieldKey =
+    /\b(revenue|sales|topline)\b/.test(q) && !/\b(market\s*cap|marketcap|mcap)\b/.test(q)
+      ? "revenue"
+      : "marketCap"
+
   consume(new RegExp(`${LESS}\\s*${NUM}${CR_ONLY}`, "g"), (m) => {
-    mergeConstraint(filters.numeric, "marketCap", {
-      max: scaleAmount(parseFloat(m[1]), m[2], "marketCap"),
+    mergeConstraint(filters.numeric, bareKey, {
+      max: scaleAmount(parseFloat(m[1]), m[2], bareKey),
     })
-    matched.push("bare:marketCap:max")
+    matched.push(`bare:${bareKey}:max`)
   })
   consume(new RegExp(`${MORE}\\s*${NUM}${CR_ONLY}`, "g"), (m) => {
-    mergeConstraint(filters.numeric, "marketCap", {
-      min: scaleAmount(parseFloat(m[1]), m[2], "marketCap"),
+    mergeConstraint(filters.numeric, bareKey, {
+      min: scaleAmount(parseFloat(m[1]), m[2], bareKey),
     })
-    matched.push("bare:marketCap:min")
+    matched.push(`bare:${bareKey}:min`)
   })
 
   // --- 6. "no pledge" / "zero debt" / "debt free" ------------------------

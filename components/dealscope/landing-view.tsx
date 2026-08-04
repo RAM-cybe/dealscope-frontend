@@ -94,8 +94,8 @@ export function LandingView({
         </h1>
 
         <p className="mt-3 font-mono text-sm text-foreground/90 tracking-wide">
-          {totalCount.toLocaleString("en-IN")} companies. {dealCount.toLocaleString("en-IN")} real M&amp;A
-          deals. Updated daily.
+          {totalCount.toLocaleString("en-IN")} companies. {dealCount.toLocaleString("en-IN")}{" "}
+          real M&amp;A deals. Updated daily.
         </p>
 
         {/* Live proof strip -- reads straight off the bundled dataset (same
@@ -104,7 +104,7 @@ export function LandingView({
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6, ease: "easeOut" }}
+          transition={{ delay: 0.12, duration: 0.4, ease: "easeOut" }}
           className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3"
         >
           <div className="flex items-baseline gap-2">
@@ -126,7 +126,8 @@ export function LandingView({
               Deals
             </span>
             <span className="font-mono text-xs text-foreground">
-              {dealCount.toLocaleString("en-IN")} precedent M&amp;A transactions
+              {dealCount.toLocaleString("en-IN")}{" "}
+              precedent M&amp;A transactions
             </span>
           </div>
         </motion.div>
@@ -141,7 +142,7 @@ export function LandingView({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
+          transition={{ delay: 0.18, duration: 0.4, ease: "easeOut" }}
           className="mt-12 max-w-2xl"
         >
           <div className="flex flex-col sm:flex-row items-stretch gap-0">
@@ -177,7 +178,7 @@ export function LandingView({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.95, duration: 0.6, ease: "easeOut" }}
+          transition={{ delay: 0.24, duration: 0.4, ease: "easeOut" }}
           className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 max-w-2xl"
         >
           <button
@@ -215,7 +216,7 @@ export function LandingView({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.6, ease: "easeOut" }}
+          transition={{ delay: 0.3, duration: 0.4, ease: "easeOut" }}
           className="mt-16"
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">Filter by Sector</span>

@@ -9,6 +9,29 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
 
+// Module-level handle to the live Lenis instance.
+//
+// Lenis hijacks the scroll position and animates it over ~1.2s. A plain
+// `window.scrollTo({ top: 0 })` therefore does NOT reset the scroll -- Lenis
+// still believes it is mid-animation at the old offset and, on its next rAF
+// tick, drags the page back toward where it thinks it should be. The result is
+// the page visibly sliding/fighting itself on every view change, which is the
+// bulk of the "transition jank" on this site.
+//
+// Callers that need a hard reset use scrollToTop() below, which tells Lenis
+// itself to jump, so its internal target and the real scroll position stay in
+// agreement. Falls back to the native call when Lenis is inactive (reduced
+// motion, or before mount).
+let activeLenis: Lenis | null = null
+
+export function scrollToTop() {
+  if (activeLenis) {
+    activeLenis.scrollTo(0, { immediate: true })
+    return
+  }
+  if (typeof window !== "undefined") window.scrollTo({ top: 0 })
+}
+
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null)
 
@@ -27,6 +50,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     })
 
     lenisRef.current = lenis
+    activeLenis = lenis
 
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update)
@@ -44,6 +68,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       gsap.ticker.remove(raf)
       lenis.destroy() // also tears down its scroll listeners
       lenisRef.current = null
+      if (activeLenis === lenis) activeLenis = null
     }
   }, [])
 

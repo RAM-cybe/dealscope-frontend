@@ -438,9 +438,13 @@ export function runScreen(
     }
   }
 
-  const results = [...pool].sort(
-    (a, b) => computeScore(b.factors, weights) - computeScore(a.factors, weights),
-  )
+  // Score once per company, then sort on the cached number. Scoring inside the
+  // comparator recomputed it on every comparison -- ~26k comparisons for the
+  // full universe, so ~52k computeScore calls per keystroke instead of 2,381.
+  // Identical ordering, just without the redundant work on the typing path.
+  const scored = pool.map((c) => ({ c, s: computeScore(c.factors, weights) }))
+  scored.sort((a, b) => b.s - a.s)
+  const results = scored.map((x) => x.c)
   return { results, matchCount, textFellBack }
 }
 
