@@ -321,7 +321,7 @@ function ResultRow({
                 <span
                   key={r.label}
                   className={cn(
-                    "inline-flex items-center border px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider",
+                    "inline-flex items-center border px-2 py-1 font-mono text-[10px] uppercase tracking-wider",
                     r.tone === "good"
                       ? "border-accent/40 text-accent/90"
                       : "border-border/60 text-muted-foreground",
