@@ -107,7 +107,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+            transition={{ delay: 0.06, duration: 0.35, ease: "easeOut" }}
             className="flex items-center gap-6 shrink-0"
           >
             <ScoreRing score={score} size={140} strokeWidth={3} sectorAverage={avg} />
@@ -164,7 +164,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 weight={weights[factor.key]}
                 metric={company.metrics[factor.metricKey]}
                 explainer={factor.explainer}
-                delay={0.1 * i}
+                delay={0.04 * i}
               />
             ))}
           </div>
@@ -181,7 +181,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
+              transition={{ delay: 0.06, duration: 0.35 }}
               className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
             >
               {company.about}
@@ -215,7 +215,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
+                  transition={{ delay: 0.08, duration: 0.35 }}
                   className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
                 >
                   {company.whyThisScore}
@@ -306,7 +306,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   key={`${deal.target}-${deal.year}-${i}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1, duration: 0.5 }}
+                  transition={{ delay: 0.1 + Math.min(i, 8) * 0.03, duration: 0.3 }}
                   className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b border-border/30 py-4 font-mono text-xs hover:bg-accent/5 transition-colors duration-300"
                 >
                   <span className="col-span-2 md:col-span-5 text-foreground">{deal.target}</span>
@@ -446,7 +446,7 @@ function NewsRow({
       rel="noopener noreferrer"
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.5 + Math.min(index, 6) * 0.08, duration: 0.45 }}
+      transition={{ delay: 0.1 + Math.min(index, 6) * 0.03, duration: 0.3 }}
       className="group block border-b border-border/30 py-4 hover:bg-accent/5 transition-colors duration-300"
     >
       <div className="flex items-baseline justify-between gap-3">
@@ -498,7 +498,7 @@ function FactorBar({
           className="absolute inset-y-0 left-0 bg-accent"
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
-          transition={{ delay: 0.3 + delay, duration: 0.9, ease: [0.22, 0.61, 0.36, 1] }}
+          transition={{ delay: 0.08 + delay, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
         />
       </div>
       <span className="mt-2 block font-mono text-[10px] text-muted-foreground/60">{value} / 100 sector-relative</span>

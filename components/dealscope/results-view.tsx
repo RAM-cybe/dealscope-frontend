@@ -30,6 +30,10 @@ interface ResultsViewProps {
   results: Company[]
   query: string
   onQueryChange: (q: string) => void
+  /** Commit the typed query (Enter). Without this the refine box updated the
+   *  list as you typed but pressing Enter did nothing and the URL never
+   *  captured the query, so refreshing or sharing lost it. */
+  onSubmitQuery: () => void
   selectedSectors: string[]
   onToggleSector: (sector: string) => void
   weights: Weights
@@ -58,6 +62,7 @@ export function ResultsView({
   results,
   query,
   onQueryChange,
+  onSubmitQuery,
   selectedSectors,
   onToggleSector,
   weights,
@@ -159,6 +164,7 @@ export function ResultsView({
         <ScreenBar
           query={query}
           onQueryChange={onQueryChange}
+          onSubmit={onSubmitQuery}
           filters={screen}
           onRemoveChip={onRemoveChip}
           onClearAll={onClearAll}
@@ -280,13 +286,13 @@ function ResultRow({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       // Cap the stagger so a 60-row set settles fast instead of trickling in
       // over ~3.5s, and drop the `layout` prop: with `layout`, every weight or
       // filter change re-sorted the list and animated all rows to new
       // positions at once -- the biggest scroll/interaction jank source here.
-      transition={{ delay: Math.min(index, 12) * 0.035, duration: 0.4, ease: [0.22, 0.61, 0.36, 1] }}
+      transition={{ delay: Math.min(index, 10) * 0.02, duration: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
     >
       <button
         onClick={onSelect}
