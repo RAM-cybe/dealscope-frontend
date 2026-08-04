@@ -160,7 +160,7 @@ export function LandingView({
             trailing={
               <button
                 onClick={onRun}
-                className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-3 border border-foreground/20 border-t-0 sm:border-t sm:border-l-0 px-8 py-4 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-3 px-8 font-mono text-xs uppercase tracking-widest leading-none text-foreground hover:text-accent transition-colors duration-200"
               >
                 <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
                 <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
