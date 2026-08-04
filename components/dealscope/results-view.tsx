@@ -122,7 +122,7 @@ export function ResultsView({
             SCREENED SET
           </h1>
           <p className="mt-2 font-mono text-xs text-muted-foreground">
-            {results.length} {results.length === 1 ? "study" : "studies"} • ranked by composite score
+            {results.length.toLocaleString("en-IN")} {results.length === 1 ? "company" : "companies"} • ranked by composite score
           </p>
         </div>
 
@@ -196,16 +196,33 @@ export function ResultsView({
       {results.length === 0 ? (
         <div className="border border-border/40 p-16 text-center">
           <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
-            No studies match the current constraints
+            No companies match every condition
           </p>
-          {activeFilters > 0 && (
+          <p className="mt-3 mx-auto max-w-sm font-mono text-[11px] leading-relaxed text-muted-foreground">
+            Conditions combine with AND, so each one narrows the set further. Remove a chip above to
+            widen the screen, or clear it and start again.
+          </p>
+          {/* Previously this offered "Loosen range filters (N)" and only when a
+              BUCKET filter was set -- so a natural-language query that returned
+              nothing gave the user an empty page with no action at all, which
+              is the most common way to hit zero results now. Clear-all is
+              always offered whenever anything is active, from either surface. */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
-              onClick={onOpenFilters}
-              className="mt-6 inline-flex items-center gap-2 border border-foreground/20 px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+              onClick={onClearAll}
+              className="inline-flex items-center gap-2 border border-accent/60 px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/10 transition-all duration-200"
             >
-              Loosen range filters ({activeFilters})
+              Clear all conditions
             </button>
-          )}
+            {activeFilters > 0 && (
+              <button
+                onClick={onOpenFilters}
+                className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+              >
+                Adjust filters ({activeFilters})
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col">

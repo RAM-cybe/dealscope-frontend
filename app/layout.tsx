@@ -4,7 +4,6 @@ import Link from "next/link"
 import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
-import { LoadingScreen } from "@/components/dealscope/loading-screen"
 import "./globals.css"
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -19,11 +18,42 @@ const ibmPlexMono = IBM_Plex_Mono({
 })
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" })
 
+const SITE_URL = "https://dealscope-screener.vercel.app"
+const SITE_TITLE = "DealScope — Acquisition screening for NSE-listed companies"
+const SITE_DESCRIPTION =
+  "Screen 2,381 NSE-listed Indian companies for acquisition fit. Sector-relative scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from precedent M&A. Free, no account required."
+
 export const metadata: Metadata = {
-  title: "DEALSCOPE — Screens India's Listed Companies for Acquisition Fit",
-  description:
-    "Screen and value NSE-listed Indian companies for acquisition attractiveness. Weighted factors, sector-relative scoring, indicative valuation ranges.",
-  generator: "v0.app",
+  // metadataBase makes every relative image/URL below absolute, which is what
+  // link-preview crawlers need -- a relative og:image is simply dropped.
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  applicationName: "DealScope",
+  authors: [{ name: "Ram Suthakaran" }],
+  keywords: [
+    "M&A screening", "NSE", "Indian equities", "acquisition targets",
+    "stock screener", "sector-relative scoring", "valuation",
+  ],
+  // Open Graph / Twitter were absent entirely, so sharing the link anywhere --
+  // LinkedIn especially -- produced a bare URL with no title, description or
+  // card. For a tool whose whole distribution model is being shared, that was
+  // the single biggest gap on the site.
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "DealScope",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: SITE_URL },
   icons: {
     icon: [
       {
@@ -54,7 +84,6 @@ export default function RootLayout({
         className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} font-sans antialiased overflow-x-hidden`}
       >
         <div className="noise-overlay" aria-hidden="true" />
-        <LoadingScreen />
         {/* Real header bar, not a floating chip.
             This was `position: fixed` with a semi-transparent blurred
             background and no reserved space anywhere in the layout, so it

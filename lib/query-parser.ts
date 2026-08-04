@@ -424,6 +424,29 @@ export function parseQuery(raw: string): ParseResult {
     matched.push(`max:${key}`)
   })
 
+  // --- 5b. Bare rupee amounts with no metric named -----------------------
+  // "logistics under 2000 Cr low debt" names no metric for the 2000, so every
+  // metric-specific pattern above skips it -- and the leftover number was then
+  // swallowed by the residual-text filter, silently dropping a constraint the
+  // user clearly intended. Defaulting to market cap follows how size is
+  // normally expressed about an Indian listed company ("a 2,000 crore
+  // company"), and because the assumption surfaces as a removable chip, a user
+  // who meant revenue can see the interpretation and correct it. Runs after
+  // the explicit forms so "under 2000 cr revenue" is never reinterpreted.
+  const CR_ONLY = "(?:\\s*(lakh\\s*cr(?:ore)?|lac\\s*cr(?:ore)?|cr(?:ore)?s?))"
+  consume(new RegExp(`${LESS}\\s*${NUM}${CR_ONLY}`, "g"), (m) => {
+    mergeConstraint(filters.numeric, "marketCap", {
+      max: scaleAmount(parseFloat(m[1]), m[2], "marketCap"),
+    })
+    matched.push("bare:marketCap:max")
+  })
+  consume(new RegExp(`${MORE}\\s*${NUM}${CR_ONLY}`, "g"), (m) => {
+    mergeConstraint(filters.numeric, "marketCap", {
+      min: scaleAmount(parseFloat(m[1]), m[2], "marketCap"),
+    })
+    matched.push("bare:marketCap:min")
+  })
+
   // --- 6. "no pledge" / "zero debt" / "debt free" ------------------------
   consume(new RegExp(`\\b(?:no|zero|nil|without)\\s+(?:promoter\\s+)?pledge\\b`, "g"), () => {
     mergeConstraint(filters.numeric, "promoterPledge", { max: 0 })
