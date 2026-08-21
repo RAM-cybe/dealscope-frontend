@@ -1,0 +1,123 @@
+name: Apply data-bot branch
+
+# The backend data bot (RAM-cybe/dealscope) never writes to this repo's main
+# and never puts a token in a clone URL. It pushes either:
+#   price-sync/<run-id>  — daily market caps; this workflow opens a PR and
+#                          squash-merges it (required reviews stay at 0)
+#   promote/<run-id>     — quarterly fundamentals; this workflow opens a PR
+#                          and STOPS. A human merges it.
+#
+# Only the five data JSON files are allowed on these branches. Anything else
+# fails the job instead of reaching main.
+
+on:
+  push:
+    branches:
+      - 'price-sync/**'
+      - 'promote/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: apply-data-bot-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify only allowed data files changed vs main
+        id: verify
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          mapfile -t CHANGED < <(git diff --name-only origin/main...HEAD)
+          if [[ ${#CHANGED[@]} -eq 0 ]]; then
+            echo "No file differences vs origin/main — nothing to apply."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Changed files:"
+          printf '  %s\n' "${CHANGED[@]}"
+          allowed='^data/(companies|deals|filter-bands|sector-bands|dataset-meta)\.json$'
+          for f in "${CHANGED[@]}"; do
+            if [[ ! "$f" =~ $allowed ]]; then
+              echo "::error::Unexpected path on data-bot branch: $f"
+              echo "Only data/companies.json, data/deals.json, data/filter-bands.json, data/sector-bands.json, data/dataset-meta.json are allowed."
+              exit 1
+            fi
+          done
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request if missing
+        id: pr
+        if: steps.verify.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if gh pr view "$BRANCH" --json number --jq .number > /tmp/pr_number; then
+            echo "PR already exists: $(cat /tmp/pr_number)"
+          else
+            if [[ "$BRANCH" == price-sync/* ]]; then
+              TITLE="Daily price refresh: ${BRANCH#price-sync/}"
+              BODY="Automated daily market-cap sync from RAM-cybe/dealscope. Fundamentals are unchanged. Safe to auto-merge. Source run: ${RUN_URL}"
+            else
+              TITLE="Promote fundamentals snapshot (${BRANCH#promote/})"
+              BODY="Frontend half of a fundamentals promotion from RAM-cybe/dealscope. Merging this is what Vercel deploys. Do not merge until the matching backend promotion PR is ready. Not auto-merged. Source run: ${RUN_URL}"
+            fi
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
+            gh pr view "$BRANCH" --json number --jq .number > /tmp/pr_number
+          fi
+          echo "number=$(cat /tmp/pr_number)" >> "$GITHUB_OUTPUT"
+
+      - name: Auto-merge daily price-sync only
+        if: success() && startsWith(github.ref_name, 'price-sync/') && steps.verify.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${PR}" ]]; then
+            echo "::error::No pull request number from the previous step"
+            exit 1
+          fi
+          for i in 1 2 3 4 5 6 7 8; do
+            if gh pr merge "$PR" --squash --delete-branch; then
+              echo "Merged PR #$PR"
+              exit 0
+            fi
+            if [[ "$i" -eq 8 ]]; then
+              echo "::error::Could not merge price-sync PR #$PR after 8 attempts"
+              exit 1
+            fi
+            echo "Merge not ready (attempt $i/8); waiting 5s"
+            sleep 5
+          done
+
+      - name: Job summary
+        if: always()
+        env:
+          BRANCH: ${{ github.ref_name }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          {
+            echo "## Data-bot apply — \`${BRANCH}\`"
+            echo ""
+            echo "- Pull request: ${PR:-'(none)'}"
+            if [[ "$BRANCH" == price-sync/* ]]; then
+              echo "- Daily prices: auto-merge attempted (required reviews = 0)"
+            else
+              echo "- Promote: PR opened only — a human must merge"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
