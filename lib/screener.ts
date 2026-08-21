@@ -17,7 +17,8 @@
 // types and the existing scorer.
 //
 // The scoring engine is untouched. computeScore() still produces the
-// sector-relative composite, and ranking is still by that score -- this file
+// sector-relative composite (re-weighting only the factors that exist),
+// and ranking is still by that score -- this file
 // only changes which companies are *eligible*, never how they rank.
 // ---------------------------------------------------------------------------
 
@@ -460,7 +461,12 @@ export function runScreen(
   // full universe, so ~52k computeScore calls per keystroke instead of 2,381.
   // Identical ordering, just without the redundant work on the typing path.
   const scored = pool.map((c) => ({ c, s: computeScore(c.factors, weights) }))
-  scored.sort((a, b) => b.s - a.s)
+  scored.sort((a, b) => {
+    if (a.s == null && b.s == null) return 0
+    if (a.s == null) return 1
+    if (b.s == null) return -1
+    return b.s - a.s
+  })
   const results = scored.map((x) => x.c)
   return { results, matchCount, textFellBack }
 }

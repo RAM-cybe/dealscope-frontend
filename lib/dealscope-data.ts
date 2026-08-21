@@ -10,6 +10,19 @@ export interface Weights {
   debtLevel: number
 }
 
+/** Sector-relative factor percentiles. null = the metric is missing, never 0. */
+export interface FactorScores {
+  revenueGrowth: number | null
+  ebitdaMargin: number | null
+  roce: number | null
+  debtLevel: number | null
+}
+
+export const FACTOR_KEYS: (keyof FactorScores)[] = ["revenueGrowth", "ebitdaMargin", "roce", "debtLevel"]
+
+/** Same floor as Python scoring.py MIN_POPULATED_METRICS. */
+export const MIN_POPULATED_FACTORS = 2
+
 export const DEFAULT_WEIGHTS: Weights = {
   revenueGrowth: 25,
   ebitdaMargin: 25,
@@ -283,14 +296,15 @@ export interface ComparableDeal {
 export interface Company {
   name: string
   ticker: string
-  sector: string // display name, e.g. "Industrials & Auto"
-  sectorKey: string // raw EY-bucket key used to match comparable deals, e.g. "Industrials and Auto"
-  // Granular yfinance-sourced fields, alongside the 6-bucket EY sector above.
-  // null for the ~74/2,046 companies missing them upstream.
+  sector: string // 13-sector v2 display name, e.g. "Industrials & Capital Goods"
+  sectorKey: string // same v2 label; used to match comparable deals on sector_v2
+  // Granular yfinance-sourced fields, alongside the 13-sector v2 grouping.
+  // null for companies missing them upstream.
   industry: string | null // e.g. "Specialty Chemicals" (one of 123 distinct values)
   sectorRaw: string | null // Yahoo's own 11-value sector taxonomy, e.g. "Basic Materials"
-  /* Factor scores, 0-100, sector-relative. debtLevel: higher = healthier (lower debt) */
-  factors: Weights
+  /* Factor scores, 0-100, sector-relative. null = missing. debtLevel: higher = healthier (lower debt) */
+  factors: FactorScores
+  asOfDate: string | null // fundamentals as-of date for this company
   metrics: {
     revenue: string // TTM revenue
     revenueGrowth: string
@@ -390,8 +404,8 @@ function formatPct(value: number | null | undefined): string {
   return `${value.toFixed(1)}%`
 }
 
-function formatFactor(value: number | null | undefined): number {
-  if (!isNum(value)) return 0
+function formatFactor(value: number | null | undefined): number | null {
+  if (!isNum(value)) return null
   return Math.round(value)
 }
 
@@ -410,6 +424,7 @@ interface CompanyRecord {
   name: string
   sector: string
   sector_display: string
+  ey_bucket?: string | null
   industry: string | null
   sector_raw: string | null
   revenue: number | null
@@ -450,6 +465,7 @@ export interface DealRow {
   acquirer: string
   sector_raw: string
   ey_bucket: string
+  sector_v2?: string | null
   deal_type: string
   deal_value_usdm: number | null
   stake_pct: number | null
@@ -464,6 +480,7 @@ function mapCompanyRecord(r: CompanyRecord): Company {
     sectorKey: r.sector,
     industry: r.industry ?? null,
     sectorRaw: r.sector_raw ?? null,
+    asOfDate: r.as_of_date || null,
     factors: {
       revenueGrowth: formatFactor(r.factor_revenue_growth),
       ebitdaMargin: formatFactor(r.factor_ebitda_margin),
@@ -545,6 +562,13 @@ const ALL_INDUSTRIES: IndustryOption[] = (() => {
 })()
 
 const DATA_AS_OF: string = (companiesData as CompanyRecord[])[0]?.as_of_date ?? ""
+
+export function compareScores(a: number | null, b: number | null): number {
+  if (a == null && b == null) return 0
+  if (a == null) return 1
+  if (b == null) return -1
+  return b - a
+}
 
 /** Industry breakdown scoped to a set of broad sectors -- the results page's
  *  drill-down (sector chip -> its granular industries). Deliberately takes
@@ -699,10 +723,10 @@ export function getNewsForTicker(ticker: string): CompanyNews {
 }
 
 export function comparablesForSector(sectorKey: string, deals: DealRow[]): ComparableDeal[] {
-  return deals
-    .filter((d) => d.ey_bucket === sectorKey)
+  const matched = deals.filter((d) => (d.sector_v2 || d.ey_bucket) === sectorKey)
+  return matched
     .sort((a, b) => (b.report_year ?? 0) - (a.report_year ?? 0))
-    .slice(0, 5)
+    .slice(0, 10)
     .map((d) => ({
       target: d.target,
       acquirer: d.acquirer,
@@ -711,31 +735,43 @@ export function comparablesForSector(sectorKey: string, deals: DealRow[]): Compa
     }))
 }
 
+export function comparableCountForSector(sectorKey: string, deals: DealRow[]): number {
+  return deals.filter((d) => (d.sector_v2 || d.ey_bucket) === sectorKey).length
+}
+
 // ---------------------------------------------------------------------------
 // Scoring / search -- pure client-side math, unchanged. Operates on whatever
 // company list is passed in (the full bundled set).
 // ---------------------------------------------------------------------------
 
-export function computeScore(factors: Weights, weights: Weights): number {
-  const total = weights.revenueGrowth + weights.ebitdaMargin + weights.roce + weights.debtLevel
-  if (total === 0) return 0
-  const raw =
-    factors.revenueGrowth * weights.revenueGrowth +
-    factors.ebitdaMargin * weights.ebitdaMargin +
-    factors.roce * weights.roce +
-    factors.debtLevel * weights.debtLevel
-  return Math.round(raw / total)
+export function computeScore(factors: FactorScores, weights: Weights): number | null {
+  const populated = FACTOR_KEYS.filter((k) => factors[k] != null)
+  if (populated.length < MIN_POPULATED_FACTORS) return null
+
+  let weightedSum = 0
+  let weightTotal = 0
+  for (const key of FACTOR_KEYS) {
+    const value = factors[key]
+    if (value == null) continue
+    weightedSum += value * weights[key]
+    weightTotal += weights[key]
+  }
+  if (weightTotal === 0) return null
+  return Math.round(weightedSum / weightTotal)
 }
 
-export function sectorAverage(companies: Company[], sector: string, weights: Weights): number {
-  const peers = companies.filter((c) => c.sector === sector)
-  if (peers.length === 0) return 0
-  const sum = peers.reduce((acc, c) => acc + computeScore(c.factors, weights), 0)
-  return Math.round(sum / peers.length)
+export function sectorAverage(companies: Company[], sector: string, weights: Weights): number | null {
+  if (sector === "Unclassified") return null
+  const scores = companies
+    .filter((c) => c.sector === sector)
+    .map((c) => computeScore(c.factors, weights))
+    .filter((s): s is number => s != null)
+  if (scores.length === 0) return null
+  return Math.round(scores.reduce((acc, s) => acc + s, 0) / scores.length)
 }
 
 export const FACTOR_LABELS: {
-  key: keyof Weights
+  key: keyof FactorScores
   label: string
   metricKey: keyof Company["metrics"]
   explainer: string
@@ -978,11 +1014,11 @@ export function searchCompaniesDetailed(
           (a, b) =>
             a.tier - b.tier ||
             a.company.name.length - b.company.name.length ||
-            computeScore(b.company.factors, weights) - computeScore(a.company.factors, weights),
+            compareScores(computeScore(a.company.factors, weights), computeScore(b.company.factors, weights)),
         )
         .map((r) => r.company)
     : [...results].sort(
-        (a, b) => computeScore(b.factors, weights) - computeScore(a.factors, weights),
+        (a, b) => compareScores(computeScore(a.factors, weights), computeScore(b.factors, weights)),
       )
 
   return { results: sorted, queryFellBack }

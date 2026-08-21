@@ -12,9 +12,11 @@ import {
   computeScore,
   sectorAverage,
   comparablesForSector,
+  comparableCountForSector,
   getNewsForTicker,
   FACTOR_LABELS,
 } from "@/lib/dealscope-data"
+import { formatAsOfDate } from "@/components/dealscope/data-freshness"
 import { cn } from "@/lib/utils"
 
 interface TearSheetViewProps {
@@ -29,7 +31,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
   const score = computeScore(company.factors, weights)
   const avg = sectorAverage(companies, company.sector, weights)
   const comparables = comparablesForSector(company.sectorKey, deals)
+  const comparableCount = comparableCountForSector(company.sectorKey, deals)
   const companyNews = getNewsForTicker(company.ticker)
+  const unclassified = company.sector === "Unclassified"
 
   // Key Financials -- raw numbers are the headline. A non-zero promoter pledge
   // is a real governance-risk signal, so flag it in accent rather than leaving
@@ -37,8 +41,8 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
   const fin = company.financials
   const pledgeFlagged = fin.promoterPledge !== "N/A" && Number.parseFloat(fin.promoterPledge) > 0
   const financialCards: { label: string; value: string; flagged?: boolean; note?: string }[] = [
-    { label: "Market Cap", value: fin.marketCap, note: fin.marketCapAsOf ? `Live as of ${fin.marketCapAsOf}` : undefined },
-    { label: "Revenue (TTM)", value: company.metrics.revenue },
+    { label: "Market Cap", value: fin.marketCap, note: fin.marketCapAsOf ? `As of ${formatAsOfDate(fin.marketCapAsOf)}` : undefined },
+    { label: "Revenue (TTM)", value: company.metrics.revenue, note: company.asOfDate ? `As of ${formatAsOfDate(company.asOfDate)}` : undefined },
     { label: "EBITDA Margin", value: company.metrics.ebitdaMargin },
     { label: "ROCE", value: company.metrics.roce },
     { label: "Total Debt", value: company.metrics.totalDebt },
@@ -114,9 +118,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground leading-loose">
               <span className="block text-foreground">Composite Score</span>
               <span className="block">
-                Sector Avg <span className="text-accent">{avg}</span>
+                Sector Avg <span className="text-accent">{avg == null ? "—" : avg}</span>
               </span>
-              <span className="block text-muted-foreground/70">Scale 0–100</span>
+              <span className="block text-muted-foreground/70">
+                {unclassified ? "Unclassified — not scored" : "Scale 0–100"}
+              </span>
             </div>
           </motion.div>
         </div>
@@ -124,11 +130,10 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         {/* Key financials -- the raw numbers are the headline of the sheet */}
         <div className="mt-16">
           <SectionLabel index="01" label="Key Financials" />
-          {fin.marketCapAsOf && (
-            <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
-              Market capitalization refreshes daily.
-            </p>
-          )}
+          <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
+            Market cap as of {formatAsOfDate(fin.marketCapAsOf)}. Fundamentals as of{" "}
+            {formatAsOfDate(company.asOfDate)}.
+          </p>
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {financialCards.map((card) => (
               <FinancialCard
@@ -152,8 +157,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         <div className="mt-14">
           <SectionLabel index="02" label="Factor Decomposition" />
           <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50 max-w-2xl">
-            Each score below is ranked 0–100 against only the other companies in {company.sector} — not
-            the whole market — so a 91 means this company outperforms ~91% of its direct sector peers.
+            {unclassified
+              ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than invented."
+              : `Each score below is ranked 0–100 against only the other companies in ${company.sector} — not the whole market — so a 91 means this company outperforms ~91% of its direct sector peers. Missing factors show as — and are dropped from the composite, not treated as zero.`}
           </p>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
             {FACTOR_LABELS.map((factor, i) => (
@@ -248,10 +254,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           <div className="lg:col-span-5">
             <SectionLabel index="05" label="Indicative Valuation Range" />
             <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/50">
-              Two independent estimates of what this company could be worth in an acquisition, based on
-              how similar companies have recently been valued. EV/EBITDA values the whole business
-              including debt; P/E values just the equity. Shown as a range, not a single number, because
-              real valuations always fall in a band.
+              Two independent estimates based on listed-peer trading multiples in {company.sector} —
+              the 25th–75th percentile EV/EBITDA and P/E of other listed companies in this sector,
+              applied to this company&apos;s own earnings. These are not precedent M&amp;A deal
+              multiples. EV/EBITDA values the whole business including debt; P/E values just the
+              equity. Shown as a range, not a single number.
             </p>
             <div className="mt-8 border border-border/50">
               <div className="border-b border-border/50 p-6">
@@ -273,7 +280,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             </div>
             <p className="mt-4 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
               {company.valuation.note ||
-                "Ranges derived from sector-relative comparables, adjusted for growth and leverage differentials."}
+                "Ranges derived from listed-peer trading multiples in this sector. Not M&A deal multiples."}
             </p>
           </div>
         </div>
@@ -282,10 +289,8 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         <div className="mt-20">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <SectionLabel index="06" label="Comparable Deals" />
-            {/* M&A deal values are genuinely reported in USD -- label it so it
-                doesn't read as a mismatch against the rupee-denominated site. */}
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              Deal values in US$ (as reported)
+              Historical M&amp;A — {comparableCount} in sector of 727 · values in US$ as reported
             </span>
           </div>
           <div className="mt-8">
@@ -296,6 +301,10 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               <span className="col-span-1">Year</span>
               <span className="col-span-2 text-right">Value (US$)</span>
             </div>
+            <p className="mt-3 mb-4 font-mono text-[10px] leading-relaxed text-muted-foreground/50 max-w-2xl">
+              Precedent transactions for context only. They are not the source of the valuation range
+              above, which uses listed-peer trading multiples.
+            </p>
             {comparables.length === 0 ? (
               <div className="py-8 font-mono text-xs text-muted-foreground/60">
                 No comparable deals found in this sector.
@@ -479,12 +488,13 @@ function FactorBar({
   delay,
 }: {
   label: string
-  value: number
+  value: number | null
   weight: number
   metric: string
   explainer: string
   delay: number
 }) {
+  const missing = value == null
   return (
     <div>
       <div className="flex items-baseline justify-between">
@@ -497,11 +507,13 @@ function FactorBar({
         <motion.div
           className="absolute inset-y-0 left-0 bg-accent"
           initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
+          animate={{ width: missing ? "0%" : `${value}%` }}
           transition={{ delay: 0.08 + delay, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
         />
       </div>
-      <span className="mt-2 block font-mono text-[10px] text-muted-foreground/60">{value} / 100 sector-relative</span>
+      <span className="mt-2 block font-mono text-[10px] text-muted-foreground/60">
+        {missing ? "— / unavailable" : `${value} / 100 sector-relative`}
+      </span>
       <span className="mt-1 block font-mono text-[10px] leading-relaxed text-muted-foreground/40">{explainer}</span>
     </div>
   )
