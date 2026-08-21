@@ -13,9 +13,9 @@ import {
   sectorAverage,
   comparablesForSector,
   comparableCountForSector,
-  getNewsForTicker,
   FACTOR_LABELS,
 } from "@/lib/dealscope-data"
+import { useCompanyDetails } from "@/lib/company-details"
 import { formatAsOfDate } from "@/components/dealscope/data-freshness"
 import { cn } from "@/lib/utils"
 
@@ -32,7 +32,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
   const avg = sectorAverage(companies, company.sector, weights)
   const comparables = comparablesForSector(company.sectorKey, deals)
   const comparableCount = comparableCountForSector(company.sectorKey, deals)
-  const companyNews = getNewsForTicker(company.ticker)
+  const { ready: detailsReady, narrative, news: companyNews } = useCompanyDetails(company.ticker)
+  const hasAbout = Boolean(narrative.about)
+  const hasWhyThisScore = Boolean(narrative.whyThisScore)
   const unclassified = company.sector === "Unclassified"
 
   // Key Financials -- raw numbers are the headline. A non-zero promoter pledge
@@ -183,15 +185,19 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             score explanation does. */}
         <div className="mt-20 max-w-3xl">
           <SectionLabel index="03" label="About The Company" />
-          {company.hasAbout ? (
+          {hasAbout ? (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.06, duration: 0.35 }}
               className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
             >
-              {company.about}
+              {narrative.about}
             </motion.p>
+          ) : !detailsReady ? (
+            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+              Loading description…
+            </p>
           ) : (
             <div className="mt-8 border border-dashed border-border/60 p-8">
               <div className="flex items-center gap-3">
@@ -216,7 +222,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         <div className="mt-20 grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
             <SectionLabel index="04" label="Why This Score" />
-            {company.hasWhyThisScore ? (
+            {hasWhyThisScore ? (
               <>
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -224,12 +230,16 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   transition={{ delay: 0.08, duration: 0.35 }}
                   className="mt-8 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
                 >
-                  {company.whyThisScore}
+                  {narrative.whyThisScore}
                 </motion.p>
                 <p className="mt-6 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
                   Generated from screened fundamentals. Not investment advice.
                 </p>
               </>
+            ) : !detailsReady ? (
+              <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+                Loading explanation…
+              </p>
             ) : (
               <div className="mt-8 border border-dashed border-border/60 p-8">
                 <div className="flex items-center gap-3">
