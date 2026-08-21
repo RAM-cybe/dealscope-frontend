@@ -7,8 +7,8 @@ name: Apply data-bot branch
 #   promote/<run-id>     — quarterly fundamentals; this workflow opens a PR
 #                          and STOPS. A human merges it.
 #
-# Only the five data JSON files are allowed on these branches. Anything else
-# fails the job instead of reaching main.
+# Only the published data JSON files are allowed on these branches. Anything
+# else fails the job instead of reaching main.
 
 on:
   push:
@@ -47,11 +47,11 @@ jobs:
           fi
           echo "Changed files:"
           printf '  %s\n' "${CHANGED[@]}"
-          allowed='^data/(companies|deals|filter-bands|sector-bands|dataset-meta)\.json$'
+          allowed='^data/(companies|narratives|deals|filter-bands|sector-bands|dataset-meta)\.json$'
           for f in "${CHANGED[@]}"; do
             if [[ ! "$f" =~ $allowed ]]; then
               echo "::error::Unexpected path on data-bot branch: $f"
-              echo "Only data/companies.json, data/deals.json, data/filter-bands.json, data/sector-bands.json, data/dataset-meta.json are allowed."
+              echo "Only data/{companies,narratives,deals,filter-bands,sector-bands,dataset-meta}.json are allowed."
               exit 1
             fi
           done

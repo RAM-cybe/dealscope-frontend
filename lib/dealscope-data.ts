@@ -1,6 +1,5 @@
 import companiesData from "@/data/companies.json"
 import dealsData from "@/data/deals.json"
-import newsData from "@/data/news.json"
 import filterBandsData from "@/data/filter-bands.json"
 
 export interface Weights {
@@ -390,7 +389,7 @@ function isNum(v: unknown): v is number {
 // valid as a React child". Treat anything that isn't actually a non-empty
 // string as absent -- safe regardless of what shape a future data hiccup
 // takes, not just this one.
-function asString(value: unknown): string | null {
+export function asString(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null
 }
 
@@ -455,9 +454,6 @@ interface CompanyRecord {
   pe_implied_high: number | null
   valuation_note: string | null
   as_of_date: string
-  rationale: string | null
-  about: string | null
-  why_this_score: string | null
 }
 
 export interface DealRow {
@@ -525,10 +521,10 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       peImplied: formatRange(r.pe_implied_low, r.pe_implied_high),
       note: r.valuation_note ?? "",
     },
-    about: asString(r.about),
-    hasAbout: Boolean(asString(r.about)),
-    whyThisScore: asString(r.why_this_score) ?? asString(r.rationale),
-    hasWhyThisScore: Boolean(asString(r.why_this_score) ?? asString(r.rationale)),
+    about: null,
+    hasAbout: false,
+    whyThisScore: null,
+    hasWhyThisScore: false,
   }
 }
 
@@ -683,43 +679,6 @@ export interface CompanyNews {
   filings: NseFiling[]
   bseNotices: BseNotice[]
   news: NewsItem[]
-}
-
-const EMPTY_NEWS: CompanyNews = { filings: [], bseNotices: [], news: [] }
-
-function toArray<T>(v: unknown): T[] {
-  return Array.isArray(v) ? (v as T[]) : []
-}
-
-function normalizeNewsEntry(raw: unknown): CompanyNews {
-  const r = (raw ?? {}) as Record<string, unknown>
-  return {
-    filings: toArray<NseFiling>(r.filings),
-    bseNotices: toArray<BseNotice>(r.bseNotices),
-    news: toArray<NewsItem>(r.news),
-  }
-}
-
-const NEWS_BY_TICKER: Map<string, CompanyNews> = (() => {
-  const map = new Map<string, CompanyNews>()
-  const raw = newsData as unknown
-
-  if (Array.isArray(raw)) {
-    for (const entry of raw) {
-      const ticker = (entry as { ticker?: string })?.ticker
-      if (ticker) map.set(ticker, normalizeNewsEntry(entry))
-    }
-  } else if (raw && typeof raw === "object") {
-    for (const [ticker, entry] of Object.entries(raw as Record<string, unknown>)) {
-      map.set(ticker, normalizeNewsEntry(entry))
-    }
-  }
-
-  return map
-})()
-
-export function getNewsForTicker(ticker: string): CompanyNews {
-  return NEWS_BY_TICKER.get(ticker) ?? EMPTY_NEWS
 }
 
 export function comparablesForSector(sectorKey: string, deals: DealRow[]): ComparableDeal[] {
