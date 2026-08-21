@@ -5,6 +5,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
 import { DataFreshness } from "@/components/dealscope/data-freshness"
+import { StaleDataBanner } from "@/components/dealscope/stale-data-banner"
 import "./globals.css"
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -112,6 +113,7 @@ export default function RootLayout({
             </Link>
           </div>
         </header>
+        <StaleDataBanner />
         <SmoothScroll>{children}</SmoothScroll>
         <Analytics />
       </body>
