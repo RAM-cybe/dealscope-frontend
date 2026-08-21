@@ -3,10 +3,10 @@
 import { motion } from "framer-motion"
 
 interface ScoreRingProps {
-  score: number
+  score: number | null
   size?: number
   strokeWidth?: number
-  sectorAverage?: number
+  sectorAverage?: number | null
   showLabel?: boolean
   className?: string
 }
@@ -22,9 +22,10 @@ export function ScoreRing({
   const radius = (size - strokeWidth * 2) / 2
   const circumference = 2 * Math.PI * radius
   const center = size / 2
+  const hasScore = score != null
 
   // Sector average tick position
-  const avgAngle = sectorAverage !== undefined ? (sectorAverage / 100) * 360 - 90 : 0
+  const avgAngle = sectorAverage != null ? (sectorAverage / 100) * 360 - 90 : 0
   const avgRad = (avgAngle * Math.PI) / 180
   const tickInner = radius - 5
   const tickOuter = radius + 5
@@ -49,11 +50,11 @@ export function ScoreRing({
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: circumference - (score / 100) * circumference }}
+          animate={{ strokeDashoffset: circumference - ((hasScore ? score : 0) / 100) * circumference }}
           transition={{ duration: 1.2, ease: [0.22, 0.61, 0.36, 1] }}
         />
       </svg>
-      {sectorAverage !== undefined && (
+      {sectorAverage != null && (
         <svg width={size} height={size} className="absolute inset-0" aria-hidden="true">
           <line
             x1={center + tickInner * Math.cos(avgRad)}
@@ -75,7 +76,7 @@ export function ScoreRing({
             className="font-[family-name:var(--font-bebas)] leading-none text-foreground"
             style={{ fontSize: size * 0.32 }}
           >
-            {score}
+            {hasScore ? score : "—"}
           </motion.span>
         </div>
       )}

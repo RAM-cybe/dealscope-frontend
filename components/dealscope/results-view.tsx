@@ -131,7 +131,9 @@ export function ResultsView({
             {results.length.toLocaleString("en-IN")}{" "}
             {results.length === 1 ? "company matches" : "companies match"}
           </h1>
-          <p className="mt-2 font-mono text-xs text-muted-foreground">ranked by composite score</p>
+          <p className="mt-2 font-mono text-xs text-muted-foreground">
+            ranked by composite score · missing factors shown as — · unclassified names are not scored
+          </p>
         </div>
 
         <div className="flex items-center gap-3 self-start md:self-auto">

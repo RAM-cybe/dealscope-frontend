@@ -11,6 +11,7 @@ import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-fil
 import type { Sector, IndustryGroup, BucketFilters } from "@/lib/dealscope-data"
 import { ScreenBar } from "@/components/dealscope/screen-bar"
 import { ExampleScreens } from "@/components/dealscope/example-screens"
+import { DataFreshness } from "@/components/dealscope/data-freshness"
 import type { ScreenFilters, FilterChip } from "@/lib/screener"
 import type { ExampleScreen } from "@/lib/example-screens"
 
@@ -95,7 +96,7 @@ export function LandingView({
 
         <p className="mt-3 font-mono text-sm text-foreground/90 tracking-wide">
           {totalCount.toLocaleString("en-IN")} companies. {dealCount.toLocaleString("en-IN")}{" "}
-          real M&amp;A deals. Updated daily.
+          real M&amp;A deals.
         </p>
 
         {/* Live proof strip -- reads straight off the bundled dataset (same
@@ -117,19 +118,13 @@ export function LandingView({
           </div>
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              Prices
-            </span>
-            <span className="font-mono text-xs text-foreground">Refreshed daily</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
               Deals
             </span>
             <span className="font-mono text-xs text-foreground">
-              {dealCount.toLocaleString("en-IN")}{" "}
-              precedent M&amp;A transactions
+              {dealCount.toLocaleString("en-IN")} historical M&amp;A transactions
             </span>
           </div>
+          <DataFreshness />
         </motion.div>
 
         <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
@@ -298,8 +293,8 @@ export function LandingView({
           <RevealItem delay={0.08}>
             <p className="text-muted-foreground">
               Open any company and you get a full tear sheet — real financials, the scoring breakdown,
-              comparable deals that actually happened, and an estimated valuation range built off
-              precedent transactions in that sector.
+              an indicative valuation range from listed-peer trading multiples, and a separate table of
+              comparable M&amp;A deals that actually happened in that sector.
             </p>
           </RevealItem>
           <RevealItem delay={0.16}>
@@ -325,7 +320,8 @@ export function LandingView({
             Before you touch a single control, every company is scored on four sector-relative
             factors — Revenue Growth, EBITDA Margin, ROCE, and Debt Level. Each factor is ranked
             0–100 against the company&apos;s own sector peers, and the four combine, equally weighted,
-            into the composite score shown on every tear sheet.
+            into the composite score shown on every tear sheet. Missing factors are dropped, not
+            scored as zero; the remaining factors are re-weighted.
           </p>
           <p className="text-muted-foreground">
             That equal-weight, sector-relative composite is the default ranking of the entire

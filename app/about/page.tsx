@@ -2,11 +2,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Linkedin, Mail } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
+import { DataFreshness, FUNDAMENTALS_AS_OF, FUNDAMENTALS_AS_OF_MAX, PRICES_AS_OF, formatAsOfDate } from "@/components/dealscope/data-freshness"
+import datasetMeta from "@/data/dataset-meta.json"
 
 export const metadata: Metadata = {
   title: "About — DealScope",
   description:
-    "How DealScope screens 2,381 NSE-listed companies for acquisition fit: sector-relative percentile scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from 727 precedent Indian M&A transactions.",
+    "How DealScope screens 2,381 NSE-listed companies for acquisition fit: sector-relative percentile scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from listed-peer trading multiples.",
 }
 
 function Section({
@@ -97,8 +99,10 @@ export default function AboutPage() {
             <span className="text-foreground">EBITDA margin</span>,{" "}
             <span className="text-foreground">return on capital employed</span>, and{" "}
             <span className="text-foreground">debt level</span> (inverted, so lower leverage scores
-            higher). Those four combine into a single 0–100 composite. The default weighting is
-            equal; the weights are adjustable, and the ranking recomputes against them.
+            higher). Those four combine into a single 0–100 composite, re-weighted across whichever
+            of the four factors are actually present. A missing factor is shown as unavailable — never
+            treated as zero. The default weighting is equal; the weights are adjustable, and the
+            ranking recomputes against them.
           </p>
           <p>
             Percentiles are always computed across the full universe, never across whatever subset a
@@ -107,11 +111,19 @@ export default function AboutPage() {
             of how you arrived at it.
           </p>
           <p>
-            Valuation ranges are derived from precedent transactions — EV/EBITDA and P/E multiples
-            observed in{" "}
-            <span className="text-foreground">727 Indian M&amp;A deals between 2006 and 2025</span>,
-            matched to the target&apos;s sector. They are indicative context for what comparable
-            businesses have changed hands at, not a fair-value estimate.
+            Valuation ranges are based on{" "}
+            <span className="text-foreground">listed-peer trading multiples</span> — the 25th to 75th
+            percentile EV/EBITDA and P/E of other listed companies in the same 13-sector peer group —
+            applied to the company&apos;s own earnings. They are not precedent M&amp;A deal multiples,
+            and they are not a fair-value estimate.
+          </p>
+          <p>
+            A separate comps table lists{" "}
+            <span className="text-foreground">
+              {datasetMeta.deal_count.toLocaleString("en-IN")} Indian M&amp;A transactions
+            </span>{" "}
+            from 2006–2025, matched to the same sector. That table is historical deal context. It does
+            not feed the valuation range.
           </p>
           <p>
             Where a figure is genuinely unavailable it is shown as unavailable. Nothing is imputed,
@@ -121,16 +133,34 @@ export default function AboutPage() {
         </Section>
 
         <Section index="04" label="Data & Refresh">
+          <DataFreshness className="mb-2" />
           <p>
             The universe is{" "}
-            <span className="text-foreground">2,381 NSE-listed companies</span>. Share prices and
-            market capitalisations refresh daily through an automated pipeline. Fundamentals —
-            revenue, margins, ROCE, debt — update on a quarterly cycle, following reported results,
-            and each company&apos;s tear sheet carries the date its figures are drawn from.
+            <span className="text-foreground">
+              {datasetMeta.universe_size.toLocaleString("en-IN")} NSE-listed companies
+            </span>
+            . Share prices and market capitalisations last updated{" "}
+            <span className="text-foreground">{PRICES_AS_OF}</span>, refreshed daily. Fundamentals —
+            revenue, margins, ROCE, debt — last updated{" "}
+            <span className="text-foreground">{FUNDAMENTALS_AS_OF}</span>
+            {FUNDAMENTALS_AS_OF_MAX !== FUNDAMENTALS_AS_OF ? (
+              <>
+                {" "}
+                for most of the universe (
+                {Object.entries(datasetMeta.fundamentals_as_of_counts)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([date, n]) => `${n.toLocaleString("en-IN")} as of ${formatAsOfDate(date)}`)
+                  .join("; ")}
+                )
+              </>
+            ) : null}
+            . Each company&apos;s tear sheet also carries the date its own figures are drawn from.
           </p>
           <p>
-            89 companies have no sector classification available from the data source. They remain in
-            the universe and are labelled as unclassified rather than dropped or assigned a guess.
+            {datasetMeta.unclassified_count} companies have no sector classification available from the
+            data source. They remain in the universe and are labelled as unclassified rather than
+            dropped or assigned a guess. Unclassified names are not scored against a fake peer group
+            and do not receive a composite score or listed-peer valuation range.
           </p>
         </Section>
 
