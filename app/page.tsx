@@ -10,11 +10,9 @@ import { LoadingScreen } from "@/components/dealscope/loading-screen"
 export default function Page() {
   return (
     <Suspense>
-      {/* Mounted here, not in the root layout. The overlay exists to cover the
-          ~1.5MB companies.json parse that this route performs at module-eval
-          time -- /about has no data to load, so showing it there meant every
-          visit to a static text page flashed "Compiling screened universe"
-          for a beat and then settled. */}
+      {/* Mounted here, not in the root layout. Covers the companies.json parse
+          this route does at module-eval. /about has no universe to load, so
+          the overlay must not live in the root layout. */}
       <LoadingScreen />
       <DealScopeApp />
     </Suspense>

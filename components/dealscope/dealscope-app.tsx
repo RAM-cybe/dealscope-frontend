@@ -18,6 +18,7 @@ import {
   getDeals,
   countActiveBucketFilters,
 } from "@/lib/dealscope-data"
+import { prefetchCompanyDetails } from "@/lib/company-details"
 import {
   type ScreenFilters,
   type FilterChip,
@@ -101,6 +102,10 @@ export function DealScopeApp() {
   const [weights, setWeights] = useState<Weights>({ ...DEFAULT_WEIGHTS })
   const [weightsOpen, setWeightsOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+
+  useEffect(() => {
+    prefetchCompanyDetails()
+  }, [])
 
   useEffect(() => {
     if (urlString === lastWrittenUrl.current) return
