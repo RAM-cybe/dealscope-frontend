@@ -98,7 +98,8 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
                   </span>
                 </div>
                 <p className="font-mono text-[10px] text-muted-foreground/70 leading-relaxed -mt-4">
-                  Weights are normalized — relative proportions determine the composite.
+                  Weights are normalized — relative proportions determine the composite. Missing
+                  factors are dropped, not treated as zero; the remaining factors are re-weighted.
                 </p>
               </div>
 

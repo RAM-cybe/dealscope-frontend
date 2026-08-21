@@ -56,23 +56,23 @@ console.log("\n=== The four required example queries ===")
   check("pharma: both drug industries", filters.industries.length === 2)
   check("pharma: mid-cap band", num(filters, "marketCap")?.min === 5000 && num(filters, "marketCap")?.max === 20000)
   check("pharma: explicit ROCE >= 18", num(filters, "roce")?.min === 18)
-  check("pharma: growth floor from Lifesciences p75, not universe", num(filters, "revenueGrowth")?.min === 27.4,
+  check("pharma: growth floor from Healthcare & Lifesciences p75, not universe", num(filters, "revenueGrowth")?.min === 27.4,
     `got ${num(filters, "revenueGrowth")?.min}`)
 }
 
 {
   const { filters, recognised } = parseQuery("consumer products high margin no promoter pledge")
   check("consumer: recognised", recognised)
-  check("consumer: sector set", filters.sectors.includes("Consumer Products"))
+  check("consumer: sector set", filters.sectors.includes("Consumer Discretionary & Retail"))
   check("consumer: zero pledge", num(filters, "promoterPledge")?.max === 0)
-  check("consumer: margin floor is Consumer Products p75", num(filters, "ebitdaMargin")?.min === 17.4,
+  check("consumer: margin floor is Consumer Discretionary & Retail p75", num(filters, "ebitdaMargin")?.min === 15.8,
     `got ${num(filters, "ebitdaMargin")?.min}`)
 }
 
 {
   const { filters, recognised } = parseQuery("industrials revenue between 500 and 3000 Cr strong ROCE")
   check("industrials: recognised", recognised)
-  check("industrials: sector set", filters.sectors.includes("Industrials & Auto"))
+  check("industrials: sector set", filters.sectors.includes("Industrials & Capital Goods"))
   check("industrials: revenue range", num(filters, "revenue")?.min === 500 && num(filters, "revenue")?.max === 3000)
   check("industrials: ROCE floor present", (num(filters, "roce")?.min ?? 0) > 0)
 }
@@ -125,7 +125,7 @@ console.log("\n=== Compound / unit handling ===")
 {
   const { filters } = parseQuery("debt free technology companies")
   check("debt free -> debt <= 0", num(filters, "totalDebt")?.max === 0)
-  check("debt free: sector still parsed", filters.sectors.includes("Technology"))
+  check("debt free: sector still parsed", filters.sectors.includes("Technology & IT Services"))
 }
 {
   const { filters } = parseQuery("pe under 15 roe over 20")
@@ -204,8 +204,8 @@ console.log("\n=== FMCG + short-word collapse ===")
 {
   for (const q of ["FMCG", "fmcg", "FMCGs", "fast moving consumer goods"]) {
     const { filters, recognised } = parseQuery(q)
-    check(`${JSON.stringify(q)} -> Consumer Products`,
-      recognised && filters.sectors.includes("Consumer Products") && filters.text === "",
+    check(`${JSON.stringify(q)} -> Consumer Staples & Agri`,
+      recognised && filters.sectors.includes("Consumer Staples & Agri") && filters.text === "",
       JSON.stringify({ sectors: filters.sectors, text: filters.text }))
   }
 }
@@ -223,7 +223,7 @@ console.log("\n=== FMCG + short-word collapse ===")
 {
   const compound = parseQuery("FMCG high margin under 5000 Cr").filters
   check("FMCG high margin under 5000 Cr: sector + margin + revenue",
-    compound.sectors.includes("Consumer Products") &&
+    compound.sectors.includes("Consumer Staples & Agri") &&
       (num(compound, "ebitdaMargin")?.min ?? 0) > 0 &&
       num(compound, "revenue")?.max === 5000 &&
       compound.text === "",
@@ -234,7 +234,7 @@ console.log("\n=== FMCG + short-word collapse ===")
     ["banks high ROE", (f: ScreenFilters) => f.industries.includes("Banks - Regional") && (num(f, "roe")?.min ?? 0) > 0],
     ["auto parts revenue under 1000 Cr", (f: ScreenFilters) => f.industries.includes("Auto Parts") && num(f, "revenue")?.max === 1000],
     ["steel companies with low leverage", (f: ScreenFilters) => f.industries.includes("Steel") && (num(f, "totalDebt")?.max ?? -1) >= 0],
-    ["consumer under 2000 Cr high quality", (f: ScreenFilters) => f.sectors.includes("Consumer Products") && num(f, "revenue")?.max === 2000 && (num(f, "roce")?.min ?? 0) > 0],
+    ["consumer under 2000 Cr high quality", (f: ScreenFilters) => f.sectors.includes("Consumer Discretionary & Retail") && num(f, "revenue")?.max === 2000 && (num(f, "roce")?.min ?? 0) > 0],
     ["pharma ROCE above 20 low debt", (f: ScreenFilters) => f.industries.length === 2 && num(f, "roce")?.min === 20 && (num(f, "totalDebt")?.max ?? -1) >= 0],
   ] as [string, (f: ScreenFilters) => boolean][]) {
     const { filters, recognised } = parseQuery(q)

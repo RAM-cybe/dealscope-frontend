@@ -4,6 +4,7 @@ import Link from "next/link"
 import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
+import { DataFreshness } from "@/components/dealscope/data-freshness"
 import "./globals.css"
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -21,7 +22,7 @@ const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--f
 const SITE_URL = "https://dealscope-screener.vercel.app"
 const SITE_TITLE = "DealScope — Every NSE-listed company, ranked the way a deal team would."
 const SITE_DESCRIPTION =
-  "Screen 2,381 NSE-listed Indian companies for acquisition fit. Sector-relative scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from precedent M&A. Free, no account required."
+  "Screen 2,381 NSE-listed Indian companies for acquisition fit. Sector-relative scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from listed-peer trading multiples. Free, no account required."
 
 export const metadata: Metadata = {
   // metadataBase makes every relative image/URL below absolute, which is what
@@ -100,11 +101,12 @@ export default function RootLayout({
             z-40 keeps it above page content but below the filters/weights
             drawers (z-[60]/z-[70]) and the loading screen (z-[200]), so a
             modal still covers it, as it should. */}
-        <header className="sticky top-0 z-40 h-14 w-full bg-background border-b border-border/60">
-          <div className="flex h-full items-center justify-end pl-6 pr-6 md:pr-12">
+        <header className="sticky top-0 z-40 w-full bg-background border-b border-border/60">
+          <div className="flex min-h-14 items-center justify-between gap-4 pl-6 pr-6 md:pr-12 py-2">
+            <DataFreshness />
             <Link
               href="/about"
-              className="inline-flex items-center border border-border/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
+              className="inline-flex shrink-0 items-center border border-border/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
             >
               About
             </Link>

@@ -121,41 +121,67 @@ const METRIC_ALIASES: [string, NumericFieldKey][] = [
  *  results as if the user had searched for a company named "auto".
  *  (normalizeQuery turns "&" into "and" before this runs.) */
 const SECTOR_ALIASES: [string, string][] = [
-  ["industrials and auto", "Industrials & Auto"],
-  ["consumer products and retail", "Consumer Products"],
-  ["consumer products", "Consumer Products"],
-  // Longest FMCG forms first so "fast moving consumer goods" is consumed as
-  // one sector token rather than matching the shorter "consumer" alias and
-  // leaving "fast moving goods" as residual free text.
-  ["fast moving consumer goods", "Consumer Products"],
-  ["fastmoving consumer goods", "Consumer Products"],
-  ["consumer staples", "Consumer Products"],
-  ["consumer", "Consumer Products"],
-  ["fmcgs", "Consumer Products"],
-  ["fmcg", "Consumer Products"],
-  ["staples", "Consumer Products"],
+  ["telecom, media and entertainment", "Telecom, Media & Entertainment"],
+  ["telecom media and entertainment", "Telecom, Media & Entertainment"],
+  ["metals, mining and materials", "Metals, Mining & Materials"],
+  ["metals mining and materials", "Metals, Mining & Materials"],
+  ["consumer discretionary and retail", "Consumer Discretionary & Retail"],
+  ["consumer products and retail", "Consumer Discretionary & Retail"],
+  ["consumer staples and agri", "Consumer Staples & Agri"],
+  ["industrials and capital goods", "Industrials & Capital Goods"],
+  ["infrastructure and construction", "Infrastructure & Construction"],
+  ["healthcare and lifesciences", "Healthcare & Lifesciences"],
+  ["technology and it services", "Technology & IT Services"],
+  ["automotive and mobility", "Automotive & Mobility"],
+  ["energy and utilities", "Energy & Utilities"],
+  // Legacy 6-bucket phrases, consumed whole so they don't leave residual
+  // tokens ("auto") that then name-search the list.
+  ["industrials and auto", "Industrials & Capital Goods"],
+  ["consumer products", "Consumer Discretionary & Retail"],
+  ["consumer discretionary", "Consumer Discretionary & Retail"],
+  ["fast moving consumer goods", "Consumer Staples & Agri"],
+  ["fastmoving consumer goods", "Consumer Staples & Agri"],
+  ["consumer staples", "Consumer Staples & Agri"],
+  ["consumer", "Consumer Discretionary & Retail"],
+  ["fmcgs", "Consumer Staples & Agri"],
+  ["fmcg", "Consumer Staples & Agri"],
+  ["staples", "Consumer Staples & Agri"],
   ["financial services", "Financial Services"],
   ["financials", "Financial Services"],
   ["finance", "Financial Services"],
   ["banking", "Financial Services"],
   ["nbfc", "Financial Services"],
-  ["industrials", "Industrials & Auto"],
-  ["industrial", "Industrials & Auto"],
-  ["manufacturing", "Industrials & Auto"],
-  ["capital goods", "Industrials & Auto"],
-  ["infrastructure", "Infrastructure"],
-  ["infra", "Infrastructure"],
-  ["lifesciences", "Lifesciences"],
-  ["life sciences", "Lifesciences"],
-  ["healthcare", "Lifesciences"],
-  ["technology", "Technology"],
-  ["tech", "Technology"],
-  ["it services", "Technology"],
+  ["capital goods", "Industrials & Capital Goods"],
+  ["industrials", "Industrials & Capital Goods"],
+  ["industrial", "Industrials & Capital Goods"],
+  ["manufacturing", "Industrials & Capital Goods"],
+  ["infrastructure", "Infrastructure & Construction"],
+  ["infra", "Infrastructure & Construction"],
+  ["construction", "Infrastructure & Construction"],
+  ["life sciences", "Healthcare & Lifesciences"],
+  ["lifesciences", "Healthcare & Lifesciences"],
+  ["healthcare", "Healthcare & Lifesciences"],
+  ["pharma sector", "Healthcare & Lifesciences"],
+  ["it services", "Technology & IT Services"],
+  ["technology", "Technology & IT Services"],
+  ["software", "Technology & IT Services"],
+  ["tech", "Technology & IT Services"],
   // "IT" is how the sector is normally named in India ("IT company", "IT
   // stocks"). Matched on word boundaries, so it can't fire inside another
   // word; a bare English "it" in a screening query is not a realistic input.
-  ["it", "Technology"],
-  ["software", "Technology"],
+  ["it", "Technology & IT Services"],
+  ["real estate", "Real Estate"],
+  ["realty", "Real Estate"],
+  ["automotive", "Automotive & Mobility"],
+  ["mobility", "Automotive & Mobility"],
+  ["chemicals", "Chemicals"],
+  ["metals", "Metals, Mining & Materials"],
+  ["mining", "Metals, Mining & Materials"],
+  ["materials", "Metals, Mining & Materials"],
+  ["energy", "Energy & Utilities"],
+  ["utilities", "Energy & Utilities"],
+  ["telecom", "Telecom, Media & Entertainment"],
+  ["media", "Telecom, Media & Entertainment"],
 ]
 
 /** Industry aliases -> [exact raw `company.industry` labels, parent sector].
@@ -171,14 +197,14 @@ const SECTOR_ALIASES: [string, string][] = [
  *  industry in the live dataset, checked against the data rather than
  *  assumed. */
 const INDUSTRY_ALIASES: [string, string[], string][] = [
-  ["logistics", ["Integrated Freight & Logistics"], "Industrials & Auto"],
-  ["freight", ["Integrated Freight & Logistics"], "Industrials & Auto"],
-  ["shipping", ["Marine Shipping"], "Industrials & Auto"],
-  ["pharma", ["Drug Manufacturers - Specialty & Generic", "Drug Manufacturers - General"], "Lifesciences"],
-  ["pharmaceutical", ["Drug Manufacturers - Specialty & Generic", "Drug Manufacturers - General"], "Lifesciences"],
-  ["drug", ["Drug Manufacturers - Specialty & Generic", "Drug Manufacturers - General"], "Lifesciences"],
-  ["hospital", ["Medical Care Facilities"], "Lifesciences"],
-  ["diagnostics", ["Diagnostics & Research"], "Lifesciences"],
+  ["logistics", ["Integrated Freight & Logistics"], "Industrials & Capital Goods"],
+  ["freight", ["Integrated Freight & Logistics"], "Industrials & Capital Goods"],
+  ["shipping", ["Marine Shipping"], "Industrials & Capital Goods"],
+  ["pharma", ["Drug Manufacturers - Specialty & Generic", "Drug Manufacturers - General"], "Healthcare & Lifesciences"],
+  ["pharmaceutical", ["Drug Manufacturers - Specialty & Generic", "Drug Manufacturers - General"], "Healthcare & Lifesciences"],
+  ["drug", ["Drug Manufacturers - Specialty & Generic", "Drug Manufacturers - General"], "Healthcare & Lifesciences"],
+  ["hospital", ["Medical Care Facilities"], "Healthcare & Lifesciences"],
+  ["diagnostics", ["Diagnostics & Research"], "Healthcare & Lifesciences"],
   ["bank", ["Banks - Regional"], "Financial Services"],
   ["banks", ["Banks - Regional"], "Financial Services"],
   ["insurance", [
@@ -188,43 +214,29 @@ const INDUSTRY_ALIASES: [string, string[], string][] = [
     "Insurance - Reinsurance",
     "Insurance Brokers",
   ], "Financial Services"],
-  ["chemicals", ["Specialty Chemicals", "Chemicals"], "Industrials & Auto"],
-  ["chemical", ["Specialty Chemicals", "Chemicals"], "Industrials & Auto"],
-  ["specialty chemicals", ["Specialty Chemicals"], "Industrials & Auto"],
-  ["steel", ["Steel"], "Industrials & Auto"],
-  ["cement", ["Building Materials"], "Industrials & Auto"],
-  ["auto parts", ["Auto Parts"], "Industrials & Auto"],
-  ["auto ancillary", ["Auto Parts"], "Industrials & Auto"],
-  ["automobile", ["Auto Manufacturers"], "Industrials & Auto"],
-  ["textile", ["Textile Manufacturing"], "Industrials & Auto"],
-  ["textiles", ["Textile Manufacturing"], "Industrials & Auto"],
-  ["real estate", ["Real Estate - Development", "Real Estate Services", "Real Estate - Diversified"], "Infrastructure"],
-  ["realty", ["Real Estate - Development", "Real Estate Services", "Real Estate - Diversified"], "Infrastructure"],
-  ["telecom", ["Telecom Services"], "Technology"],
-  ["power", ["Utilities - Independent Power Producers", "Utilities - Regulated Electric"], "Infrastructure"],
-  ["utilities", [
-    "Utilities - Independent Power Producers",
-    "Utilities - Regulated Electric",
-    "Utilities - Regulated Gas",
-    "Utilities - Regulated Water",
-  ], "Infrastructure"],
-  ["renewable", ["Utilities - Renewable", "Solar"], "Infrastructure"],
-  ["solar", ["Solar"], "Infrastructure"],
-  ["defence", ["Aerospace & Defense"], "Industrials & Auto"],
-  ["defense", ["Aerospace & Defense"], "Industrials & Auto"],
-  ["aerospace", ["Aerospace & Defense"], "Industrials & Auto"],
-  ["it services", ["Information Technology Services"], "Technology"],
-  ["hotels", ["Lodging", "Resorts & Casinos"], "Consumer Products"],
-  ["hotel", ["Lodging", "Resorts & Casinos"], "Consumer Products"],
-  ["airlines", ["Airlines"], "Industrials & Auto"],
-  ["paints", ["Specialty Chemicals"], "Industrials & Auto"],
-  ["packaging", ["Packaging & Containers"], "Industrials & Auto"],
-  // FMCG industries -- when someone wants the packaged-goods slice rather
-  // than the whole Consumer Products sector. The sector aliases still catch
-  // a bare "FMCG"; these catch more specific phrasing.
-  ["packaged foods", ["Packaged Foods"], "Consumer Products"],
-  ["personal care", ["Household & Personal Products"], "Consumer Products"],
-  ["household products", ["Household & Personal Products"], "Consumer Products"],
+  ["specialty chemicals", ["Specialty Chemicals"], "Chemicals"],
+  ["chemical", ["Specialty Chemicals", "Chemicals"], "Chemicals"],
+  ["steel", ["Steel"], "Metals, Mining & Materials"],
+  ["cement", ["Building Materials"], "Metals, Mining & Materials"],
+  ["auto parts", ["Auto Parts"], "Automotive & Mobility"],
+  ["auto ancillary", ["Auto Parts"], "Automotive & Mobility"],
+  ["automobile", ["Auto Manufacturers"], "Automotive & Mobility"],
+  ["textile", ["Textile Manufacturing"], "Consumer Discretionary & Retail"],
+  ["textiles", ["Textile Manufacturing"], "Consumer Discretionary & Retail"],
+  ["power", ["Utilities - Independent Power Producers", "Utilities - Regulated Electric"], "Energy & Utilities"],
+  ["renewable", ["Utilities - Renewable", "Solar"], "Energy & Utilities"],
+  ["solar", ["Solar"], "Energy & Utilities"],
+  ["defence", ["Aerospace & Defense"], "Industrials & Capital Goods"],
+  ["defense", ["Aerospace & Defense"], "Industrials & Capital Goods"],
+  ["aerospace", ["Aerospace & Defense"], "Industrials & Capital Goods"],
+  ["hotels", ["Lodging", "Resorts & Casinos"], "Consumer Discretionary & Retail"],
+  ["hotel", ["Lodging", "Resorts & Casinos"], "Consumer Discretionary & Retail"],
+  ["airlines", ["Airlines"], "Industrials & Capital Goods"],
+  ["paints", ["Specialty Chemicals"], "Chemicals"],
+  ["packaging", ["Packaging & Containers"], "Consumer Discretionary & Retail"],
+  ["packaged foods", ["Packaged Foods"], "Consumer Staples & Agri"],
+  ["personal care", ["Household & Personal Products"], "Consumer Staples & Agri"],
+  ["household products", ["Household & Personal Products"], "Consumer Staples & Agri"],
 ]
 
 /** Market-cap classes, in ₹ Cr. Deliberately absolute rather than percentile:
@@ -361,19 +373,12 @@ export function parseQuery(raw: string): ParseResult {
     return isCurrencyUnit ? CURRENCY_FIELDS.has(key) : true
   }
 
-  // --- 1. Sector, so later percentile lookups can be sector-scoped ---------
+  // --- 1. Industries first, then sectors ---------------------------------
+  // Industry aliases can be a superstring of a sector alias ("specialty
+  // chemicals" contains "chemicals"). If sectors ran first, the shorter
+  // token would be consumed and the industry would never match. Industries
+  // are strictly narrower, so they win when both are named.
   let sector: string | null = null
-  for (const [alias, name] of [...SECTOR_ALIASES].sort((a, b) => b[0].length - a[0].length)) {
-    const re = new RegExp(`\\b${alias.replace(/\s+/g, "\\s+")}\\b`, "g")
-    if (re.test(q)) {
-      if (!filters.sectors.includes(name)) filters.sectors.push(name)
-      sector = sector ?? name
-      q = q.replace(re, " ")
-      matched.push(`sector:${name}`)
-    }
-  }
-
-  // --- 2. Industries ------------------------------------------------------
   for (const [alias, labels, parentSector] of [...INDUSTRY_ALIASES].sort(
     (a, b) => b[0].length - a[0].length,
   )) {
@@ -389,9 +394,19 @@ export function parseQuery(raw: string): ParseResult {
       sector = sector ?? parentSector
     }
   }
+
+  for (const [alias, name] of [...SECTOR_ALIASES].sort((a, b) => b[0].length - a[0].length)) {
+    const re = new RegExp(`\\b${alias.replace(/\s+/g, "\\s+")}\\b`, "g")
+    if (re.test(q)) {
+      if (!filters.sectors.includes(name)) filters.sectors.push(name)
+      sector = sector ?? name
+      q = q.replace(re, " ")
+      matched.push(`sector:${name}`)
+    }
+  }
   // An industry is strictly narrower than its sector; keeping both would
-  // double-constrain and can contradict (a pharma name whose EY bucket isn't
-  // Lifesciences would vanish). Industry wins.
+  // double-constrain and can contradict (a pharma name whose v2 bucket isn't
+  // Healthcare & Lifesciences would vanish). Industry wins.
   if (filters.industries.length > 0 && filters.sectors.length > 0) {
     filters.sectors = []
   }

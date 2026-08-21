@@ -191,8 +191,8 @@ export function SectorIndustryFilter({
                 {unclassifiedCount != null && unclassifiedCount > 0 && (
                   <p className="border-t border-border/40 pt-4 font-mono text-[10px] leading-relaxed text-muted-foreground">
                     Unclassified ({unclassifiedCount}) — no industry data available for these
-                    companies. Confirmed gap in the upstream data source, not a filter that can be
-                    narrowed further.
+                    companies. Confirmed gap in the upstream data source, not a guess. They are not
+                    scored against a fake peer group.
                   </p>
                 )}
               </div>
