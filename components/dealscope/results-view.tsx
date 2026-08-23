@@ -109,7 +109,7 @@ export function ResultsView({
     <section className="relative min-h-screen pl-6 md:pl-28 pr-6 md:pr-12 py-16 md:py-24">
       {/* Left vertical label */}
       <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:block">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
+        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
           RESULTS
         </span>
       </div>
@@ -123,7 +123,7 @@ export function ResultsView({
               the old muted "← Entry State" back-link treatment. */}
           <button
             onClick={onBack}
-            className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent hover:text-foreground transition-colors duration-200"
+            className="font-mono text-xs uppercase tracking-[0.3em] text-accent hover:text-foreground transition-colors duration-200"
           >
             Entry State / Screened Set
           </button>
@@ -143,7 +143,7 @@ export function ResultsView({
           >
             <ScrambleTextOnHover text="Filters" as="span" duration={0.5} />
             {activeFilters > 0 ? (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-[10px] leading-none">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none">
                 {activeFilters}
               </span>
             ) : (
@@ -180,7 +180,7 @@ export function ResultsView({
 
       {/* Example screens, compact on this view */}
       <div className="mb-10">
-        <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/70">
+        <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
           Example Screens
         </span>
         <div className="mt-3">
@@ -221,14 +221,14 @@ export function ResultsView({
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={onClearAll}
-              className="inline-flex items-center gap-2 border border-accent/60 px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/10 transition-all duration-200"
+              className="inline-flex items-center gap-2 border border-accent/60 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 transition-all duration-200"
             >
               Clear all conditions
             </button>
             {activeFilters > 0 && (
               <button
                 onClick={onOpenFilters}
-                className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
               >
                 Adjust filters ({activeFilters})
               </button>
@@ -263,7 +263,7 @@ export function ResultsView({
 
       {/* Footer */}
       <div className="mt-16 flex items-center justify-end">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           {showAll ? "Full universe shown" : `Showing top ${Math.min(RENDER_CAP, results.length)} of ${results.length}`}
         </span>
       </div>
@@ -300,7 +300,7 @@ function ResultRow({
         className="group w-full text-left border-t border-border/40 last:border-b hover:bg-accent/5 transition-colors duration-300 py-6 px-2 md:px-4 flex items-center gap-4 md:gap-8"
       >
         {/* Index */}
-        <span className="hidden md:block font-mono text-[10px] text-muted-foreground/70 w-8 shrink-0">
+        <span className="hidden md:block font-mono text-xs text-muted-foreground w-8 shrink-0">
           {String(index + 1).padStart(2, "0")}
         </span>
 
@@ -313,11 +313,11 @@ function ResultRow({
             <h3 className="font-[family-name:var(--font-bebas)] text-2xl md:text-3xl tracking-tight group-hover:text-accent transition-colors duration-300 text-pretty">
               {company.name}
             </h3>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {company.ticker}
             </span>
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
             {company.sector}
           </span>
 
@@ -331,7 +331,7 @@ function ResultRow({
                 <span
                   key={r.label}
                   className={cn(
-                    "inline-flex items-center border px-2 py-1 font-mono text-[10px] uppercase tracking-wider",
+                    "inline-flex items-center border px-2 py-1 font-mono text-xs uppercase tracking-wider",
                     r.tone === "good"
                       ? "border-accent/40 text-accent/90"
                       : "border-border/60 text-muted-foreground",
@@ -363,7 +363,7 @@ function ResultRow({
         </div>
 
         {/* Chevron */}
-        <BitmapChevron className="shrink-0 text-muted-foreground/70 group-hover:text-accent transition-all duration-[400ms] group-hover:rotate-45" />
+        <BitmapChevron className="shrink-0 text-muted-foreground group-hover:text-accent transition-all duration-[400ms] group-hover:rotate-45" />
       </button>
     </motion.article>
   )
@@ -372,7 +372,7 @@ function ResultRow({
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 lg:w-24">
-      <span className="block font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">{label}</span>
+      <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
       <span className="block mt-1 font-mono text-xs text-foreground">{value}</span>
     </div>
   )

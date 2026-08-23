@@ -74,7 +74,7 @@ export function LandingView({
 
       {/* Left vertical label */}
       <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:block">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
+        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
           SCREEN
         </span>
       </div>
@@ -108,7 +108,7 @@ export function LandingView({
           className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3"
         >
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               Universe
             </span>
             <span className="font-mono text-xs text-foreground">
@@ -116,7 +116,7 @@ export function LandingView({
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               Deals
             </span>
             <span className="font-mono text-xs text-foreground">
@@ -180,7 +180,7 @@ export function LandingView({
           >
             <ScrambleTextOnHover text="Screen Companies" as="span" duration={0.5} />
             {activeFilterCount > 0 ? (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-[10px] leading-none">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none">
                 {activeFilterCount}
               </span>
             ) : (
@@ -212,7 +212,7 @@ export function LandingView({
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="mt-16"
         >
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">Filter by Sector</span>
+          <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">Filter by Sector</span>
           <div className="mt-6">
             <SectorIndustryFilter
               sectors={sectors}
@@ -230,10 +230,10 @@ export function LandingView({
 
       {/* Footer data line */}
       <div className="absolute bottom-8 left-6 md:left-28 right-6 md:right-12 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60">
+        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground/80">
           Screening the NSE-listed universe
         </span>
-        <div className="hidden md:block border border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="hidden md:block border border-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Not investment advice. Built by Ram —{" "}
           <Link href="/about" className="text-foreground hover:text-accent transition-colors duration-200">
             About
@@ -329,11 +329,11 @@ export function LandingView({
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/40 border border-border/40">
             {["Revenue Growth", "EBITDA Margin", "ROCE", "Debt Level"].map((f, i) => (
               <div key={f} className="bg-background p-5 flex flex-col gap-2">
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-accent">
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
                   Factor 0{i + 1}
                 </span>
                 <span className="font-mono text-xs text-foreground leading-relaxed">{f}</span>
-                <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70">
+                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
                   0–100 · equal weight
                 </span>
               </div>
@@ -401,7 +401,7 @@ export function LandingView({
 
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
-    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+    <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
       {index} / {label}
     </span>
   )

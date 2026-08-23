@@ -57,7 +57,7 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+                  <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
                     Control Variables
                   </span>
                   <h2 className="mt-3 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
@@ -67,7 +67,7 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
                 <button
                   onClick={onClose}
                   aria-label="Close weights panel"
-                  className="border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                  className="border border-border px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
                 >
                   ESC
                 </button>
@@ -90,14 +90,14 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
 
                 {/* Total readout */}
                 <div className="border-t border-border/50 pt-6 flex items-baseline justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     Total Allocation
                   </span>
                   <span className="font-[family-name:var(--font-bebas)] text-2xl tracking-tight text-accent">
                     {total}
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-muted-foreground/70 leading-relaxed -mt-4">
+                <p className="font-mono text-xs text-muted-foreground leading-relaxed -mt-4">
                   Weights are normalized — relative proportions determine the composite. Missing
                   factors are dropped, not treated as zero; the remaining factors are re-weighted.
                 </p>
