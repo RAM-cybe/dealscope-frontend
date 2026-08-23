@@ -115,7 +115,7 @@ export function ResultsView({
       </div>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
         <div>
           {/* Eyebrow label doubles as the back control (onClick={onBack}
               unchanged) -- restyled to match the SectionLabel pattern used
@@ -136,7 +136,7 @@ export function ResultsView({
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
+        <div className="flex flex-wrap items-center gap-3 self-start">
           <button
             onClick={onOpenFilters}
             className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
@@ -342,6 +342,16 @@ function ResultRow({
               ))}
             </div>
           )}
+
+          {/* Phone/tablet: metrics sat behind `hidden lg:grid` so a 768px
+              row was name + ring only. Keep the desktop 4-up, and show the
+              same four figures under the name below lg. */}
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 lg:hidden">
+            <Metric label="Revenue" value={company.metrics.revenue} />
+            <Metric label="Margin" value={company.metrics.ebitdaMargin} />
+            <Metric label="ROCE" value={company.metrics.roce} />
+            <Metric label="Debt" value={company.metrics.totalDebt} />
+          </div>
         </div>
 
         {/* Metrics */}
@@ -361,7 +371,7 @@ function ResultRow({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="w-24">
+    <div className="min-w-0 lg:w-24">
       <span className="block font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">{label}</span>
       <span className="block mt-1 font-mono text-xs text-foreground">{value}</span>
     </div>
