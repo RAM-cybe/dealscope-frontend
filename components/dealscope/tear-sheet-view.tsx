@@ -131,10 +131,6 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         {/* Key financials -- the raw numbers are the headline of the sheet */}
         <div className="mt-16">
           <SectionLabel index="01" label="Key Financials" />
-          <p className="mt-3 font-mono text-[10px] leading-relaxed text-muted-foreground/60">
-            Market cap as of {formatAsOfDate(fin.marketCapAsOf)}. Fundamentals as of{" "}
-            {formatAsOfDate(company.asOfDate)}.
-          </p>
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {financialCards.map((card) => (
               <FinancialCard

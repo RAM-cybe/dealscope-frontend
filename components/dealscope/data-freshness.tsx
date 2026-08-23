@@ -26,20 +26,18 @@ export function DataFreshness({
   return (
     <div
       className={cn(
-        "flex flex-col gap-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/75 leading-relaxed",
+        "flex flex-col gap-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground leading-snug",
         align === "end" && "sm:items-end sm:text-right",
         className,
       )}
       role="status"
-      aria-label={`Prices and market cap last updated ${PRICES_AS_OF}. Fundamentals last updated ${FUNDAMENTALS_AS_OF}.`}
+      aria-label={`Prices last updated ${PRICES_AS_OF}. Fundamentals last updated ${FUNDAMENTALS_AS_OF}.`}
     >
       <span>
-        Prices / Market Cap last updated:{" "}
-        <span className="text-foreground/85">{PRICES_AS_OF}</span>
+        Prices <span className="text-foreground">{PRICES_AS_OF}</span>
       </span>
       <span>
-        Fundamentals last updated:{" "}
-        <span className="text-foreground/85">{FUNDAMENTALS_AS_OF}</span>
+        Fundamentals <span className="text-foreground">{FUNDAMENTALS_AS_OF}</span>
       </span>
     </div>
   )

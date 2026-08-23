@@ -11,7 +11,6 @@ import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-fil
 import type { Sector, IndustryGroup, BucketFilters } from "@/lib/dealscope-data"
 import { ScreenBar } from "@/components/dealscope/screen-bar"
 import { ExampleScreens } from "@/components/dealscope/example-screens"
-import { DataFreshness } from "@/components/dealscope/data-freshness"
 import type { ScreenFilters, FilterChip } from "@/lib/screener"
 import type { ExampleScreen } from "@/lib/example-screens"
 
@@ -124,7 +123,6 @@ export function LandingView({
               {dealCount.toLocaleString("en-IN")} historical M&amp;A transactions
             </span>
           </div>
-          <DataFreshness />
         </motion.div>
 
         <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">

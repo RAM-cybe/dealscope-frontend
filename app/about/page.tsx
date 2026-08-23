@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Linkedin, Mail } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
-import { DataFreshness, FUNDAMENTALS_AS_OF, FUNDAMENTALS_AS_OF_MAX, PRICES_AS_OF, formatAsOfDate } from "@/components/dealscope/data-freshness"
+import { FUNDAMENTALS_AS_OF, FUNDAMENTALS_AS_OF_MAX, PRICES_AS_OF, formatAsOfDate } from "@/components/dealscope/data-freshness"
 import datasetMeta from "@/data/dataset-meta.json"
 
 export const metadata: Metadata = {
@@ -136,7 +136,6 @@ export default function AboutPage() {
         </Section>
 
         <Section index="04" label="Data & Refresh">
-          <DataFreshness className="mb-2" />
           <p>
             The universe is{" "}
             <span className="text-foreground">
