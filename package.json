@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "test": "npx tsx lib/__tests__/query-parser.test.ts && npx tsx lib/__tests__/scoring.test.ts"
   },
   "dependencies": {
     "@vercel/analytics": "1.3.1",
