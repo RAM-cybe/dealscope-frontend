@@ -98,9 +98,12 @@ export default function AboutPage() {
             <span className="text-foreground">revenue growth</span>,{" "}
             <span className="text-foreground">EBITDA margin</span>,{" "}
             <span className="text-foreground">return on capital employed</span>, and{" "}
-            <span className="text-foreground">debt level</span> (inverted, so lower leverage scores
-            higher). Those four combine into a single 0–100 composite, re-weighted across whichever
-            of the four factors are actually present. A missing factor is shown as unavailable — never
+            <span className="text-foreground">leverage</span> (Net Debt / EBITDA, with Debt / Equity
+            as a fallback when earnings are missing or not positive; inverted, so lower leverage
+            scores higher). Financial Services is left out of the leverage factor — a bank&apos;s
+            borrowings are how it operates, not a distress signal — and the remaining three factors
+            are reweighted. Those factors combine into a single 0–100 composite, re-weighted across
+            whichever of them are actually present. A missing factor is shown as unavailable — never
             treated as zero. The default weighting is equal; the weights are adjustable, and the
             ranking recomputes against them.
           </p>
