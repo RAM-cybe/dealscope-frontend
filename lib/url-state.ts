@@ -120,7 +120,11 @@ export interface UrlState {
  *  avoid a replace/read feedback loop. */
 export function encodeUrlState(state: UrlState): string {
   const sp = new URLSearchParams()
-  if (state.view !== "landing") sp.set("view", state.view === "detail" ? "results" : state.view)
+  // Tear sheets use view=detail, not view=results. Writing "results" while a
+  // ticker was present made a shareable sheet look like a results URL and
+  // left a leftover view=results after the ticker was cleared.
+  if (state.view === "results") sp.set("view", "results")
+  if (state.view === "detail") sp.set("view", "detail")
   const s = state.screen
   if (s.text.trim()) sp.set("q", s.text.trim())
   if (s.sectors.length) sp.set("sectors", encodeList(s.sectors))
@@ -129,13 +133,15 @@ export function encodeUrlState(state: UrlState): string {
   if (num) sp.set("num", num)
   const bands = encodeBands(s.buckets)
   if (bands) sp.set("bands", bands)
-  if (state.ticker) sp.set("ticker", state.ticker)
+  // Ticker only belongs on a tear sheet. Results and landing must not keep it.
+  const ticker = state.view === "detail" ? state.ticker?.trim() : null
+  if (ticker) sp.set("ticker", ticker)
   return sp.toString()
 }
 
 /** Total inverse of encodeUrlState. Never throws. */
 export function decodeUrlState(sp: URLSearchParams): UrlState {
-  const ticker = sp.get("ticker")
+  const ticker = (sp.get("ticker") ?? "").trim() || null
   const industries = decodeList(sp.get("ind") ?? "")
   const screen = makeScreen({
     text: sp.get("q") ?? "",
@@ -144,9 +150,20 @@ export function decodeUrlState(sp: URLSearchParams): UrlState {
     numeric: decodeNumeric(sp.get("num") ?? ""),
     buckets: decodeBands(sp.get("bands") ?? "", industries),
   })
-  return {
-    view: ticker ? "detail" : sp.get("view") === "results" ? "results" : "landing",
-    ticker,
-    screen,
+  const viewParam = sp.get("view")
+  let view: UrlState["view"]
+  if (ticker) {
+    view = "detail"
+  } else if (viewParam === "results" || viewParam === "detail") {
+    // view=detail without a ticker cannot show a sheet; degrade to results.
+    view = "results"
+  } else {
+    view = "landing"
   }
+  return { view, ticker, screen }
+}
+
+/** Drop unknown keys and rewrite legacy view=results&ticker=… sheet links. */
+export function canonicalizeUrlState(sp: URLSearchParams): string {
+  return encodeUrlState(decodeUrlState(sp))
 }
