@@ -64,11 +64,11 @@ export function LoadingScreen() {
           preview or search result picks the wrong one from. A div carries the
           same type with none of the document semantics. */}
       <div className="relative flex flex-col items-center gap-7 px-6 text-center">
-        <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-accent">Initializing</span>
+        <span className="font-mono text-xs uppercase tracking-[0.4em] text-accent">Initializing</span>
         <div className="ds-loading-pulse font-[family-name:var(--font-bebas)] text-[clamp(3rem,12vw,8rem)] leading-none tracking-tight text-foreground">
           DEALSCOPE
         </div>
-        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+        <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
           <span className="ds-loading-dot" aria-hidden="true" />
           Compiling screened universe
         </div>
