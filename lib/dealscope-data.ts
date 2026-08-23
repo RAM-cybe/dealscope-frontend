@@ -320,22 +320,33 @@ export interface Company {
     debtToEquity: string
     currentRatio: string
     freeCashFlow: string
+    promoterHolding: string
     promoterPledge: string
     beta: string
   }
-  // Unformatted numeric values for real-value bucket filtering. Currency fields
-  // are in ₹ Cr, percentages are plain (e.g. 14.8), ratios are plain (e.g. 63.3).
-  // null = missing, so such a company never falls inside any bucket for that field.
+  // Unformatted numeric values for real-value bucket filtering and CSV export.
+  // Currency fields are in ₹ Cr, percentages are plain (e.g. 14.8), ratios are
+  // plain (e.g. 0.45). null = missing — never coerced to 0.
   raw: {
     marketCap: number | null // ₹ Cr
     revenue: number | null // ₹ Cr
+    ebitda: number | null // ₹ Cr
+    netIncome: number | null // ₹ Cr
     peRatio: number | null
+    priceToBook: number | null
     revenueGrowth: number | null // %
     ebitdaMargin: number | null // %
     roce: number | null // %
     roe: number | null // %
     totalDebt: number | null // ₹ Cr
+    debtToEquity: number | null // x
+    currentRatio: number | null // x
+    freeCashFlow: number | null // ₹ Cr
+    promoterHolding: number | null // %
     promoterPledge: number | null // %
+    beta: number | null
+    evEbitdaLow: number | null // ₹ Cr
+    evEbitdaHigh: number | null // ₹ Cr
   }
   valuation: {
     evEbitda: string
@@ -413,6 +424,14 @@ function formatRange(low: number | null | undefined, high: number | null | undef
   return `${formatCr(low)} – ${formatCr(high)}`
 }
 
+function toCr(value: number | null | undefined): number | null {
+  return isNum(value) ? value / 1e7 : null
+}
+
+function toNum(value: number | null | undefined): number | null {
+  return isNum(value) ? value : null
+}
+
 /** Implied equity cannot be negative. Confirmed live on IDEA: EV/EBITDA
  *  showed ₹-30,365 Cr – ₹3,84,520 Cr. Floor at 0 and flag debt overhang. */
 export const DEBT_OVERHANG_NOTE =
@@ -458,6 +477,9 @@ interface CompanyRecord {
   debt_to_equity: number | null
   current_ratio: number | null
   free_cash_flow: number | null
+  // Optional so an older payload without the field typechecks; missing is null,
+  // never coerced to 0 in mapCompanyRecord.
+  promoter_holding_pct?: number | null
   promoter_pledge_pct: number | null
   beta: number | null
   market_cap_as_of: string | null
@@ -476,7 +498,7 @@ interface CompanyRecord {
 export interface DealRow {
   target: string
   acquirer: string
-  sector_raw: string
+  sector_raw: string | null
   ey_bucket: string
   sector_v2?: string | null
   deal_type: string
@@ -516,22 +538,33 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       debtToEquity: r.debt_to_equity != null ? r.debt_to_equity.toFixed(2) + "x" : "N/A",
       currentRatio: r.current_ratio != null ? r.current_ratio.toFixed(2) + "x" : "N/A",
       freeCashFlow: formatCr(r.free_cash_flow),
+      promoterHolding: formatPct(r.promoter_holding_pct),
       promoterPledge: formatPct(r.promoter_pledge_pct),
       beta: r.beta != null ? r.beta.toFixed(2) : "N/A",
     },
     raw: {
-      marketCap: isNum(r.market_cap) ? r.market_cap / 1e7 : null,
+      marketCap: toCr(r.market_cap),
       // Added for the screener: "under 2000 Cr revenue" needs revenue as a
       // filterable number, not just the pre-formatted `metrics.revenue`
       // string. Same rupees -> Rs Cr scaling as marketCap/totalDebt above.
-      revenue: isNum(r.revenue) ? r.revenue / 1e7 : null,
-      peRatio: isNum(r.trailing_pe) ? r.trailing_pe : null,
-      revenueGrowth: isNum(r.revenue_growth_pct) ? r.revenue_growth_pct : null,
-      ebitdaMargin: isNum(r.ebitda_margin_pct) ? r.ebitda_margin_pct : null,
-      roce: isNum(r.roce_pct) ? r.roce_pct : null,
-      roe: isNum(r.return_on_equity_pct) ? r.return_on_equity_pct : null,
-      totalDebt: isNum(r.total_debt) ? r.total_debt / 1e7 : null,
-      promoterPledge: isNum(r.promoter_pledge_pct) ? r.promoter_pledge_pct : null,
+      revenue: toCr(r.revenue),
+      ebitda: toCr(r.ebitda),
+      netIncome: toCr(r.net_income),
+      peRatio: toNum(r.trailing_pe),
+      priceToBook: toNum(r.price_to_book),
+      revenueGrowth: toNum(r.revenue_growth_pct),
+      ebitdaMargin: toNum(r.ebitda_margin_pct),
+      roce: toNum(r.roce_pct),
+      roe: toNum(r.return_on_equity_pct),
+      totalDebt: toCr(r.total_debt),
+      debtToEquity: toNum(r.debt_to_equity),
+      currentRatio: toNum(r.current_ratio),
+      freeCashFlow: toCr(r.free_cash_flow),
+      promoterHolding: toNum(r.promoter_holding_pct),
+      promoterPledge: toNum(r.promoter_pledge_pct),
+      beta: toNum(r.beta),
+      evEbitdaLow: toCr(r.ev_ebitda_low),
+      evEbitdaHigh: toCr(r.ev_ebitda_high),
     },
     valuation: (() => {
       const ev = formatImpliedEquityRange(r.ev_ebitda_low, r.ev_ebitda_high)

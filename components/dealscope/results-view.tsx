@@ -25,6 +25,7 @@ import {
   computeScore,
   countActiveBucketFilters,
 } from "@/lib/dealscope-data"
+import { buildCompsCsv, compsCsvFilename, downloadCompsCsv } from "@/lib/export-comps-csv"
 
 interface ResultsViewProps {
   results: Company[]
@@ -105,6 +106,18 @@ export function ResultsView({
     }
   }
 
+  const handleExportCsv = () => {
+    if (results.length === 0) return
+    const csv = buildCompsCsv(results, weights)
+    const filename = compsCsvFilename({
+      resultCount: results.length,
+      universeCount: totalCount,
+      query,
+      sectors: selectedSectors,
+    })
+    downloadCompsCsv(filename, csv)
+  }
+
   return (
     <section className="relative min-h-screen pl-6 md:pl-28 pr-6 md:pr-12 py-16 md:py-24">
       {/* Left vertical label */}
@@ -157,6 +170,16 @@ export function ResultsView({
           >
             <ScrambleTextOnHover text="Adjust Weights" as="span" duration={0.5} />
             <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={results.length === 0}
+            aria-label="Export current screened companies as CSV"
+            className="group inline-flex min-h-11 items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40"
+          >
+            <ScrambleTextOnHover text="Export Comps (CSV)" as="span" duration={0.5} />
           </button>
         </div>
       </div>
