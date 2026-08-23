@@ -9,6 +9,7 @@
 import {
   computeScore,
   DEFAULT_WEIGHTS,
+  formatImpliedEquityRange,
   getCompanies,
   MIN_POPULATED_FACTORS,
   type FactorScores,
@@ -71,6 +72,25 @@ console.log("\n=== Live payload: Financial Services has no Factor 4 ===")
   check("every FS company has blank Factor 4", fsBlank.length === fs.length, `${fsBlank.length} / ${fs.length}`)
   const scoredFs = fs.filter((c) => computeScore(c.factors, DEFAULT_WEIGHTS) != null)
   check("FS companies can still score on the other three factors", scoredFs.length > 0, `n=${scoredFs.length}`)
+}
+
+console.log("\n=== Implied equity is never shown as negative ===")
+{
+  const mixed = formatImpliedEquityRange(-3.036e11, 3.845e12)
+  check("negative low end is floored at ₹0", mixed.text.startsWith("₹0 Cr"), `got ${mixed.text}`)
+  check("positive high end is kept", mixed.text.includes("3,84,520") || mixed.text.includes("384520") || /₹[1-9]/.test(mixed.text.split("–")[1] ?? ""), `got ${mixed.text}`)
+  check("debt overhang is flagged when either end is negative", mixed.debtOverhang)
+  const both = formatImpliedEquityRange(-1e10, -8e9)
+  check("both-negative range becomes ₹0 – ₹0", both.text === "₹0 Cr – ₹0 Cr", `got ${both.text}`)
+  check("both-negative is overhang", both.debtOverhang)
+  const fine = formatImpliedEquityRange(1e10, 2e10)
+  check("a positive range is not overhang", !fine.debtOverhang)
+  const idea = getCompanies().companies.find((c) => c.ticker === "IDEA")
+  check("IDEA is in the live payload", !!idea)
+  if (idea) {
+    check("IDEA EV/EBITDA display has no minus sign", !idea.valuation.evEbitda.includes("-"), `got ${idea.valuation.evEbitda}`)
+    check("IDEA note names debt overhang", idea.valuation.note.includes("debt overhang"), `got ${idea.valuation.note}`)
+  }
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`)
