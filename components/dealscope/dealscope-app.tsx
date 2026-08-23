@@ -90,10 +90,16 @@ export function DealScopeApp() {
   const searchParams = useSearchParams()
   const urlString = searchParams.toString()
 
-  const { view, ticker: tickerParam, screen: urlScreen } = useMemo(
-    () => decodeUrlState(searchParams),
-    [urlString],
+  const decoded = useMemo(() => decodeUrlState(searchParams), [urlString])
+  const selectedCompany: Company | null = useMemo(
+    () => (decoded.ticker ? companies.find((c) => c.ticker === decoded.ticker) ?? null : null),
+    [decoded.ticker],
   )
+  // A ticker that is not in the universe must not leave a blank tear-sheet
+  // view, and must not stay in the address bar.
+  const view = decoded.view === "detail" && !selectedCompany ? "results" : decoded.view
+  const tickerParam = selectedCompany ? decoded.ticker : null
+  const urlScreen = decoded.screen
 
   const [rawText, setRawText] = useState(urlScreen.text)
   const [debouncedText, setDebouncedText] = useState(urlScreen.text)
@@ -106,6 +112,16 @@ export function DealScopeApp() {
   useEffect(() => {
     prefetchCompanyDetails()
   }, [])
+
+  // Rewrite leftover or legacy params (view=results&ticker=, unknown keys,
+  // a ticker that is not in the universe) to the canonical form. replace(),
+  // not push(), so a dirty shared link does not add a history entry.
+  useEffect(() => {
+    const next = encodeUrlState({ view, ticker: tickerParam, screen: urlScreen })
+    if (next === urlString) return
+    lastWrittenUrl.current = next
+    router.replace(next ? `/?${next}` : "/", { scroll: false })
+  }, [view, tickerParam, urlScreen, urlString, router])
 
   useEffect(() => {
     if (urlString === lastWrittenUrl.current) return
@@ -155,11 +171,6 @@ export function DealScopeApp() {
   const screen = useMemo(() => computeScreen(debouncedText), [computeScreen, debouncedText])
 
   const { results, matchCount } = useMemo(() => runScreen(companies, screen, weights), [screen, weights])
-
-  const selectedCompany: Company | null = useMemo(
-    () => (tickerParam ? companies.find((c) => c.ticker === tickerParam) ?? null : null),
-    [tickerParam],
-  )
 
   // Same-view screen edits: sector pill, chip removal, clear all, buckets
   // drawer. Each is a direct click handler calling this synchronously --
