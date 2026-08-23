@@ -759,7 +759,8 @@ export const FACTOR_LABELS: {
     key: "debtLevel",
     label: "Debt Level",
     metricKey: "totalDebt",
-    explainer: "Total borrowed money on the books — lower debt scores higher.",
+    explainer:
+      "Net debt relative to earnings (Net Debt / EBITDA). If earnings are missing or not positive, Debt / Equity is used instead. Lower leverage scores higher. Not used for Financial Services — a bank's borrowings are how it operates, not a distress signal — and the other three factors are reweighted.",
   },
 ]
 
