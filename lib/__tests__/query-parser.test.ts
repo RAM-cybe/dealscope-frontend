@@ -10,8 +10,8 @@
  * documented requirement, not a restatement of the implementation.
  */
 
-import { parseQuery, screenToQuery } from "../query-parser"
-import { countScreen, runScreen, NUMERIC_FIELD_KEYS, type ScreenFilters } from "../screener"
+import { parseQuery, screenAfterClearedSearch, screenFromTypedQuery, screenToQuery } from "../query-parser"
+import { countScreen, makeScreen, runScreen, NUMERIC_FIELD_KEYS, type ScreenFilters } from "../screener"
 import { getCompanies, DEFAULT_WEIGHTS } from "../dealscope-data"
 
 const { companies } = getCompanies()
@@ -251,6 +251,19 @@ console.log("\n=== Round-trip ===")
   check("screenToQuery -> parseQuery preserves match count",
     countScreen(companies, original) === countScreen(companies, reparsed),
     `rendered=${JSON.stringify(rendered)} ${countScreen(companies, original)} vs ${countScreen(companies, reparsed)}`)
+}
+
+console.log("\n=== Clearing search keeps committed filters ===")
+{
+  const committed = makeScreen({ sectors: ["Telecom, Media & Entertainment"] })
+  const afterType = screenFromTypedQuery("foo", committed)
+  check("name search does not drop the sector chip", afterType.sectors.includes("Telecom, Media & Entertainment"))
+  check("name search still searches the typed text", afterType.text === "foo")
+  const afterClear = screenAfterClearedSearch(committed)
+  check("clearing the box drops only the text", afterClear.text === "" && afterClear.sectors.includes("Telecom, Media & Entertainment"))
+  const afterScreenQuery = screenFromTypedQuery("high growth pharma mid-cap ROCE > 18", committed)
+  check("a recognised screen query still replaces the sector",
+    !afterScreenQuery.sectors.includes("Telecom, Media & Entertainment") && afterScreenQuery.industries.length === 2)
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`)
