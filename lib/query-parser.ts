@@ -682,6 +682,29 @@ export function parseQuery(raw: string): ParseResult {
   return { filters, recognised, matched }
 }
 
+/** Emptying the search box must drop only the text. Sector chips, numeric
+ *  constraints and drawer bands stay. Confirmed live: Telecom selected, type
+ *  then backspace, URL went from `?sectors=Telecom…` to blank. */
+export function screenAfterClearedSearch(committed: ScreenFilters): ScreenFilters {
+  return makeScreen({ ...committed, text: "" })
+}
+
+/** Typed text that is just a name/ticker search must not wipe committed
+ *  visual filters. A recognised screen query still replaces the query-owned
+ *  half (sectors / industries / numeric) so "pharma" after "logistics" does
+ *  not AND the two together. */
+export function screenFromTypedQuery(text: string, committed: ScreenFilters): ScreenFilters {
+  if (text === committed.text) return committed
+  const { filters, recognised } = parseQuery(text)
+  if (!recognised) {
+    return makeScreen({ ...committed, text: filters.text || text.trim() })
+  }
+  return makeScreen({
+    ...filters,
+    buckets: { ...committed.buckets, industry: filters.industries },
+  })
+}
+
 /**
  * Render a ScreenFilters back into a human-readable query string, for the
  * search bar's two-way sync: clicking visual controls produces text that

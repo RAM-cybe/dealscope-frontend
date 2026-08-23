@@ -27,7 +27,7 @@ import {
   countScreen,
   removeChip as removeChipFrom,
 } from "@/lib/screener"
-import { parseQuery } from "@/lib/query-parser"
+import { parseQuery, screenAfterClearedSearch, screenFromTypedQuery } from "@/lib/query-parser"
 import { scrollToTop } from "@/components/smooth-scroll"
 import { encodeUrlState, decodeUrlState } from "@/lib/url-state"
 import { type ExampleScreen, EXAMPLE_SCREENS } from "@/lib/example-screens"
@@ -158,14 +158,7 @@ export function DealScopeApp() {
   // on screen explaining why. Industry moves with the query; the genuine
   // drawer bands (market cap, ROCE, ...) still survive typing.
   const computeScreen = useCallback(
-    (text: string) => {
-      if (text === urlScreen.text) return urlScreen
-      const filters = parseQuery(text).filters
-      return makeScreen({
-        ...filters,
-        buckets: { ...urlScreen.buckets, industry: filters.industries },
-      })
-    },
+    (text: string) => screenFromTypedQuery(text, urlScreen),
     [urlScreen],
   )
   const screen = useMemo(() => computeScreen(debouncedText), [computeScreen, debouncedText])
@@ -225,14 +218,25 @@ export function DealScopeApp() {
    * the now-inaccurate query text is cleared. What you see (chips) therefore
    * always equals what is applied, which is the property that makes a
    * natural-language box trustworthy at all.
+   *
+   * On the landing page this is a view change, not a same-page tweak:
+   * staying on landing wrote the sector into the URL, Next/Lenis jumped
+   * scroll to the top, and the user had to scroll back down to click Run.
+   * Confirmed live (Telecom chip at scrollY 670 → 0, still on landing).
+   * Selecting a sector from home now opens the filtered results instead.
    */
   const materialize = useCallback(
     (next: ScreenFilters) => {
+      const cleaned = { ...next, text: "" }
       setRawText("")
       setDebouncedText("")
-      updateScreen({ ...next, text: "" })
+      if (view === "landing") {
+        navigate({ view: "results", ticker: null, screen: cleaned })
+        return
+      }
+      updateScreen(cleaned)
     },
-    [updateScreen],
+    [view, navigate, updateScreen],
   )
 
   // Emptying the search box is a full reset, not a residual-text edit.
@@ -245,15 +249,15 @@ export function DealScopeApp() {
       setRawText(q)
       if (!q.trim()) {
         setDebouncedText("")
-        const empty = makeScreen()
+        const kept = screenAfterClearedSearch(urlScreen)
         if (tickerParam) {
-          navigate({ view: "results", ticker: null, screen: empty })
+          navigate({ view: "results", ticker: null, screen: kept })
         } else {
-          updateScreen(empty)
+          updateScreen(kept)
         }
       }
     },
-    [tickerParam, navigate, updateScreen],
+    [tickerParam, navigate, updateScreen, urlScreen],
   )
 
   const toggleSector = useCallback(
