@@ -413,6 +413,23 @@ function formatRange(low: number | null | undefined, high: number | null | undef
   return `${formatCr(low)} – ${formatCr(high)}`
 }
 
+/** Implied equity cannot be negative. Confirmed live on IDEA: EV/EBITDA
+ *  showed ₹-30,365 Cr – ₹3,84,520 Cr. Floor at 0 and flag debt overhang. */
+export const DEBT_OVERHANG_NOTE =
+  "Implied equity floored at ₹0. Listed-peer EV/EBITDA value is fully absorbed by this company's debt (debt overhang)."
+
+export function formatImpliedEquityRange(
+  low: number | null | undefined,
+  high: number | null | undefined,
+): { text: string; debtOverhang: boolean } {
+  if (!isNum(low) || !isNum(high)) return { text: "N/A", debtOverhang: false }
+  const debtOverhang = low < 0 || high < 0
+  return {
+    text: `${formatCr(Math.max(0, low))} – ${formatCr(Math.max(0, high))}`,
+    debtOverhang,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Raw record shapes -- match data/companies.json and data/deals.json exactly
 // (produced by export_for_frontend.py from the real scoring/valuation engine)
@@ -516,11 +533,20 @@ function mapCompanyRecord(r: CompanyRecord): Company {
       totalDebt: isNum(r.total_debt) ? r.total_debt / 1e7 : null,
       promoterPledge: isNum(r.promoter_pledge_pct) ? r.promoter_pledge_pct : null,
     },
-    valuation: {
-      evEbitda: formatRange(r.ev_ebitda_low, r.ev_ebitda_high),
-      peImplied: formatRange(r.pe_implied_low, r.pe_implied_high),
-      note: r.valuation_note ?? "",
-    },
+    valuation: (() => {
+      const ev = formatImpliedEquityRange(r.ev_ebitda_low, r.ev_ebitda_high)
+      const existing = r.valuation_note?.trim() ?? ""
+      const note = ev.debtOverhang
+        ? existing
+          ? `${existing} ${DEBT_OVERHANG_NOTE}`
+          : DEBT_OVERHANG_NOTE
+        : existing
+      return {
+        evEbitda: ev.text,
+        peImplied: formatRange(r.pe_implied_low, r.pe_implied_high),
+        note,
+      }
+    })(),
     about: null,
     hasAbout: false,
     whyThisScore: null,
