@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Linkedin, Mail } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
-import { DataFreshness, FUNDAMENTALS_AS_OF, FUNDAMENTALS_AS_OF_MAX, PRICES_AS_OF, formatAsOfDate } from "@/components/dealscope/data-freshness"
+import { FUNDAMENTALS_AS_OF, FUNDAMENTALS_AS_OF_MAX, PRICES_AS_OF, formatAsOfDate } from "@/components/dealscope/data-freshness"
 import datasetMeta from "@/data/dataset-meta.json"
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ function Section({
 }) {
   return (
     <section className="mt-14 first:mt-0">
-      <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+      <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
         {index} / {label}
       </span>
       <div className="mt-5 flex flex-col gap-5 font-sans text-base md:text-lg leading-relaxed text-foreground/85 text-pretty">
@@ -40,7 +40,7 @@ export default function AboutPage() {
       {/* Left vertical label -- mirrors the SCREEN / RESULTS / TEAR SHEET
           labels used on the other views */}
       <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:block">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
+        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
           ABOUT
         </span>
       </div>
@@ -48,7 +48,7 @@ export default function AboutPage() {
       <div className="relative z-10 max-w-2xl">
         <Link
           href="/"
-          className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent transition-colors duration-200"
+          className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground hover:text-accent transition-colors duration-200"
         >
           ← Home
         </Link>
@@ -136,7 +136,6 @@ export default function AboutPage() {
         </Section>
 
         <Section index="04" label="Data & Refresh">
-          <DataFreshness className="mb-2" />
           <p>
             The universe is{" "}
             <span className="text-foreground">
@@ -199,7 +198,7 @@ export default function AboutPage() {
         </Section>
 
         <div className="mt-16 border-t border-border/40 pt-8">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Built by Ram
           </span>
           <div className="mt-5 flex flex-wrap items-center gap-4">

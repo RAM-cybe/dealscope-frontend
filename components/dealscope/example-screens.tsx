@@ -25,10 +25,10 @@ export function ExampleScreens({ screens, onApply, variant = "cards" }: ExampleS
             key={screen.id}
             onClick={() => onApply(screen)}
             title={screen.description}
-            className="group inline-flex items-baseline gap-2 border border-border/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+            className="group inline-flex items-baseline gap-2 border border-border/60 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
           >
             <span>{screen.label}</span>
-            <span className="text-[9px] text-muted-foreground/70 group-hover:text-accent/70">{count}</span>
+            <span className="text-[11px] text-muted-foreground group-hover:text-accent/70">{count}</span>
           </button>
         ))}
       </div>
@@ -53,7 +53,7 @@ export function ExampleScreens({ screens, onApply, variant = "cards" }: ExampleS
               <span className="font-[family-name:var(--font-bebas)] text-3xl tracking-tight leading-none text-accent">
                 {count}
               </span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 {count === 1 ? "match" : "matches"}
               </span>
             </div>
@@ -63,7 +63,7 @@ export function ExampleScreens({ screens, onApply, variant = "cards" }: ExampleS
             <p className="font-mono text-[11px] text-muted-foreground leading-relaxed flex-1">
               {screen.description}
             </p>
-            <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-accent transition-colors duration-200">
+            <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground group-hover:text-accent transition-colors duration-200">
               Run screen
               <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
             </span>

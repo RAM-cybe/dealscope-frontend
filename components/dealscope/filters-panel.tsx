@@ -82,7 +82,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+                  <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
                     Screening Constraints
                   </span>
                   <h2 className="mt-3 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
@@ -92,7 +92,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
                 <button
                   onClick={onClose}
                   aria-label="Close filters panel"
-                  className="border border-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                  className="border border-border px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
                 >
                   ESC
                 </button>
@@ -138,14 +138,14 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
 
                 {/* Active readout */}
                 <div className="border-t border-border/50 pt-6 flex items-baseline justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
                     Active Filters
                   </span>
                   <span className="font-[family-name:var(--font-bebas)] text-2xl tracking-tight text-accent">
                     {activeCount}
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-muted-foreground/70 leading-relaxed -mt-4">
+                <p className="font-mono text-xs text-muted-foreground leading-relaxed -mt-4">
                   A field only narrows the set once you pick at least one band; up to eight can be active.
                 </p>
               </div>
@@ -176,7 +176,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
 // Reuses the tear sheet's SectionLabel pattern for consistency.
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
-    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">
+    <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
       {index} / {label}
     </span>
   )
@@ -195,7 +195,7 @@ function FieldControl({
     <div>
       <div className="flex items-baseline justify-between mb-3">
         <label className="font-mono text-[11px] uppercase tracking-[0.2em] text-foreground">{def.label}</label>
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80">
           {def.select === "multi" ? "Select any" : "Select one"}
         </span>
       </div>
@@ -235,7 +235,7 @@ function PillGroup({
             onClick={() => toggle(b.key)}
             aria-pressed={active}
             className={cn(
-              "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-200",
+              "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all duration-200",
               active
                 ? "border-accent text-accent"
                 : "border-border text-muted-foreground hover:border-accent hover:text-accent",
@@ -244,8 +244,8 @@ function PillGroup({
             <span>{b.name}</span>
             <span
               className={cn(
-                "text-[9px] normal-case tracking-normal",
-                active ? "text-accent/70" : "text-muted-foreground/60",
+                "text-[11px] normal-case tracking-normal",
+                active ? "text-accent/70" : "text-muted-foreground/80",
               )}
             >
               {b.range}
@@ -320,7 +320,7 @@ function IndustryFilterControl({
             <button
               key={name}
               onClick={() => toggle(name)}
-              className="inline-flex items-center gap-2 border border-accent bg-accent/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-accent hover:bg-accent/20 transition-colors duration-200"
+              className="inline-flex items-center gap-2 border border-accent bg-accent/10 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-accent hover:bg-accent/20 transition-colors duration-200"
             >
               <span>{name}</span>
               <span aria-hidden="true">×</span>
@@ -341,19 +341,19 @@ function IndustryFilterControl({
           role="combobox"
           aria-expanded={flatList.length > 0}
           aria-controls="industry-listbox"
-          className="w-full bg-transparent px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          className="w-full bg-transparent px-3 py-2.5 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
       </div>
 
       <div id="industry-listbox" role="listbox" className="mt-2 max-h-56 overflow-y-auto border border-border/50">
         {flatList.length === 0 ? (
-          <p className="px-3 py-4 font-mono text-[10px] text-muted-foreground/60 text-center">
+          <p className="px-3 py-4 font-mono text-xs text-muted-foreground/80 text-center">
             No industries match &quot;{query}&quot;
           </p>
         ) : (
           filteredGroups.map((group) => (
             <div key={group.sector} className="border-b border-border/30 last:border-b-0">
-              <div className="sticky top-0 bg-background px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+              <div className="sticky top-0 bg-background px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80">
                 {group.sector}
               </div>
               <div className="divide-y divide-border/20">
@@ -378,7 +378,7 @@ function IndustryFilterControl({
                     >
                       <span className="truncate">{ind.name}</span>
                       <span
-                        className={cn("text-[9px] shrink-0", active ? "text-accent/70" : "text-muted-foreground/60")}
+                        className={cn("text-[11px] shrink-0", active ? "text-accent/70" : "text-muted-foreground/80")}
                       >
                         {ind.count}
                       </span>
@@ -423,7 +423,7 @@ function SegmentedControl({
           >
             <span
               className={cn(
-                "font-mono text-[9px] uppercase tracking-wider leading-tight",
+                "font-mono text-[11px] uppercase tracking-wider leading-tight",
                 active ? "text-accent-foreground" : "text-muted-foreground",
               )}
             >
@@ -432,7 +432,7 @@ function SegmentedControl({
             <span
               className={cn(
                 "font-mono text-[8px] tracking-normal leading-tight",
-                active ? "text-accent-foreground/80" : "text-muted-foreground/60",
+                active ? "text-accent-foreground/80" : "text-muted-foreground/80",
               )}
             >
               {b.range}

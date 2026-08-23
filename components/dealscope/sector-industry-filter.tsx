@@ -89,14 +89,14 @@ export function SectorIndustryFilter({
               onClick={() => onToggleSector(sector.name)}
               aria-pressed={active}
               className={cn(
-                "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-200",
+                "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all duration-200",
                 active
                   ? "border-accent bg-accent/10 text-accent"
                   : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
               )}
             >
               {sector.name}
-              <span className={cn("text-[9px]", active ? "text-accent/70" : "text-muted-foreground/70")}>
+              <span className={cn("text-[11px]", active ? "text-accent/70" : "text-muted-foreground")}>
                 {sector.count}
               </span>
             </button>
@@ -110,7 +110,7 @@ export function SectorIndustryFilter({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           className={cn(
-            "inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider transition-all duration-200",
+            "inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all duration-200",
             open || selectedCount > 0
               ? "border-accent text-accent"
               : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
@@ -118,7 +118,7 @@ export function SectorIndustryFilter({
         >
           <span>Browse Industries</span>
           {selectedCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-accent text-accent-foreground text-[9px] leading-none">
+            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-accent text-accent-foreground text-[11px] leading-none">
               {selectedCount}
             </span>
           )}
@@ -130,7 +130,7 @@ export function SectorIndustryFilter({
         {selectedCount > 0 && (
           <button
             onClick={onClearIndustries}
-            className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
+            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
           >
             Clear industries
           </button>
@@ -148,7 +148,7 @@ export function SectorIndustryFilter({
               placeholder={`Search ${totalIndustries} industries…`}
               aria-label="Search industries"
               autoFocus
-              className="w-full bg-transparent px-4 py-3 font-mono text-[11px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-accent"
+              className="w-full bg-transparent px-4 py-3 font-mono text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -171,7 +171,7 @@ export function SectorIndustryFilter({
                 {otherSectors.length > 0 && !showOtherSectors && (
                   <button
                     onClick={() => setShowOtherSectors(true)}
-                    className="self-start border border-dashed border-border/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-all duration-200"
+                    className="self-start border border-dashed border-border/60 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-all duration-200"
                   >
                     Browse other sectors ({otherSectors.length})
                   </button>
@@ -189,7 +189,7 @@ export function SectorIndustryFilter({
                   ))}
 
                 {unclassifiedCount != null && unclassifiedCount > 0 && (
-                  <p className="border-t border-border/40 pt-4 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  <p className="border-t border-border/40 pt-4 font-mono text-xs leading-relaxed text-muted-foreground">
                     Unclassified ({unclassifiedCount}) — no industry data available for these
                     companies. Confirmed gap in the upstream data source, not a guess. They are not
                     scored against a fake peer group.
@@ -219,8 +219,8 @@ function IndustryGroupBlock({
     <div>
       <span
         className={cn(
-          "font-mono text-[10px] uppercase tracking-[0.2em]",
-          dimmedHeader ? "text-muted-foreground/70" : "text-accent",
+          "font-mono text-xs uppercase tracking-[0.2em]",
+          dimmedHeader ? "text-muted-foreground" : "text-accent",
         )}
       >
         {group.sector}
@@ -241,7 +241,7 @@ function IndustryGroupBlock({
               )}
             >
               {ind.name}
-              <span className={cn("text-[10px]", active ? "text-accent/80" : "text-muted-foreground/80")}>
+              <span className={cn("text-xs", active ? "text-accent/80" : "text-muted-foreground/80")}>
                 {ind.count}
               </span>
             </button>

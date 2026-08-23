@@ -107,7 +107,7 @@ export default function RootLayout({
             <DataFreshness />
             <Link
               href="/about"
-              className="inline-flex shrink-0 items-center border border-border/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
+              className="inline-flex shrink-0 items-center border border-border/60 px-4 py-2 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
             >
               About
             </Link>
