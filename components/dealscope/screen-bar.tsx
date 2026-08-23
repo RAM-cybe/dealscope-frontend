@@ -91,8 +91,8 @@ export function ScreenBar({
         >
           <span
             className={cn(
-              "absolute left-4 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-[0.3em] pointer-events-none",
-              recognised ? "text-accent" : "text-muted-foreground/60",
+              "absolute left-4 top-1/2 -translate-y-1/2 font-mono text-xs uppercase tracking-[0.3em] pointer-events-none",
+              recognised ? "text-accent" : "text-muted-foreground/80",
             )}
             aria-hidden="true"
           >
@@ -106,7 +106,7 @@ export function ScreenBar({
             placeholder={placeholder}
             aria-label="Search companies or describe a screen"
             autoFocus={autoFocus}
-            className="box-border w-full h-full bg-transparent pl-12 pr-4 font-mono text-sm leading-none text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            className="box-border w-full h-full bg-transparent pl-12 pr-4 font-mono text-sm leading-none text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
         {trailing ? (
@@ -139,7 +139,7 @@ export function ScreenBar({
         </span>
 
         {recognised && (
-          <span className="font-mono text-[10px] uppercase tracking-wider text-accent/80">
+          <span className="font-mono text-xs uppercase tracking-wider text-accent/80">
             Screen applied
           </span>
         )}
@@ -147,7 +147,7 @@ export function ScreenBar({
         {activeCount > 0 && (
           <button
             onClick={onClearAll}
-            className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
+            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
           >
             Clear all
           </button>
@@ -161,7 +161,7 @@ export function ScreenBar({
             <button
               key={chip.id}
               onClick={() => onRemoveChip(chip)}
-              className="group inline-flex max-w-full items-center gap-2 border border-accent/50 bg-accent/10 px-3 py-1.5 font-mono text-[10px] text-accent hover:bg-accent/20 hover:border-accent transition-colors duration-200"
+              className="group inline-flex max-w-full items-center gap-2 border border-accent/50 bg-accent/10 px-3 py-1.5 font-mono text-xs text-accent hover:bg-accent/20 hover:border-accent transition-colors duration-200"
               aria-label={`Remove filter: ${chip.label}`}
             >
               <span className="truncate">{chip.label}</span>
