@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { motion } from "framer-motion"
-import { ScrambleText } from "@/components/scramble-text"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScoreRing } from "@/components/dealscope/score-ring"
 import {
@@ -275,16 +274,16 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   EV / EBITDA
                 </span>
-                <p className="mt-2 font-[family-name:var(--font-bebas)] text-4xl tracking-tight text-accent">
-                  <ScrambleText text={company.valuation.evEbitda} delayMs={500} duration={0.8} />
+                <p className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl tracking-tight text-accent break-words">
+                  {company.valuation.evEbitda}
                 </p>
               </div>
               <div className="p-6">
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   P/E Implied
                 </span>
-                <p className="mt-2 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
-                  <ScrambleText text={company.valuation.peImplied} delayMs={700} duration={0.8} />
+                <p className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl tracking-tight break-words">
+                  {company.valuation.peImplied}
                 </p>
               </div>
             </div>
@@ -326,12 +325,12 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 + Math.min(i, 8) * 0.03, duration: 0.3 }}
-                  className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b border-border/30 py-4 font-mono text-xs hover:bg-accent/5 transition-colors duration-300"
+                  className="grid grid-cols-12 gap-x-3 gap-y-1 md:gap-4 border-b border-border/30 py-4 font-mono text-xs hover:bg-accent/5 transition-colors duration-300"
                 >
-                  <span className="col-span-2 md:col-span-5 text-foreground">{deal.target}</span>
-                  <span className="md:col-span-4 text-muted-foreground">{deal.acquirer}</span>
-                  <span className="md:col-span-1 text-muted-foreground/60">{deal.year}</span>
-                  <span className="md:col-span-2 md:text-right text-accent">{deal.value}</span>
+                  <span className="col-span-12 md:col-span-5 text-foreground">{deal.target}</span>
+                  <span className="col-span-12 md:col-span-4 text-muted-foreground">{deal.acquirer}</span>
+                  <span className="col-span-5 md:col-span-1 text-muted-foreground/60">{deal.year}</span>
+                  <span className="col-span-7 md:col-span-2 md:text-right text-accent">{deal.value}</span>
                 </motion.div>
               ))
             )}
