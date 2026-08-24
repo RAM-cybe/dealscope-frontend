@@ -290,6 +290,9 @@ export interface ComparableDeal {
   acquirer: string
   year: string
   value: string
+  dealType?: string
+  stakePct?: string | null
+  evEbitda?: string | null
 }
 
 export interface Company {
@@ -505,6 +508,7 @@ export interface DealRow {
   deal_value_usdm: number | null
   stake_pct: number | null
   report_year: number
+  ev_ebitda?: number | null
 }
 
 function mapCompanyRecord(r: CompanyRecord): Company {
@@ -744,17 +748,79 @@ export function comparablesForSector(sectorKey: string, deals: DealRow[]): Compa
   const matched = deals.filter((d) => (d.sector_v2 || d.ey_bucket) === sectorKey)
   return matched
     .sort((a, b) => (b.report_year ?? 0) - (a.report_year ?? 0))
-    .slice(0, 10)
+    .slice(0, 15)
     .map((d) => ({
       target: d.target,
       acquirer: d.acquirer,
       year: d.report_year ? String(d.report_year) : "N/A",
       value: isNum(d.deal_value_usdm) ? `US$${d.deal_value_usdm.toLocaleString("en-IN")}m` : "N/A",
+      dealType: d.deal_type || undefined,
+      stakePct: isNum(d.stake_pct) ? `${d.stake_pct}%` : null,
+      evEbitda: isNum(d.ev_ebitda) ? `${d.ev_ebitda.toFixed(1)}x` : "—",
     }))
 }
 
 export function comparableCountForSector(sectorKey: string, deals: DealRow[]): number {
   return deals.filter((d) => (d.sector_v2 || d.ey_bucket) === sectorKey).length
+}
+
+export interface SectorRankInfo {
+  rank: number
+  total: number
+}
+
+export function computeSectorRank(company: Company, companies: Company[], weights: Weights): SectorRankInfo | null {
+  if (!company.sector || company.sector === "Unclassified") return null
+  const currentScore = computeScore(company.factors, weights)
+  if (currentScore == null) return null
+
+  const sectorCohort = companies.filter((c) => c.sector === company.sector)
+  let higherCount = 0
+  let validCount = 0
+
+  for (const c of sectorCohort) {
+    const s = computeScore(c.factors, weights)
+    if (s != null) {
+      validCount++
+      if (s > currentScore) {
+        higherCount++
+      }
+    }
+  }
+
+  if (validCount === 0) return null
+  return {
+    rank: higherCount + 1,
+    total: validCount,
+  }
+}
+
+export function findClosestPeers(company: Company, companies: Company[], limit = 5): Company[] {
+  if (!company.sector || company.sector === "Unclassified") return []
+
+  const peers = companies.filter((c) => c.sector === company.sector && c.ticker !== company.ticker)
+  if (peers.length === 0) return []
+
+  const targetFactors = company.factors
+  const factorKeys: (keyof FactorScores)[] = ["revenueGrowth", "ebitdaMargin", "roce", "debtLevel"]
+
+  const scoredPeers = peers.map((peer) => {
+    let sumSq = 0
+    let count = 0
+    for (const k of factorKeys) {
+      const tv = targetFactors[k]
+      const pv = peer.factors[k]
+      if (tv != null && pv != null) {
+        sumSq += Math.pow(tv - pv, 2)
+        count++
+      }
+    }
+    const distance = count > 0 ? Math.sqrt(sumSq / count) + (4 - count) * 15 : 999
+    return { peer, distance }
+  })
+
+  scoredPeers.sort((a, b) => a.distance - b.distance)
+  return scoredPeers.slice(0, limit).map((sp) => sp.peer)
 }
 
 // ---------------------------------------------------------------------------
