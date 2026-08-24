@@ -16,6 +16,7 @@ import {
 } from "@/lib/dealscope-data"
 import { useCompanyDetails } from "@/lib/company-details"
 import { formatAsOfDate } from "@/components/dealscope/data-freshness"
+import { OwnershipBadge } from "@/components/dealscope/ownership-badges"
 import { cn } from "@/lib/utils"
 
 interface TearSheetViewProps {
@@ -94,6 +95,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               <span className="border border-border px-3 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                 NSE: {company.ticker}
               </span>
+              <OwnershipBadge
+                holding={company.raw.promoterHolding}
+                pledge={company.raw.promoterPledge}
+                variant="header"
+              />
               {/* Granular industry, alongside the broad sector already shown in
                   the kicker above -- omitted entirely (not a broken/empty
                   label) for the ~74/2,046 companies missing it upstream. */}

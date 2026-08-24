@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx lib/__tests__/query-parser.test.ts && npx tsx lib/__tests__/scoring.test.ts && npx tsx lib/__tests__/url-state.test.ts && npx tsx lib/__tests__/export-csv.test.ts"
+    "test": "npx tsx lib/__tests__/query-parser.test.ts && npx tsx lib/__tests__/scoring.test.ts && npx tsx lib/__tests__/url-state.test.ts && npx tsx lib/__tests__/export-csv.test.ts && npx tsx lib/__tests__/ownership-badges.test.ts"
   },
   "dependencies": {
     "@vercel/analytics": "1.3.1",
