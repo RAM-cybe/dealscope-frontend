@@ -20,7 +20,6 @@ import { useCompanyDetails } from "@/lib/company-details"
 import { formatAsOfDate } from "@/components/dealscope/data-freshness"
 import { OwnershipBadge } from "@/components/dealscope/ownership-badges"
 import { FactorRadarChart } from "@/components/dealscope/factor-radar-chart"
-import { PeerScatterMatrix } from "@/components/dealscope/peer-scatter-matrix"
 import { cn } from "@/lib/utils"
 
 interface TearSheetViewProps {
@@ -210,23 +209,14 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         </div>
 
-        {/* 03 / Sector Peers & 2D Positioning Matrix */}
+        {/* 03 / Sector Peers */}
         {peers.length > 0 && (
           <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
             <SectionHeader
               index="03"
-              label="Sector Peers & 2D Positioning Matrix"
-              subtitle={`Relative positioning across ${company.sector} cohort`}
+              label="Sector Peers"
+              subtitle={`Closest 5 peers in ${company.sector} by factor correlation`}
             />
-
-            {/* 2D Positioning Matrix */}
-            <div className="mb-8">
-              <PeerScatterMatrix
-                target={company}
-                companies={companies}
-                weights={weights}
-              />
-            </div>
 
             {/* Closest Peers Table */}
             <div className="border border-border/40 bg-card/20 overflow-hidden">
