@@ -21,28 +21,28 @@ export function SectorQuartileExplorer() {
   const activeMetricMeta = METRICS.find((m) => m.key === selectedMetric) || METRICS[0]
 
   return (
-    <div className="border border-border/40 bg-card/25 p-5 md:p-6 my-6">
+    <div className="border border-border/40 bg-card/25 p-5 sm:p-6 my-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/30 pb-4">
         <div>
-          <span className="font-mono text-xs uppercase tracking-wider text-foreground font-semibold block">
+          <span className="font-mono text-sm sm:text-base uppercase tracking-wider text-foreground font-semibold block">
             Interactive Sector Quartile Atlas
           </span>
-          <span className="font-mono text-[11px] text-muted-foreground/70">
+          <span className="font-mono text-xs sm:text-sm text-muted-foreground mt-0.5 block">
             Empirical P25, Median (P50), and P75 distribution cutpoints across 13 sector cohorts
           </span>
         </div>
-        <span className="font-mono text-xs uppercase tracking-wider text-accent border border-accent/40 bg-accent/5 px-2.5 py-1 shrink-0 self-start sm:self-auto font-medium">
+        <span className="font-mono text-xs uppercase tracking-wider text-accent border border-accent/40 bg-accent/5 px-3 py-1 shrink-0 self-start sm:self-auto font-medium">
           2,381 Universe Baseline
         </span>
       </div>
 
       {/* Metric Selector Tabs */}
-      <div className="flex flex-wrap gap-2 mt-5">
+      <div className="flex flex-wrap gap-2.5 mt-5">
         {METRICS.map((metric) => (
           <button
             key={metric.key}
             onClick={() => setSelectedMetric(metric.key)}
-            className={`px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all duration-150 border ${
+            className={`px-3.5 py-2 font-mono text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 border font-medium ${
               selectedMetric === metric.key
                 ? "border-accent bg-accent/10 text-accent font-semibold"
                 : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
@@ -55,15 +55,15 @@ export function SectorQuartileExplorer() {
 
       {/* Small-Multiples Table / Range Grid */}
       <div className="mt-6 overflow-x-auto">
-        <table className="w-full text-left font-mono text-xs">
+        <table className="w-full text-left font-mono text-xs sm:text-sm">
           <thead>
-            <tr className="border-b border-border/40 text-muted-foreground text-[11px] uppercase tracking-wider">
-              <th className="py-2.5 pr-4 font-normal">Sector Cohort</th>
-              <th className="py-2.5 px-3 text-right font-normal">Sample (N)</th>
-              <th className="py-2.5 px-3 text-right font-normal text-muted-foreground/70">P25 (Bottom)</th>
-              <th className="py-2.5 px-3 text-right font-semibold text-accent">P50 (Median)</th>
-              <th className="py-2.5 px-3 text-right font-normal text-foreground">P75 (Top)</th>
-              <th className="py-2.5 pl-4 min-w-[140px] font-normal">Interquartile Range (IQR)</th>
+            <tr className="border-b border-border/40 text-muted-foreground text-xs uppercase tracking-wider">
+              <th className="py-3 pr-4 font-medium">Sector Cohort</th>
+              <th className="py-3 px-3 text-right font-medium">Sample (N)</th>
+              <th className="py-3 px-3 text-right font-medium text-muted-foreground/70">P25 (Bottom)</th>
+              <th className="py-3 px-3 text-right font-semibold text-accent">P50 (Median)</th>
+              <th className="py-3 px-3 text-right font-medium text-foreground">P75 (Top)</th>
+              <th className="py-3 pl-4 min-w-[150px] font-medium">Interquartile Range (IQR)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/20">
@@ -88,22 +88,22 @@ export function SectorQuartileExplorer() {
 
               return (
                 <tr key={sectorName} className="hover:bg-accent/[0.02] transition-colors">
-                  <td className="py-2.5 pr-4 text-foreground font-medium text-pretty">{sectorName}</td>
-                  <td className="py-2.5 px-3 text-right text-muted-foreground/70 tabular-nums">{n}</td>
-                  <td className="py-2.5 px-3 text-right text-muted-foreground/80 tabular-nums">
+                  <td className="py-3 pr-4 text-foreground font-medium text-pretty">{sectorName}</td>
+                  <td className="py-3 px-3 text-right text-muted-foreground/70 tabular-nums">{n}</td>
+                  <td className="py-3 px-3 text-right text-muted-foreground/80 tabular-nums">
                     {p25.toFixed(activeMetricMeta.decimals)}
                     {activeMetricMeta.unit === "%" ? "%" : activeMetricMeta.unit === "x" ? "x" : ""}
                   </td>
-                  <td className="py-2.5 px-3 text-right text-accent font-semibold tabular-nums">
+                  <td className="py-3 px-3 text-right text-accent font-semibold tabular-nums">
                     {p50.toFixed(activeMetricMeta.decimals)}
                     {activeMetricMeta.unit === "%" ? "%" : activeMetricMeta.unit === "x" ? "x" : ""}
                   </td>
-                  <td className="py-2.5 px-3 text-right text-foreground font-medium tabular-nums">
+                  <td className="py-3 px-3 text-right text-foreground font-medium tabular-nums">
                     {p75.toFixed(activeMetricMeta.decimals)}
                     {activeMetricMeta.unit === "%" ? "%" : activeMetricMeta.unit === "x" ? "x" : ""}
                   </td>
-                  <td className="py-2.5 pl-4">
-                    <div className="h-2 w-full bg-border/40 relative rounded-none overflow-hidden">
+                  <td className="py-3 pl-4">
+                    <div className="h-2.5 w-full bg-border/40 relative rounded-none overflow-hidden">
                       {/* P25 to P75 range */}
                       <div
                         className="absolute top-0 bottom-0 bg-accent/30 border-x border-accent/70"
@@ -111,7 +111,7 @@ export function SectorQuartileExplorer() {
                       />
                       {/* Median marker */}
                       <div
-                        className="absolute top-0 bottom-0 w-1 bg-accent -translate-x-1/2"
+                        className="absolute top-0 bottom-0 w-1.5 bg-accent -translate-x-1/2"
                         style={{ left: `${medPct}%` }}
                       />
                     </div>
@@ -123,7 +123,7 @@ export function SectorQuartileExplorer() {
         </table>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-border/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-[11px] text-muted-foreground/70">
+      <div className="mt-4 pt-3.5 border-t border-border/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-xs sm:text-sm text-muted-foreground/80">
         <span>
           <strong className="text-foreground font-medium">Visual Key:</strong> Shaded block = Interquartile zone (P25 to P75); Vertical amber line = Sector Median (P50).
         </span>
