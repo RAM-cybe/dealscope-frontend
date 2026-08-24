@@ -864,28 +864,26 @@ export const FACTOR_LABELS: {
     key: "revenueGrowth",
     label: "Revenue Growth",
     metricKey: "revenueGrowth",
-    explainer: "How fast sales are growing compared to other companies in the same sector.",
+    explainer: "YoY revenue growth trajectory relative to sector cohort.",
   },
   {
     key: "ebitdaMargin",
     label: "EBITDA Margin",
     metricKey: "ebitdaMargin",
-    explainer:
-      "Operating profit kept from every ₹100 of revenue, before interest, tax, depreciation and amortization.",
+    explainer: "Operating profitability (EBITDA / Revenue) before non-cash & capital costs.",
   },
   {
     key: "roce",
     label: "ROCE",
     metricKey: "roce",
-    explainer:
-      "How efficiently the company turns capital invested in the business into profit — higher is better.",
+    explainer: "Capital efficiency (EBIT / Capital Employed) — returns generated on deployed capital.",
   },
   {
     key: "debtLevel",
     label: "Debt Level",
     metricKey: "totalDebt",
     explainer:
-      "Net debt relative to earnings (Net Debt / EBITDA). If earnings are missing or not positive, Debt / Equity is used instead. Lower leverage scores higher. Not used for Financial Services — a bank's borrowings are how it operates, not a distress signal — and the other three factors are reweighted.",
+      "Balance sheet leverage (Net Debt / EBITDA; fallback D/E). Higher score indicates lower debt burden. Excluded for Financial Services.",
   },
 ]
 
