@@ -19,6 +19,8 @@ import {
 import { useCompanyDetails } from "@/lib/company-details"
 import { formatAsOfDate } from "@/components/dealscope/data-freshness"
 import { OwnershipBadge } from "@/components/dealscope/ownership-badges"
+import { FactorRadarChart } from "@/components/dealscope/factor-radar-chart"
+import { PeerScatterMatrix } from "@/components/dealscope/peer-scatter-matrix"
 import { cn } from "@/lib/utils"
 
 interface TearSheetViewProps {
@@ -161,11 +163,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         </div>
 
-        {/* 02 / Factor Decomposition */}
+        {/* 02 / Factor Decomposition & Radar Fingerprint */}
         <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
           <SectionHeader
             index="02"
-            label="Factor Decomposition"
+            label="Factor Decomposition & Radar Fingerprint"
             subtitle={`Sector-relative percentiles (0–100) benchmarked against ${company.sector} cohort`}
           />
           <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-8">
@@ -173,32 +175,67 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than invented."
               : `Each score below is ranked 0–100 against direct peers in ${company.sector} — a 90 means outperforming ~90% of sector companies. Missing factors (—) are excluded from weighting.`}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-8">
-            {FACTOR_LABELS.map((factor, i) => (
-              <FactorBar
-                key={factor.key}
-                label={factor.label}
-                value={company.factors[factor.key]}
-                weight={weights[factor.key]}
-                metric={company.metrics[factor.metricKey]}
-                explainer={factor.explainer}
-                delay={0.04 * i}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left: 4 Factor Bars (7 cols) */}
+            <div className="lg:col-span-7 flex flex-col gap-6">
+              {FACTOR_LABELS.map((factor, i) => (
+                <FactorBar
+                  key={factor.key}
+                  label={factor.label}
+                  value={company.factors[factor.key]}
+                  weight={weights[factor.key]}
+                  metric={company.metrics[factor.metricKey]}
+                  explainer={factor.explainer}
+                  delay={0.04 * i}
+                />
+              ))}
+            </div>
+
+            {/* Right: Factor Radar Chart (5 cols) */}
+            <div className="lg:col-span-5 flex justify-center w-full">
+              <FactorRadarChart
+                factors={company.factors}
+                weights={weights}
+                sector={company.sector}
+                unclassified={unclassified}
+                rawMetrics={{
+                  revenueGrowth: company.metrics.revenueGrowth,
+                  ebitdaMargin: company.metrics.ebitdaMargin,
+                  roce: company.metrics.roce,
+                  debtLevel: company.metrics.totalDebt,
+                }}
+                className="w-full"
               />
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* 03 / Sector Peers */}
+        {/* 03 / Sector Peers & 2D Positioning Matrix */}
         {peers.length > 0 && (
-          <div className="mt-12 md:mt-16">
+          <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
             <SectionHeader
               index="03"
-              label="Sector Peers"
-              subtitle={`Closest 5 peers in ${company.sector} by factor correlation`}
+              label="Sector Peers & 2D Positioning Matrix"
+              subtitle={`Relative positioning across ${company.sector} cohort`}
             />
+
+            {/* 2D Positioning Matrix */}
+            <div className="mb-8">
+              <PeerScatterMatrix
+                target={company}
+                companies={companies}
+                weights={weights}
+              />
+            </div>
+
+            {/* Closest Peers Table */}
             <div className="border border-border/40 bg-card/20 overflow-hidden">
+              <div className="border-b border-border/40 bg-card/40 px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                <span>Top 5 Closest Peers by Correlation</span>
+                <span className="text-[11px] text-muted-foreground/70">Sector: {company.sector}</span>
+              </div>
               {/* Desktop header */}
-              <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border/40 bg-card/40 px-5 py-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border/40 bg-card/30 px-5 py-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 <span className="col-span-5">Company</span>
                 <span className="col-span-2">Ticker</span>
                 <span className="col-span-2 text-right">Composite Score</span>
