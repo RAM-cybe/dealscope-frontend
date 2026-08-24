@@ -162,11 +162,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         </div>
 
-        {/* 02 / Factor Decomposition & Radar Fingerprint */}
+        {/* 02 / Factor Decomposition & Operational Radar */}
         <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
           <SectionHeader
             index="02"
-            label="Factor Decomposition & Radar Fingerprint"
+            label="Factor Decomposition & Operational Radar"
             subtitle={`Sector-relative percentiles (0–100) benchmarked against ${company.sector} cohort`}
           />
           <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-8">
@@ -174,24 +174,53 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than invented."
               : `Each score below is ranked 0–100 against direct peers in ${company.sector} — a 90 means outperforming ~90% of sector companies. Missing factors (—) are excluded from weighting.`}
           </p>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left: 4 Factor Bars (7 cols) */}
-            <div className="lg:col-span-7 flex flex-col gap-6">
-              {FACTOR_LABELS.map((factor, i) => (
-                <FactorBar
-                  key={factor.key}
-                  label={factor.label}
-                  value={company.factors[factor.key]}
-                  weight={weights[factor.key]}
-                  metric={company.metrics[factor.metricKey]}
-                  explainer={factor.explainer}
-                  delay={0.04 * i}
-                />
-              ))}
+
+          {/* Symmetrical 50/50 Bento Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            {/* Left Column: Factor Decomposition Panel */}
+            <div className="border border-border/40 bg-card/25 p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+              {/* Corner Terminal Accent Brackets */}
+              <div className="absolute top-2 left-2 w-2 h-2 border-t-2 border-l-2 border-accent/40 pointer-events-none" />
+              <div className="absolute top-2 right-2 w-2 h-2 border-t-2 border-r-2 border-accent/40 pointer-events-none" />
+              <div className="absolute bottom-2 left-2 w-2 h-2 border-b-2 border-l-2 border-accent/40 pointer-events-none" />
+              <div className="absolute bottom-2 right-2 w-2 h-2 border-b-2 border-r-2 border-accent/40 pointer-events-none" />
+
+              <div>
+                {/* Panel Header */}
+                <div className="flex items-center justify-between border-b border-border/30 pb-3 mb-5 font-mono text-xs">
+                  <span className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
+                    02.A / Factor Drivers
+                  </span>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground/70">
+                    Cohort: {company.sector}
+                  </span>
+                </div>
+
+                {/* 4 Factor Rows */}
+                <div className="flex flex-col divide-y divide-border/20">
+                  {FACTOR_LABELS.map((factor, i) => (
+                    <FactorRow
+                      key={factor.key}
+                      label={factor.label}
+                      value={company.factors[factor.key]}
+                      weight={weights[factor.key]}
+                      metric={company.metrics[factor.metricKey]}
+                      explainer={factor.explainer}
+                      delay={0.04 * i}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Panel Footer */}
+              <div className="mt-4 pt-3 border-t border-border/20 flex items-center justify-between font-mono text-[11px] text-muted-foreground/60 uppercase tracking-wider">
+                <span>Sector-Relative Percentiles</span>
+                <span>Active Weights: {Object.values(weights).reduce((a, b) => a + b, 0)}%</span>
+              </div>
             </div>
 
-            {/* Right: Factor Radar Chart (5 cols) */}
-            <div className="lg:col-span-5 flex justify-center w-full">
+            {/* Right Column: Factor Radar Chart Box */}
+            <div className="h-full flex flex-col">
               <FactorRadarChart
                 factors={company.factors}
                 weights={weights}
@@ -203,7 +232,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   roce: company.metrics.roce,
                   debtLevel: company.metrics.totalDebt,
                 }}
-                className="w-full"
+                className="w-full h-full justify-between"
               />
             </div>
           </div>
@@ -771,7 +800,7 @@ function NewsRow({
   )
 }
 
-function FactorBar({
+function FactorRow({
   label,
   value,
   weight,
@@ -788,25 +817,37 @@ function FactorBar({
 }) {
   const missing = value == null
   return (
-    <div className="flex flex-col">
-      <div className="flex items-baseline justify-between gap-4 font-mono text-xs">
-        <span className="uppercase tracking-wider text-foreground font-medium">{label}</span>
-        <span className="text-muted-foreground/80 shrink-0">
-          {metric} • <span className="text-accent font-medium">w {weight}%</span>
-        </span>
+    <div className="py-3.5 first:pt-0 last:pb-0 flex flex-col">
+      <div className="flex items-baseline justify-between gap-3 font-mono text-xs">
+        <div className="flex items-center gap-2">
+          <span className="uppercase tracking-wider text-foreground font-semibold">{label}</span>
+          <span className="text-[10px] uppercase tracking-wider border border-accent/40 bg-accent/5 text-accent px-1.5 py-0.2 font-medium">
+            w {weight}%
+          </span>
+        </div>
+        <div className="flex items-baseline gap-2 font-mono text-xs">
+          <span className="text-muted-foreground/80">{metric}</span>
+          <span className="text-border/80">·</span>
+          <span className={cn("font-bold tabular-nums", missing ? "text-muted-foreground/50" : "text-accent")}>
+            {missing ? "—" : `${value}/100`}
+          </span>
+        </div>
       </div>
-      <div className="mt-3 h-[3px] bg-border/40 relative overflow-hidden">
+
+      {/* Progress Track */}
+      <div className="mt-2.5 h-[3px] bg-border/40 relative overflow-hidden">
         <motion.div
-          className="absolute inset-y-0 left-0 bg-accent"
+          className="absolute inset-y-0 left-0 bg-accent shadow-[0_0_6px_#f59e0b]"
           initial={{ width: 0 }}
           animate={{ width: missing ? "0%" : `${value}%` }}
           transition={{ delay: 0.08 + delay, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
         />
       </div>
-      <div className="mt-2 flex items-baseline justify-between gap-2 font-mono text-xs text-muted-foreground/70">
-        <span>{missing ? "— / unavailable" : `${value} / 100 sector-relative`}</span>
-      </div>
-      <span className="mt-1 block font-mono text-xs leading-relaxed text-muted-foreground/70">{explainer}</span>
+
+      {/* Explainer Subtitle */}
+      <span className="mt-1.5 block font-mono text-[11px] leading-relaxed text-muted-foreground/70">
+        {explainer}
+      </span>
     </div>
   )
 }

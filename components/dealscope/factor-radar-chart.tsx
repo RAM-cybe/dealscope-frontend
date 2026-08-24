@@ -26,11 +26,12 @@ export function FactorRadarChart({
 
   const isFig = sector === "Financial Services"
 
-  // Standard dimensions
-  const size = 360
-  const center = size / 2
-  const padding = 56
-  const maxRadius = center - padding
+  // Ultra-safe coordinate system dimensions (540x380) with generous border clearance
+  const viewBoxWidth = 540
+  const viewBoxHeight = 380
+  const cx = 270
+  const cy = 190
+  const maxRadius = 105
   const minRadius = maxRadius * 0.08
 
   // 4 Standard DealScope Factor Axes
@@ -82,8 +83,8 @@ export function FactorRadarChart({
   }
 
   const getPoint = (radius: number, angle: number) => ({
-    x: center + radius * Math.cos(angle),
-    y: center + radius * Math.sin(angle),
+    x: cx + radius * Math.cos(angle),
+    y: cy + radius * Math.sin(angle),
   })
 
   // Precomputed baseline polygon points
@@ -103,7 +104,7 @@ export function FactorRadarChart({
         return `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`
       })
       .join(" ")
-  }, [axes, factors, isFig, maxRadius, minRadius])
+  }, [axes, factors, isFig, maxRadius, minRadius, cx, cy])
 
   // Company Archetype diagnosis in simple plain language
   const archetype = useMemo(() => {
@@ -134,7 +135,7 @@ export function FactorRadarChart({
   }
 
   return (
-    <div className={`border border-border/40 bg-card/25 p-5 sm:p-6 flex flex-col items-center select-none relative overflow-hidden ${className}`}>
+    <div className={`border border-border/40 bg-card/25 p-4 sm:p-6 flex flex-col items-center select-none relative overflow-hidden ${className}`}>
       {/* Corner Terminal Accent Brackets */}
       <div className="absolute top-2 left-2 w-2 h-2 border-t-2 border-l-2 border-accent/40 pointer-events-none" />
       <div className="absolute top-2 right-2 w-2 h-2 border-t-2 border-r-2 border-accent/40 pointer-events-none" />
@@ -156,13 +157,12 @@ export function FactorRadarChart({
         </div>
       </div>
 
-      {/* Main SVG Radar Canvas */}
-      <div className="relative flex items-center justify-center my-2" style={{ width: size, height: size }}>
+      {/* Main SVG Radar Canvas (Fluid aspect ratio with guaranteed clearance) */}
+      <div className="relative w-full max-w-[540px] flex items-center justify-center my-1 aspect-[540/380]">
         <svg
-          width={size}
-          height={size}
-          viewBox={`0 0 ${size} ${size}`}
-          className="overflow-visible"
+          viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="w-full h-auto max-w-[540px] overflow-visible select-none"
         >
           <defs>
             {/* Dark Terminal Amber Glow Filter */}
@@ -207,10 +207,10 @@ export function FactorRadarChart({
           />
 
           {/* Concentric Percentage Annotations on North Spoke */}
-          <text x={center + 5} y={center - getRadius(25) + 3} className="font-mono text-[8px] fill-muted-foreground/40">25</text>
-          <text x={center + 5} y={center - getRadius(50) + 3} className="font-mono text-[8px] fill-muted-foreground/70 font-semibold">50</text>
-          <text x={center + 5} y={center - getRadius(75) + 3} className="font-mono text-[8px] fill-muted-foreground/50">75</text>
-          <text x={center + 5} y={center - maxRadius + 3} className="font-mono text-[8px] fill-muted-foreground/40">100</text>
+          <text x={cx + 6} y={cy - getRadius(25) + 3} className="font-mono text-[8px] fill-muted-foreground/40 font-medium">25</text>
+          <text x={cx + 6} y={cy - getRadius(50) + 3} className="font-mono text-[8px] fill-muted-foreground/75 font-semibold">50</text>
+          <text x={cx + 6} y={cy - getRadius(75) + 3} className="font-mono text-[8px] fill-muted-foreground/50 font-medium">75</text>
+          <text x={cx + 6} y={cy - maxRadius + 3} className="font-mono text-[8px] fill-muted-foreground/40 font-medium">100</text>
 
           {/* Axis Radial Spokes */}
           {axes.map((axis, i) => {
@@ -222,8 +222,8 @@ export function FactorRadarChart({
             return (
               <line
                 key={axis.key}
-                x1={center}
-                y1={center}
+                x1={cx}
+                y1={cy}
                 x2={endPt.x}
                 y2={endPt.y}
                 stroke={isHovered ? "oklch(0.7 0.2 45)" : isExempt ? "oklch(0.22 0 0)" : "oklch(0.28 0 0)"}
@@ -248,7 +248,7 @@ export function FactorRadarChart({
           />
 
           {/* Center Point Crosshair */}
-          <circle cx={center} cy={center} r="2" fill="oklch(0.45 0 0)" />
+          <circle cx={cx} cy={cy} r="2" fill="oklch(0.45 0 0)" />
 
           {/* Interactive Vertex Nodes */}
           {axes.map((axis, i) => {
@@ -299,25 +299,48 @@ export function FactorRadarChart({
             )
           })}
 
-          {/* Outer Monospace Labels & Scores */}
+          {/* Structured Two-Line Monospace Labels & Scores with Zero Overflow */}
           {axes.map((axis, i) => {
-            const labelRadius = maxRadius + 20
-            const labelPt = getPoint(labelRadius, axis.angle)
             const scoreVal = factors[axis.key]
             const isHovered = hoveredIndex === i
             const isExempt = isFig && axis.key === "debtLevel"
             const rawVal = rawMetrics[axis.key]
 
+            // Exact coordinate placement for 2-line layout
+            let line1X = cx
+            let line1Y = cy
+            let line2X = cx
+            let line2Y = cy
             let textAnchor: "middle" | "start" | "end" = "middle"
-            let dy = "0.35em"
-            if (axis.angle === 0) {
+
+            if (axis.angle === -Math.PI / 2) {
+              // North (GROWTH)
+              textAnchor = "middle"
+              line1X = cx
+              line1Y = 48
+              line2X = cx
+              line2Y = 64
+            } else if (axis.angle === 0) {
+              // East (MARGIN)
               textAnchor = "start"
-            } else if (axis.angle === Math.PI) {
-              textAnchor = "end"
-            } else if (axis.angle === -Math.PI / 2) {
-              dy = "-0.6em"
+              line1X = cx + maxRadius + 19
+              line1Y = cy - 8
+              line2X = cx + maxRadius + 19
+              line2Y = cy + 8
             } else if (axis.angle === Math.PI / 2) {
-              dy = "1.2em"
+              // South (ROCE)
+              textAnchor = "middle"
+              line1X = cx
+              line1Y = cy + maxRadius + 27
+              line2X = cx
+              line2Y = cy + maxRadius + 43
+            } else if (axis.angle === Math.PI) {
+              // West (LEVERAGE)
+              textAnchor = "end"
+              line1X = cx - maxRadius - 19
+              line1Y = cy - 8
+              line2X = cx - maxRadius - 19
+              line2Y = cy + 8
             }
 
             return (
@@ -327,24 +350,36 @@ export function FactorRadarChart({
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
+                {/* Line 1: Factor Header */}
                 <text
-                  x={labelPt.x}
-                  y={labelPt.y}
+                  x={line1X}
+                  y={line1Y}
                   textAnchor={textAnchor}
-                  dy={dy}
-                  className={`font-mono text-[10px] sm:text-[11px] uppercase tracking-wider transition-colors duration-150 ${
-                    isHovered ? "fill-accent font-bold" : "fill-muted-foreground"
+                  className={`font-mono text-[10.5px] uppercase tracking-wider transition-colors duration-150 ${
+                    isHovered ? "fill-accent font-bold" : "fill-muted-foreground font-medium"
                   }`}
                 >
                   {axis.shortLabel}
-                  <tspan className="fill-foreground font-semibold ml-1">
-                    {" "}
-                    {isExempt ? "FIG" : scoreVal != null ? `${scoreVal}` : "—"}
+                </text>
+
+                {/* Line 2: Score + Metric Pill */}
+                <text
+                  x={line2X}
+                  y={line2Y}
+                  textAnchor={textAnchor}
+                  className="font-mono text-[10px] uppercase tracking-wider"
+                >
+                  <tspan className={isHovered ? "fill-accent font-bold" : "fill-foreground font-semibold"}>
+                    {isExempt ? "EXEMPT" : scoreVal != null ? `${scoreVal}` : "—"}
                   </tspan>
                   {rawVal && !isExempt && (
+                    <tspan className="fill-muted-foreground/70 text-[9.5px]">
+                      {" "}({rawVal})
+                    </tspan>
+                  )}
+                  {isExempt && (
                     <tspan className="fill-muted-foreground/60 text-[9.5px]">
-                      {" "}
-                      ({rawVal})
+                      {" "}(FIG)
                     </tspan>
                   )}
                 </text>
@@ -368,7 +403,7 @@ export function FactorRadarChart({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.12 }}
-              className="absolute left-1/2 bottom-1 -translate-x-1/2 z-30 pointer-events-none bg-background/95 border border-accent/50 p-3 shadow-2xl backdrop-blur-md min-w-[220px]"
+              className="absolute left-1/2 bottom-2 -translate-x-1/2 z-30 pointer-events-none bg-background/95 border border-accent/50 p-3 shadow-2xl backdrop-blur-md w-[240px] max-w-[calc(100%-20px)]"
             >
               <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1.5 mb-1.5 font-mono text-[11px]">
                 <span className="uppercase tracking-wider text-accent font-bold">
@@ -404,7 +439,7 @@ export function FactorRadarChart({
         </AnimatePresence>
       </div>
 
-      {/* Legend Footer (Clean Monospace Reference) */}
+      {/* Legend Footer */}
       <div className="mt-2 pt-2.5 border-t border-border/25 w-full flex flex-wrap items-center justify-center gap-6 font-mono text-[11px] uppercase tracking-wider text-muted-foreground/80">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-1 bg-accent inline-block shadow-[0_0_6px_#f59e0b]" />
