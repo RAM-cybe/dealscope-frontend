@@ -9,6 +9,7 @@ import { ScoreRing } from "@/components/dealscope/score-ring"
 import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
 import { ScreenBar } from "@/components/dealscope/screen-bar"
 import { ExampleScreens } from "@/components/dealscope/example-screens"
+import { OwnershipBadge } from "@/components/dealscope/ownership-badges"
 import {
   type ScreenFilters,
   type FilterChip,
@@ -339,6 +340,11 @@ function ResultRow({
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {company.ticker}
             </span>
+            <OwnershipBadge
+              holding={company.raw.promoterHolding}
+              pledge={company.raw.promoterPledge}
+              className="self-center"
+            />
           </div>
           <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
             {company.sector}
