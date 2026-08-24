@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { motion } from "framer-motion"
-import { ScrambleText } from "@/components/scramble-text"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScoreRing } from "@/components/dealscope/score-ring"
 import {
@@ -55,9 +54,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
   const freeFloat = promoterHolding != null ? Math.max(0, Math.min(100, 100 - promoterHolding)) : null
 
   // Key Financials grid
-  const financialCards: { label: string; value: string; flagged?: boolean; note?: string }[] = [
-    { label: "Market Cap", value: fin.marketCap, note: fin.marketCapAsOf ? `As of ${formatAsOfDate(fin.marketCapAsOf)}` : undefined },
-    { label: "Revenue (TTM)", value: company.metrics.revenue, note: company.asOfDate ? `As of ${formatAsOfDate(company.asOfDate)}` : undefined },
+  const financialCards: { label: string; value: string; flagged?: boolean }[] = [
+    { label: "Market Cap", value: fin.marketCap },
+    { label: "Revenue (TTM)", value: company.metrics.revenue },
     { label: "EBITDA Margin", value: company.metrics.ebitdaMargin },
     { label: "ROCE", value: company.metrics.roce },
     { label: "Total Debt", value: company.metrics.totalDebt },
@@ -71,41 +70,35 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
   ]
 
   return (
-    <section className="relative min-h-screen pl-6 md:pl-28 pr-6 md:pr-12 py-16 md:py-24">
+    <section className="relative min-h-screen px-6 md:px-12 py-12 md:py-20 max-w-7xl mx-auto">
       <AnimatedNoise opacity={0.02} />
 
-      {/* Left vertical label */}
-      <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:block">
-        <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
-          TEAR SHEET
-        </span>
-      </div>
-
-      <div className="relative z-10 max-w-6xl">
+      <div className="relative z-10">
         {/* Back */}
         <button
           onClick={onBack}
-          className="font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-accent transition-colors duration-200 py-1"
+          className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200 py-1"
         >
-          ← Back to Results
+          ← Back to Screener
         </button>
 
-        {/* Header */}
-        <div className="mt-8 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+        {/* Master Header Ribbon */}
+        <div className="mt-6 md:mt-8 flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-border/40">
+          {/* Identity Column */}
+          <div className="flex-1 min-w-0 max-w-3xl">
+            <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent block">
               Tear Sheet / {company.sector}
             </span>
             <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="mt-4 font-[family-name:var(--font-bebas)] text-[clamp(2.5rem,7vw,6.5rem)] leading-[0.95] tracking-tight text-balance"
+              className="mt-2.5 font-[family-name:var(--font-bebas)] text-[clamp(2rem,3.8vw,3.5rem)] leading-[0.92] tracking-tight text-balance break-words text-foreground"
             >
               {company.name.toUpperCase()}
             </motion.h1>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <span className="border border-border px-3 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
+              <span className="border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 NSE: {company.ticker}
               </span>
               <OwnershipBadge
@@ -114,110 +107,73 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 variant="header"
               />
               {company.industry && (
-                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground/75">
+                <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
                   {company.industry}
                 </span>
               )}
-              <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground/75">
+              <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 TTM {company.metrics.revenue}
               </span>
               {sectorRank && (
-                <span className="border border-accent/40 bg-accent/5 px-3 py-1 font-mono text-xs uppercase tracking-widest text-accent">
+                <span className="border border-accent/40 bg-accent/5 px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-accent font-medium">
                   Ranks {sectorRank.rank} of {sectorRank.total} in {company.sector}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Score + Breakdown Mini-Table */}
+          {/* Composite Score Pod */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-8 shrink-0"
+            className="flex items-center gap-5 shrink-0"
           >
-            <div className="flex items-center gap-5">
-              <ScoreRing score={score} size={130} strokeWidth={3} sectorAverage={avg} />
-              <div className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground leading-relaxed">
-                <span className="block text-foreground font-medium">Composite Score</span>
-                <span className="block">
-                  Sector Avg <span className="text-accent">{avg == null ? "—" : avg}</span>
-                </span>
-                <span className="block text-muted-foreground/70 text-[11px]">
-                  {unclassified ? "Unclassified — not scored" : "Sector-relative · 0–100"}
-                </span>
-              </div>
+            <ScoreRing score={score} size={110} strokeWidth={3} sectorAverage={avg} />
+            <div className="font-mono text-xs uppercase tracking-wider leading-relaxed">
+              <span className="block text-foreground font-medium">Composite Score</span>
+              <span className="block text-muted-foreground">
+                Sector Avg <span className="text-accent font-medium tabular-nums">{avg == null ? "—" : avg}</span>
+              </span>
+              <span className="block text-muted-foreground/70 text-xs mt-0.5">
+                {unclassified ? "Unclassified — not scored" : "Sector-relative · 0–100"}
+              </span>
             </div>
-
-            {/* Score Breakdown mini-table */}
-            {!unclassified && (
-              <div className="border-t sm:border-t-0 sm:border-l border-border/50 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
-                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground/80 block mb-2.5">
-                  Factor Breakdown
-                </span>
-                <div className="flex flex-col gap-2 min-w-[210px]">
-                  {FACTOR_LABELS.map((factor) => {
-                    const factorVal = company.factors[factor.key]
-                    const weightVal = weights[factor.key]
-                    const isFigDebt = company.sector === "Financial Services" && factor.key === "debtLevel"
-                    return (
-                      <div key={factor.key} className="flex items-center justify-between gap-3 font-mono text-xs">
-                        <span className="text-muted-foreground/85 text-[11px] truncate">{factor.label}</span>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <div className="w-14 h-1.5 bg-border/50 relative overflow-hidden">
-                            <div
-                              className="absolute inset-y-0 left-0 bg-accent transition-all duration-300"
-                              style={{ width: factorVal != null ? `${factorVal}%` : "0%" }}
-                            />
-                          </div>
-                          <span className="w-12 text-right text-foreground font-mono text-[11px]">
-                            {isFigDebt ? "N/A · FIG" : factorVal != null ? `${factorVal}` : "—"}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
           </motion.div>
         </div>
 
-        {/* Key financials */}
-        <div className="mt-16">
-          <SectionLabel index="01" label="Key Financials" />
-          <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground/70">
-            Market cap as of {formatAsOfDate(fin.marketCapAsOf)}. Fundamentals as of{" "}
-            {formatAsOfDate(company.asOfDate)}.
-          </p>
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {/* 01 / Key Financials */}
+        <div className="mt-12 md:mt-16">
+          <SectionHeader
+            index="01"
+            label="Key Financials"
+            subtitle={`Market Cap & Fundamentals as of ${formatAsOfDate(fin.marketCapAsOf || company.asOfDate)}`}
+          />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
             {financialCards.map((card) => (
               <FinancialCard
                 key={card.label}
                 label={card.label}
                 value={card.value}
                 flagged={card.flagged}
-                note={card.note}
               />
             ))}
           </div>
-          {pledgeFlagged && (
-            <p className="mt-4 font-mono text-xs leading-relaxed text-accent/90 max-w-2xl">
-              Non-zero promoter pledge — shares pledged by promoters are a governance-risk signal worth
-              reviewing before any acquisition approach.
-            </p>
-          )}
         </div>
 
-        {/* Factor decomposition */}
-        <div className="mt-16">
-          <SectionLabel index="02" label="Factor Decomposition" />
-          <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-2xl">
+        {/* 02 / Factor Decomposition */}
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <SectionHeader
+            index="02"
+            label="Factor Decomposition"
+            subtitle={`Sector-relative percentiles (0–100) benchmarked against ${company.sector} cohort`}
+          />
+          <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-8">
             {unclassified
               ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than invented."
-              : `Each score below is ranked 0–100 against only the other companies in ${company.sector} — not the whole market — so a 91 means this company outperforms ~91% of its direct sector peers. Missing factors show as — and are dropped from the composite, not treated as zero.`}
+              : `Each score below is ranked 0–100 against direct peers in ${company.sector} — a 90 means outperforming ~90% of sector companies. Missing factors (—) are excluded from weighting.`}
           </p>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-8">
             {FACTOR_LABELS.map((factor, i) => (
               <FactorBar
                 key={factor.key}
@@ -232,53 +188,52 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         </div>
 
-        {/* Sector Peers Strip */}
+        {/* 03 / Sector Peers */}
         {peers.length > 0 && (
-          <div className="mt-16">
-            <div className="flex items-baseline justify-between gap-4 flex-wrap">
-              <SectionLabel index="02.5" label="Sector Peers" />
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-                Closest 5 peers in {company.sector} by factor profile
-              </span>
-            </div>
-            <div className="mt-6 border border-border/50">
+          <div className="mt-12 md:mt-16">
+            <SectionHeader
+              index="03"
+              label="Sector Peers"
+              subtitle={`Closest 5 peers in ${company.sector} by factor correlation`}
+            />
+            <div className="border border-border/40 bg-card/20 overflow-hidden">
               {/* Desktop header */}
-              <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border/50 px-5 py-3 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
+              <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border/40 bg-card/40 px-5 py-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 <span className="col-span-5">Company</span>
                 <span className="col-span-2">Ticker</span>
                 <span className="col-span-2 text-right">Composite Score</span>
                 <span className="col-span-3 text-right">EBITDA Margin</span>
               </div>
-              {/* Current company row */}
-              <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b border-border/50 bg-accent/5 px-5 py-3.5 font-mono text-xs items-center">
+              {/* Target company row */}
+              <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b border-border/40 bg-accent/[0.04] border-l-2 border-l-accent px-5 py-3.5 font-mono text-xs items-center">
                 <div className="col-span-2 md:col-span-5 flex items-center gap-2">
-                  <span className="text-accent font-medium">{company.name}</span>
-                  <span className="text-[10px] uppercase tracking-widest border border-accent/40 text-accent px-1.5 py-0.5">
-                    Current
+                  <span className="text-foreground font-semibold truncate">{company.name}</span>
+                  <span className="text-[10px] uppercase tracking-wider border border-accent/40 text-accent px-1.5 py-0.5 bg-accent/5 font-medium">
+                    Target
                   </span>
                 </div>
                 <span className="hidden md:inline md:col-span-2 text-muted-foreground">{company.ticker}</span>
-                <span className="md:col-span-2 text-right text-accent font-bold">
+                <span className="md:col-span-2 text-right text-accent font-bold tabular-nums">
                   {score != null ? `${score} / 100` : "—"}
                 </span>
-                <span className="md:col-span-3 text-right text-foreground font-medium">
+                <span className="md:col-span-3 text-right text-foreground font-medium tabular-nums">
                   {company.metrics.ebitdaMargin}
                 </span>
               </div>
-              {/* Peers */}
+              {/* Peer rows */}
               {peers.map((peer) => {
                 const peerScore = computeScore(peer.factors, weights)
                 return (
                   <div
                     key={peer.ticker}
-                    className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b last:border-b-0 border-border/30 px-5 py-3 font-mono text-xs items-center hover:bg-accent/5 transition-colors"
+                    className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b last:border-b-0 border-border/25 px-5 py-3 font-mono text-xs items-center hover:bg-accent/5 transition-colors"
                   >
-                    <span className="col-span-2 md:col-span-5 text-foreground truncate">{peer.name}</span>
+                    <span className="col-span-2 md:col-span-5 text-foreground/90 truncate">{peer.name}</span>
                     <span className="hidden md:inline md:col-span-2 text-muted-foreground/70">{peer.ticker}</span>
-                    <span className="md:col-span-2 text-right text-muted-foreground">
+                    <span className="md:col-span-2 text-right text-muted-foreground tabular-nums">
                       {peerScore != null ? `${peerScore} / 100` : "—"}
                     </span>
-                    <span className="md:col-span-3 text-right text-muted-foreground/80">
+                    <span className="md:col-span-3 text-right text-muted-foreground/80 tabular-nums">
                       {peer.metrics.ebitdaMargin}
                     </span>
                   </div>
@@ -288,150 +243,222 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         )}
 
-        {/* About the company */}
-        <div className="mt-16 max-w-3xl">
-          <SectionLabel index="03" label="About The Company" />
-          {hasAbout ? (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.06, duration: 0.35 }}
-              className="mt-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
-            >
-              {narrative.about}
-            </motion.p>
-          ) : !detailsReady ? (
-            <p className="mt-6 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-              Loading description…
-            </p>
-          ) : (
-            <p className="mt-6 font-mono text-xs leading-relaxed text-muted-foreground/60">
-              — No company description generated yet. Financial metrics and factor rankings above are live and complete.
-            </p>
-          )}
-        </div>
-
-        {/* Why This Score + Valuation */}
-        <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-7">
-            <SectionLabel index="04" label="Why This Score" />
-            {hasWhyThisScore ? (
-              <>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.08, duration: 0.35 }}
-                  className="mt-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/90 text-pretty"
-                >
-                  {narrative.whyThisScore}
-                </motion.p>
-                <p className="mt-4 font-mono text-[11px] uppercase tracking-widest text-muted-foreground/70">
-                  Generated from screened fundamentals. Not investment advice.
-                </p>
-              </>
-            ) : !detailsReady ? (
-              <p className="mt-6 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-                Loading explanation…
-              </p>
-            ) : (
-              <p className="mt-6 font-mono text-xs leading-relaxed text-muted-foreground/60">
-                — No score rationale generated yet. Factor decomposition above reflects direct sector-relative percentiles.
-              </p>
-            )}
-          </div>
-
-          {/* Valuation */}
-          <div className="lg:col-span-5">
-            <SectionLabel index="05" label="Indicative Valuation Range" />
-            <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground/70">
-              Two independent estimates based on listed-peer trading multiples in {company.sector} —
-              the 25th–75th percentile EV/EBITDA and P/E of other listed companies in this sector,
-              applied to this company&apos;s own earnings. EV/EBITDA values enterprise; P/E values equity.
-            </p>
-            <div className="mt-6 border border-border/50">
-              <div className="border-b border-border/50 p-6">
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  EV / EBITDA Implied
-                </span>
-                <p className="mt-2 font-[family-name:var(--font-bebas)] text-4xl tracking-tight text-accent">
-                  <ScrambleText text={company.valuation.evEbitda} delayMs={500} duration={0.8} />
-                </p>
+        {/* 04 / Executive Brief & Thesis */}
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <SectionHeader
+            index="04"
+            label="Executive Brief & Thesis"
+            subtitle="Company profile & score driver analysis"
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            {/* Left: Company Profile */}
+            <div className="border border-border/40 bg-card/20 p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-border/30 pb-3 mb-4">
+                  <span className="font-mono text-xs uppercase tracking-wider text-accent font-medium">
+                    04.A / Business Model
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70">
+                    {company.industry || company.sector}
+                  </span>
+                </div>
+                {hasAbout ? (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.06, duration: 0.35 }}
+                    className="font-sans text-sm md:text-base leading-relaxed text-foreground/90 text-pretty"
+                  >
+                    {narrative.about}
+                  </motion.p>
+                ) : !detailsReady ? (
+                  <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70 py-4">
+                    Loading profile…
+                  </p>
+                ) : (
+                  <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 py-4">
+                    — Company overview pending synthesis. Financial metrics and factor rankings above are live.
+                  </p>
+                )}
               </div>
-              <div className="p-6">
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  P / E Implied
-                </span>
-                <p className="mt-2 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
-                  <ScrambleText text={company.valuation.peImplied} delayMs={700} duration={0.8} />
-                </p>
+              <div className="mt-6 pt-3 border-t border-border/20 flex justify-between font-mono text-xs text-muted-foreground/60 uppercase tracking-wider">
+                <span>NSE: {company.ticker}</span>
+                <span>Corporate Overview</span>
               </div>
             </div>
-            <p className="mt-3 font-mono text-xs leading-relaxed text-muted-foreground/70">
-              {company.valuation.note ||
-                "Ranges derived from listed-peer trading multiples in this sector. Not precedent M&A multiples."}
-            </p>
+
+            {/* Right: Score Thesis */}
+            <div className="border border-border/40 bg-card/20 p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-border/30 pb-3 mb-4">
+                  <span className="font-mono text-xs uppercase tracking-wider text-accent font-medium">
+                    04.B / Score Rationale
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-wider text-accent font-medium">
+                    Score: {score != null ? `${score}/100` : "—"}
+                  </span>
+                </div>
+                {hasWhyThisScore ? (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.08, duration: 0.35 }}
+                    className="font-sans text-sm md:text-base leading-relaxed text-foreground/90 text-pretty"
+                  >
+                    {narrative.whyThisScore}
+                  </motion.p>
+                ) : !detailsReady ? (
+                  <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70 py-4">
+                    Loading rationale…
+                  </p>
+                ) : (
+                  <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 py-4">
+                    — Score rationale pending synthesis. Factor decomposition reflects direct sector-relative percentiles.
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 pt-3 border-t border-border/20 flex justify-between font-mono text-xs text-muted-foreground/60 uppercase tracking-wider">
+                <span>Algorithmic screening</span>
+                <span>Non-advisory</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Ownership Structure */}
-        <div className="mt-16">
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <SectionLabel index="06" label="Ownership Structure" />
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-              Shareholding &amp; Float telemetry · As of {formatAsOfDate(company.asOfDate)}
-            </span>
-          </div>
-          <div className="mt-6 border border-border/50 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 05 / Indicative Valuation Range */}
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <SectionHeader
+            index="05"
+            label="Indicative Valuation Range"
+            subtitle={`Derived from ${company.sector} listed peer multiples (P25–P75)`}
+          />
+          <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-6">
+            Two independent estimates based on listed-peer trading multiples in {company.sector} applied to this company&apos;s own earnings. EV/EBITDA values enterprise; P/E values equity.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* EV / EBITDA Card */}
+            <div className="border border-border/40 bg-card/30 p-6 sm:p-7 flex flex-col justify-between">
               <div>
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-                  Promoter Holding
-                </span>
-                <p className="mt-2 font-[family-name:var(--font-bebas)] text-3xl md:text-4xl text-foreground">
-                  {promoterHolding != null
-                    ? `${promoterHolding.toFixed(1)}%`
-                    : fin.promoterHolding && fin.promoterHolding !== "N/A"
-                    ? fin.promoterHolding
-                    : "N/A"}
+                <div className="flex items-baseline justify-between border-b border-border/30 pb-3">
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                    EV / EBITDA Implied
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-wider text-accent border border-accent/40 bg-accent/5 px-2 py-0.5 font-medium">
+                    Enterprise Value
+                  </span>
+                </div>
+                <div className="py-5">
+                  <p className="font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-accent">
+                    {company.valuation.evEbitda}
+                  </p>
+                </div>
+              </div>
+              <p className="pt-3 border-t border-border/20 font-mono text-xs text-muted-foreground/70">
+                Applied against TTM EBITDA of {company.metrics.ebitdaMargin !== "—" ? `${company.metrics.ebitdaMargin} margin` : "reported operating earnings"}. Reflects core operating enterprise value.
+              </p>
+            </div>
+
+            {/* P / E Card */}
+            <div className="border border-border/40 bg-card/30 p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <div className="flex items-baseline justify-between border-b border-border/30 pb-3">
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                    P / E Implied
+                  </span>
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground border border-border px-2 py-0.5">
+                    Equity Value
+                  </span>
+                </div>
+                <div className="py-5">
+                  <p className="font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-foreground">
+                    {company.valuation.peImplied}
+                  </p>
+                </div>
+              </div>
+              <p className="pt-3 border-t border-border/20 font-mono text-xs text-muted-foreground/70">
+                {company.valuation.note ||
+                  "Derived from 25th–75th percentile sector P/E multiples applied to net profit. Excludes debt adjustments."}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 06 / Ownership Structure */}
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <SectionHeader
+            index="06"
+            label="Ownership Structure"
+            subtitle={`Cap table & float breakdown · As of ${formatAsOfDate(company.asOfDate)}`}
+          />
+          <div className="border border-border/40 bg-card/25 p-6 sm:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                    Promoter Holding
+                  </span>
+                  {promoterHolding != null && (
+                    <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 border border-border/60 text-muted-foreground">
+                      {promoterHolding >= 50 ? "Majority" : promoterHolding >= 26 ? "Controlling" : "Minority"}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2.5 font-mono text-3xl md:text-4xl font-semibold tracking-tight text-foreground tabular-nums">
+                  {promoterHolding != null ? `${promoterHolding.toFixed(1)}%` : fin.promoterHolding || "N/A"}
                 </p>
-                <span className="mt-1 block font-mono text-[11px] text-muted-foreground/60">
-                  Equity held by promoters &amp; insider group
+                <span className="mt-1.5 block font-mono text-xs text-muted-foreground/70">
+                  Promoter &amp; insider equity
                 </span>
               </div>
               <div>
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-                  Promoter Pledge
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                    Promoter Pledge
+                  </span>
+                  <span
+                    className={cn(
+                      "font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 border",
+                      pledgeFlagged
+                        ? "border-accent/40 bg-accent/10 text-accent font-medium"
+                        : "border-border/60 text-muted-foreground/70",
+                    )}
+                  >
+                    {pledgeFlagged ? "Encumbered" : "Unencumbered"}
+                  </span>
+                </div>
                 <p
                   className={cn(
-                    "mt-2 font-[family-name:var(--font-bebas)] text-3xl md:text-4xl",
+                    "mt-2.5 font-mono text-3xl md:text-4xl font-semibold tracking-tight tabular-nums",
                     pledgeFlagged ? "text-accent" : "text-foreground",
                   )}
                 >
                   {fin.promoterPledge}
                 </p>
-                <span className="mt-1 block font-mono text-[11px] text-muted-foreground/60">
-                  {pledgeFlagged
-                    ? "Shares encumbered as collateral"
-                    : "No reported encumbrance on promoter shares"}
+                <span className="mt-1.5 block font-mono text-xs text-muted-foreground/70">
+                  {pledgeFlagged ? "Shares encumbered as collateral" : "No reported encumbrance on promoter shares"}
                 </span>
               </div>
               <div>
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-                  Free Float (Est.)
-                </span>
-                <p className="mt-2 font-[family-name:var(--font-bebas)] text-3xl md:text-4xl text-foreground">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                    Free Float (Est.)
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 border border-border/60 text-muted-foreground">
+                    Liquid Float
+                  </span>
+                </div>
+                <p className="mt-2.5 font-mono text-3xl md:text-4xl font-semibold tracking-tight text-foreground tabular-nums">
                   {freeFloat != null ? `${freeFloat.toFixed(1)}%` : "N/A"}
                 </p>
-                <span className="mt-1 block font-mono text-[11px] text-muted-foreground/60">
-                  Public &amp; institutional non-promoter float
+                <span className="mt-1.5 block font-mono text-xs text-muted-foreground/70">
+                  Institutional &amp; public float
                 </span>
               </div>
             </div>
 
             {/* Factual distribution bar */}
             {promoterHolding != null && freeFloat != null && (
-              <div className="mt-6 pt-6 border-t border-border/40">
+              <div className="mt-8 pt-6 border-t border-border/30">
                 <div className="h-2.5 w-full bg-border/40 flex overflow-hidden">
                   <div
                     className="bg-accent h-full transition-all duration-500"
@@ -442,7 +469,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                     style={{ width: `${Math.min(100, Math.max(0, freeFloat))}%` }}
                   />
                 </div>
-                <div className="mt-2 flex justify-between font-mono text-[11px] text-muted-foreground/75">
+                <div className="mt-3 flex justify-between font-mono text-xs text-muted-foreground/70">
                   <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 bg-accent inline-block" /> Promoter ({promoterHolding.toFixed(1)}%)
                   </span>
@@ -455,78 +482,112 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           </div>
         </div>
 
-        {/* Comparable deals */}
-        <div className="mt-16">
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <SectionLabel index="07" label="Comparable Deals" />
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-              Historical M&amp;A — {comparableCount} in sector of 727 precedent deals (2006–2025)
-            </span>
-          </div>
-          <p className="mt-3 mb-4 font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-2xl">
-            Precedent transactions for context only. They are not the source of the valuation range
-            above, which uses listed-peer trading multiples.
+        {/* 07 / Comparable Deals */}
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <SectionHeader
+            index="07"
+            label="Comparable Deals"
+            subtitle={`Historical M&A — ${comparableCount} in sector of 727 precedent deals (2006–2025)`}
+          />
+          <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-6">
+            Selected precedent M&amp;A transactions in {company.sector} for benchmark context only. Not the source of the listed-peer valuation range above.
           </p>
 
-          <div className="mt-6 border border-border/50">
-            {/* Header row */}
-            <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border/50 px-5 py-3 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/70">
-              <span className="col-span-5">Acquirer ← Target</span>
-              <span className="col-span-2">Year</span>
-              <span className="col-span-2">Deal Type</span>
-              <span className="col-span-3 text-right">Value (US$)</span>
+          <div className="border border-border/40 bg-card/20 overflow-hidden">
+            {/* Desktop Header */}
+            <div className="hidden md:grid grid-cols-12 gap-4 border-b border-border/40 bg-card/40 px-5 py-3 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="col-span-4">Target Company</span>
+              <span className="col-span-3">Acquiring Entity</span>
+              <span className="col-span-1 text-center">Year</span>
+              <span className="col-span-2 text-center">Deal Type</span>
+              <span className="col-span-2 text-right">Value (US$)</span>
             </div>
 
+            {/* Rows */}
             {comparables.length === 0 ? (
-              <div className="p-6 font-mono text-xs text-muted-foreground/60">
+              <div className="p-6 font-mono text-xs text-muted-foreground/70 text-center">
                 No precedent transactions recorded for {company.sector} in the dataset.
               </div>
             ) : (
               comparables.map((deal, i) => (
-                <motion.div
+                <div
                   key={`${deal.target}-${deal.year}-${i}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.05 + Math.min(i, 8) * 0.02, duration: 0.25 }}
-                  className="border-b last:border-b-0 border-border/30 px-5 py-3.5 font-mono text-xs hover:bg-accent/5 transition-colors duration-200"
+                  className="border-b last:border-b-0 border-border/25 px-5 py-3.5 font-mono text-xs hover:bg-accent/5 transition-colors"
                 >
-                  {/* Desktop view */}
+                  {/* Desktop Row View */}
                   <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-5 flex items-center gap-2 truncate">
-                      <span className="text-foreground font-medium">{deal.acquirer}</span>
-                      <span className="text-muted-foreground/50">←</span>
-                      <span className="text-muted-foreground truncate">{deal.target}</span>
-                    </div>
-                    <span className="col-span-2 text-muted-foreground/75">{deal.year}</span>
-                    <span className="col-span-2 text-muted-foreground/60 uppercase text-[11px] truncate">
+                    <span className="col-span-4 text-foreground font-medium truncate" title={deal.target}>
+                      {deal.target}
+                    </span>
+                    <span className="col-span-3 text-muted-foreground truncate" title={deal.acquirer}>
+                      {deal.acquirer}
+                    </span>
+                    <span className="col-span-1 text-center text-muted-foreground/70 tabular-nums">
+                      {deal.year}
+                    </span>
+                    <span
+                      className="col-span-2 text-center text-muted-foreground/70 uppercase text-xs truncate"
+                      title={deal.dealType || "M&A"}
+                    >
                       {deal.dealType || "M&A"}
                     </span>
-                    <span className="col-span-3 text-right text-accent font-medium">{deal.value}</span>
+                    <span
+                      className={cn(
+                        "col-span-2 text-right tabular-nums",
+                        deal.value === "N/A"
+                          ? "text-muted-foreground/40 font-normal"
+                          : "text-accent font-medium",
+                      )}
+                    >
+                      {deal.value}
+                    </span>
                   </div>
 
-                  {/* Mobile stacked card view */}
+                  {/* Mobile Structured Card View */}
                   <div className="md:hidden flex flex-col gap-1.5">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <div className="text-foreground font-medium text-xs">
-                        {deal.acquirer} <span className="text-muted-foreground/50">←</span> {deal.target}
-                      </div>
-                      <span className="text-accent font-medium text-xs shrink-0">{deal.value}</span>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-foreground font-medium text-xs flex-1 break-words">
+                        {deal.target}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-xs shrink-0 tabular-nums",
+                          deal.value === "N/A"
+                            ? "text-muted-foreground/40 font-normal"
+                            : "text-accent font-medium",
+                        )}
+                      >
+                        {deal.value}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground/75">
-                      <span>{deal.year}</span>
-                      {deal.dealType && <span>• {deal.dealType}</span>}
+                    <div className="flex items-baseline gap-1.5 text-xs text-muted-foreground/80">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/50 shrink-0">
+                        Buyer:
+                      </span>
+                      <span className="truncate text-foreground/85">{deal.acquirer}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground/60">
+                      <span className="tabular-nums text-muted-foreground/70">{deal.year}</span>
+                      <span>•</span>
+                      <span className="uppercase text-xs">{deal.dealType || "M&A"}</span>
+                      {deal.stakePct && (
+                        <>
+                          <span>•</span>
+                          <span className="tabular-nums">{deal.stakePct}</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
         </div>
 
-        {/* Filings, notices & news */}
-        <div className="mt-16">
-          <SectionLabel index="08" label="Filings, Notices & News" />
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-12">
+        {/* 08 / Filings, Notices & News */}
+        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <SectionHeader index="08" label="Filings, Notices & News" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-12">
             {/* NSE regulatory filings */}
             <NewsColumn title="NSE Filings" count={companyNews.filings.length} emptyLabel="No recent filings found">
               {companyNews.filings.map((f, i) => (
@@ -551,10 +612,16 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </div>
 
         {/* Footer */}
-        <div className="mt-20 flex items-center justify-end">
+        <div className="mt-20 md:mt-24 pt-8 border-t border-border/30 flex items-center justify-between">
           <button
             onClick={onBack}
-            className="border border-border px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
+          >
+            ← Return to Screener
+          </button>
+          <button
+            onClick={onBack}
+            className="border border-border/60 hover:border-accent px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-all duration-200"
           >
             Close Tear Sheet
           </button>
@@ -564,11 +631,20 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
   )
 }
 
-function SectionLabel({ index, label }: { index: string; label: string }) {
+function SectionHeader({ index, label, subtitle }: { index: string; label: string; subtitle?: string }) {
   return (
-    <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-      {index} / {label}
-    </span>
+    <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1.5 border-b border-border/40 pb-3 mb-6">
+      <div className="flex items-baseline gap-2.5">
+        <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent font-bold">{index}</span>
+        <span className="font-mono text-xs text-border">/</span>
+        <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-foreground font-semibold">{label}</h2>
+      </div>
+      {subtitle && (
+        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70">
+          {subtitle}
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -576,27 +652,22 @@ function FinancialCard({
   label,
   value,
   flagged,
-  note,
 }: {
   label: string
   value: string
   flagged?: boolean
-  note?: string
 }) {
   return (
-    <div className="border border-border/50 p-5 flex flex-col gap-2">
-      <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/75">{label}</span>
+    <div className="border border-border/40 bg-card/25 hover:border-border/70 transition-colors p-5 flex flex-col justify-between h-[105px]">
+      <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
       <span
         className={cn(
-          "font-[family-name:var(--font-bebas)] text-3xl md:text-4xl leading-none tracking-tight break-words",
+          "font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl leading-none tracking-tight break-words",
           flagged ? "text-accent" : "text-foreground",
         )}
       >
         {value}
       </span>
-      {note && (
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">{note}</span>
-      )}
     </div>
   )
 }
@@ -614,9 +685,9 @@ function NewsColumn({
 }) {
   return (
     <div>
-      <div className="flex items-baseline justify-between border-b border-border/50 pb-3">
-        <span className="font-mono text-xs uppercase tracking-[0.2em] text-foreground">{title}</span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
+      <div className="flex items-baseline justify-between border-b border-border/40 pb-3 mb-2">
+        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{title}</span>
+        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70 tabular-nums">
           {count > 0 ? String(count).padStart(2, "0") : "—"}
         </span>
       </div>
@@ -650,10 +721,10 @@ function NewsRow({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.1 + Math.min(index, 6) * 0.03, duration: 0.3 }}
-      className="group block border-b border-border/30 py-4 hover:bg-accent/5 transition-colors duration-300"
+      className="group block border-b border-border/25 py-4 hover:bg-accent/5 transition-colors duration-200"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">{date}</span>
+        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70">{date}</span>
         <span
           aria-hidden="true"
           className="font-mono text-xs text-muted-foreground/70 group-hover:text-accent transition-colors duration-200"
@@ -665,7 +736,7 @@ function NewsRow({
         {title}
       </p>
       {source && (
-        <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+        <span className="mt-1 block font-mono text-xs uppercase tracking-wider text-muted-foreground/70">
           {source}
         </span>
       )}
@@ -690,14 +761,14 @@ function FactorBar({
 }) {
   const missing = value == null
   return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <span className="font-mono text-xs uppercase tracking-[0.2em] text-foreground">{label}</span>
-        <span className="font-mono text-xs text-muted-foreground">
-          {metric} • <span className="text-accent/90 font-medium">w {weight}%</span>
+    <div className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-4 font-mono text-xs">
+        <span className="uppercase tracking-wider text-foreground font-medium">{label}</span>
+        <span className="text-muted-foreground/80 shrink-0">
+          {metric} • <span className="text-accent font-medium">w {weight}%</span>
         </span>
       </div>
-      <div className="mt-3 h-[3px] bg-border/50 relative overflow-hidden">
+      <div className="mt-3 h-[3px] bg-border/40 relative overflow-hidden">
         <motion.div
           className="absolute inset-y-0 left-0 bg-accent"
           initial={{ width: 0 }}
@@ -705,10 +776,10 @@ function FactorBar({
           transition={{ delay: 0.08 + delay, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
         />
       </div>
-      <span className="mt-2 block font-mono text-xs text-muted-foreground/80">
-        {missing ? "— / unavailable" : `${value} / 100 sector-relative`}
-      </span>
-      <span className="mt-1 block font-mono text-xs leading-relaxed text-muted-foreground/65">{explainer}</span>
+      <div className="mt-2 flex items-baseline justify-between gap-2 font-mono text-xs text-muted-foreground/70">
+        <span>{missing ? "— / unavailable" : `${value} / 100 sector-relative`}</span>
+      </div>
+      <span className="mt-1 block font-mono text-xs leading-relaxed text-muted-foreground/70">{explainer}</span>
     </div>
   )
 }
