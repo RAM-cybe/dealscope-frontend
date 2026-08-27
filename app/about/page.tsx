@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Linkedin, Mail, ArrowUpRight, Check, X } from "lucide-react"
+import { Linkedin, Mail, ArrowUpRight } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { FUNDAMENTALS_AS_OF, PRICES_AS_OF } from "@/components/dealscope/data-freshness"
 import datasetMeta from "@/data/dataset-meta.json"
