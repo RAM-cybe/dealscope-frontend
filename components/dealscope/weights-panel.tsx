@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect } from "react"
-import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { type Weights, DEFAULT_WEIGHTS, FACTOR_LABELS } from "@/lib/dealscope-data"
 
 interface WeightsPanelProps {
@@ -107,13 +106,13 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
               <div className="mt-10 flex items-center gap-4">
                 <button
                   onClick={onClose}
-                  className="flex-1 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 text-center"
+                  className="flex-1 border border-border/80 bg-card/60 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 text-center cursor-pointer font-medium"
                 >
-                  <ScrambleTextOnHover text="Apply Weights" as="span" duration={0.5} />
+                  <span>Apply Weights</span>
                 </button>
                 <button
                   onClick={() => onWeightsChange({ ...DEFAULT_WEIGHTS })}
-                  className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
                 >
                   Reset
                 </button>

@@ -3,58 +3,77 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Custom editorial design tokens - monochrome with orange accent */
+/* =========================================================================
+   DealScope Design System Tokens
+   - Default (:root): Executive Paper / Clean Dossier Light Mode
+   - .dark: Institutional Slate / Obsidian Luxury Dark Mode
+   ========================================================================= */
+
 :root {
-  --background: oklch(0.08 0 0);
-  /* 2026-07-20 brightness pass: the off-whites read muddy against the pure-black
-     background. Lifted foreground 0.95 -> 0.97 (contrast 17.96 -> 19.06 : 1) and
-     muted-foreground 0.68 -> 0.76 (7.21 -> 9.68 : 1) so secondary text clears the
-     4.5:1 body threshold even at the /70 opacity used throughout the UI
-     (3.90 -> 5.00 : 1). The black/orange split-flap identity is unchanged --
-     --accent and --background are untouched, only the neutrals got brighter. */
+  /* Clean Executive Light Theme (Crisp Paper / FT / WSJ Style) */
+  --background: oklch(0.99 0.005 240);
+  --foreground: oklch(0.18 0.02 260);
+  --card: oklch(0.96 0.008 240);
+  --card-foreground: oklch(0.18 0.02 260);
+  --popover: oklch(0.99 0.005 240);
+  --popover-foreground: oklch(0.18 0.02 260);
+  --primary: oklch(0.18 0.02 260);
+  --primary-foreground: oklch(0.99 0.005 240);
+  --secondary: oklch(0.92 0.01 240);
+  --secondary-foreground: oklch(0.22 0.02 260);
+  --muted: oklch(0.92 0.01 240);
+  --muted-foreground: oklch(0.44 0.02 260);
+  --accent: oklch(0.62 0.19 45);
+  --accent-foreground: oklch(0.99 0.005 240);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0.005 240);
+  --border: oklch(0.85 0.012 240);
+  --input: oklch(0.92 0.01 240);
+  --ring: oklch(0.62 0.19 45);
+  --radius: 0rem;
+  --sidebar: oklch(0.97 0.008 240);
+  --sidebar-foreground: oklch(0.18 0.02 260);
+  --sidebar-primary: oklch(0.62 0.19 45);
+  --sidebar-primary-foreground: oklch(0.99 0.005 240);
+  --sidebar-accent: oklch(0.93 0.01 240);
+  --sidebar-accent-foreground: oklch(0.18 0.02 260);
+  --sidebar-border: oklch(0.86 0.012 240);
+  --sidebar-ring: oklch(0.62 0.19 45);
+}
+
+.dark {
+  /* Institutional Slate Obsidian Luxury Dark Theme */
+  --background: oklch(0.11 0.012 250);
   --foreground: oklch(0.97 0 0);
-  --card: oklch(0.12 0 0);
+  --card: oklch(0.14 0.015 250);
   --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.1 0 0);
+  --popover: oklch(0.13 0.015 250);
   --popover-foreground: oklch(0.95 0 0);
   --primary: oklch(0.95 0 0);
-  --primary-foreground: oklch(0.08 0 0);
-  --secondary: oklch(0.18 0 0);
+  --primary-foreground: oklch(0.11 0.012 250);
+  --secondary: oklch(0.19 0.015 250);
   --secondary-foreground: oklch(0.88 0 0);
-  --muted: oklch(0.25 0 0);
-  /* Raised 0.55 -> 0.68 (2026-07-20 contrast fix), then 0.68 -> 0.76 in the same
-     day's brightness pass. At 0.55, plain muted text was only 4.28:1 on the 0.08
-     background (below the 4.5 body minimum) and /40-/60 opacity stacks fell to
-     ~1.5-2.2:1 (illegible). At 0.76 full-opacity muted is 9.68:1, and -- the
-     reason for the second lift -- the /70 stacks used all over this UI now clear
-     the 4.5:1 BODY threshold (5.00:1) rather than only the 3:1 UI threshold.
-     Still clearly muted against the 0.97 foreground, so the secondary-text
-     hierarchy is preserved. */
-  --muted-foreground: oklch(0.76 0 0);
-  --accent: oklch(0.7 0.2 45);
-  --accent-foreground: oklch(0.08 0 0);
+  --muted: oklch(0.24 0.015 250);
+  --muted-foreground: oklch(0.72 0.01 250);
+  --accent: oklch(0.72 0.19 45);
+  --accent-foreground: oklch(0.11 0.012 250);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  /* 0.25 -> 0.32: dividers/panel edges (including the right-hand filter panel's
-     border-l and its internal segmented-control dividers) were nearly invisible
-     against the black background; 0.32 makes the structure readable without
-     turning borders into a visual element that competes with the orange accent. */
-  --border: oklch(0.32 0 0);
-  --input: oklch(0.2 0 0);
-  --ring: oklch(0.7 0.2 45);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.26 0.015 250);
+  --input: oklch(0.18 0.015 250);
+  --ring: oklch(0.72 0.19 45);
   --radius: 0rem;
-  --sidebar: oklch(0.1 0 0);
+  --sidebar: oklch(0.13 0.015 250);
   --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.7 0.2 45);
-  --sidebar-primary-foreground: oklch(0.08 0 0);
-  --sidebar-accent: oklch(0.15 0 0);
+  --sidebar-primary: oklch(0.72 0.19 45);
+  --sidebar-primary-foreground: oklch(0.11 0.012 250);
+  --sidebar-accent: oklch(0.18 0.015 250);
   --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.25 0 0);
-  --sidebar-ring: oklch(0.7 0.2 45);
+  --sidebar-border: oklch(0.26 0.015 250);
+  --sidebar-ring: oklch(0.72 0.19 45);
 }
 
 @theme inline {
-  /* Updated font-sans and font-mono to use IBM Plex */
   --font-sans: "IBM Plex Sans", "IBM Plex Sans Fallback", sans-serif;
   --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", monospace;
   --font-display: "Bebas Neue", "Bebas Neue Fallback", sans-serif;
@@ -98,34 +117,27 @@
   html {
     overflow-x: hidden;
     max-width: 100vw;
-    /* Apply scrollbar styles to html element */
     scrollbar-width: thin;
-    scrollbar-color: hsl(0, 0%, 24%) hsl(0, 0%, 8%);
   }
   body {
     @apply bg-background text-foreground;
     overflow-x: hidden;
     max-width: 100vw;
     scrollbar-width: thin;
-    scrollbar-color: hsl(0, 0%, 24%) hsl(0, 0%, 8%);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
-  /* Webkit scrollbar styling for html and body */
+  /* Webkit scrollbar styling */
   html::-webkit-scrollbar,
   body::-webkit-scrollbar {
-    width: 10px;
+    width: 8px;
   }
   html::-webkit-scrollbar-track,
   body::-webkit-scrollbar-track {
-    background: hsl(0, 0%, 8%);
+    background: var(--background);
   }
   html::-webkit-scrollbar-thumb,
   body::-webkit-scrollbar-thumb {
-    background: hsl(0, 0%, 24%);
-    border-radius: 0px;
-  }
-  html::-webkit-scrollbar-thumb:hover,
-  body::-webkit-scrollbar-thumb:hover {
-    background: hsl(0, 0%, 32%);
+    background: var(--border);
   }
 }
 
@@ -138,83 +150,24 @@
   height: 100%;
   pointer-events: none;
   z-index: 1000;
-  opacity: 0.03;
+  opacity: 0.02;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
 /* Grid background pattern */
 .grid-bg {
-  background-image: linear-gradient(to right, oklch(0.2 0 0) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.2 0 0) 1px, transparent 1px);
+  background-image: linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
 /* Custom selection color */
 ::selection {
-  background: oklch(0.7 0.2 45);
-  color: oklch(0.08 0 0);
-}
-
-/* DealScope first-load overlay motifs -- reuse the grid + accent scan language */
-@keyframes ds-scan {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh);
-    opacity: 0;
-  }
-}
-.ds-loading-scan {
-  animation: ds-scan 1.4s linear infinite;
-  will-change: transform;
-}
-@keyframes ds-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-.ds-loading-pulse {
-  animation: ds-pulse 1.6s ease-in-out infinite;
-}
-.ds-loading-dot {
-  width: 6px;
-  height: 6px;
   background: var(--accent);
-  animation: ds-blink 1s steps(2, end) infinite;
-}
-@keyframes ds-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.2;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ds-loading-pulse,
-  .ds-loading-dot {
-    animation: none;
-  }
-  .ds-loading-scan {
-    display: none;
-  }
+  color: var(--accent-foreground);
 }
 
-/* DealScope range-filter number inputs - strip the native spinners so they
-   match the square, monospace search-box aesthetic (keyboard arrows still work) */
+/* DealScope range-filter number inputs */
 .ds-num {
   -moz-appearance: textfield;
   appearance: textfield;
@@ -225,12 +178,12 @@
   margin: 0;
 }
 
-/* DealScope weight sliders - refined, square, on-theme */
+/* DealScope weight sliders */
 .ds-slider {
   -webkit-appearance: none;
   appearance: none;
   height: 2px;
-  background: oklch(0.25 0 0);
+  background: var(--border);
   outline: none;
   cursor: pointer;
 }
@@ -239,26 +192,26 @@
   appearance: none;
   width: 14px;
   height: 14px;
-  background: oklch(0.08 0 0);
-  border: 1px solid oklch(0.7 0.2 45);
+  background: var(--card);
+  border: 1.5px solid var(--accent);
   border-radius: 0;
   transition: background 0.2s ease;
 }
 .ds-slider::-webkit-slider-thumb:hover {
-  background: oklch(0.7 0.2 45);
+  background: var(--accent);
 }
 .ds-slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  background: oklch(0.08 0 0);
-  border: 1px solid oklch(0.7 0.2 45);
+  background: var(--card);
+  border: 1.5px solid var(--accent);
   border-radius: 0;
   transition: background 0.2s ease;
 }
 .ds-slider::-moz-range-thumb:hover {
-  background: oklch(0.7 0.2 45);
+  background: var(--accent);
 }
 .ds-slider:focus-visible {
-  outline: 1px solid oklch(0.7 0.2 45);
+  outline: 1px solid var(--accent);
   outline-offset: 4px;
 }

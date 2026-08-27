@@ -3,7 +3,6 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { ScoreRing } from "@/components/dealscope/score-ring"
 import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
@@ -120,14 +119,7 @@ export function ResultsView({
   }
 
   return (
-    <section className="relative min-h-screen pl-6 md:pl-28 pr-6 md:pr-12 py-16 md:py-24">
-      {/* Left vertical label */}
-      <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:block">
-        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
-          RESULTS
-        </span>
-      </div>
-
+    <section className="relative min-h-screen px-4 sm:px-6 md:px-12 py-12 md:py-20 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
         <div>
@@ -153,24 +145,24 @@ export function ResultsView({
         <div className="flex flex-wrap items-center gap-3 self-start">
           <button
             onClick={onOpenFilters}
-            className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
+            className="group inline-flex items-center gap-3 border border-border/80 bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
           >
-            <ScrambleTextOnHover text="Filters" as="span" duration={0.5} />
+            <span>Filters</span>
             {activeFilters > 0 ? (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none font-bold">
                 {activeFilters}
               </span>
             ) : (
-              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+              <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
             )}
           </button>
 
           <button
             onClick={onOpenWeights}
-            className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
+            className="group inline-flex items-center gap-3 border border-border/80 bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
           >
-            <ScrambleTextOnHover text="Adjust Weights" as="span" duration={0.5} />
-            <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+            <span>Adjust Weights</span>
+            <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
           </button>
 
           <button
@@ -178,9 +170,9 @@ export function ResultsView({
             onClick={handleExportCsv}
             disabled={results.length === 0}
             aria-label="Export current screened companies as CSV"
-            className="group inline-flex min-h-11 items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40"
+            className="group inline-flex min-h-11 items-center gap-3 border border-border/80 bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
           >
-            <ScrambleTextOnHover text="Export Comps (CSV)" as="span" duration={0.5} />
+            <span>Export Comps (CSV)</span>
           </button>
         </div>
       </div>

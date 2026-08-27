@@ -36,37 +36,41 @@ export function ExampleScreens({ screens, onApply, variant = "cards" }: ExampleS
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border/40 border border-border/40">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {screens.map(({ screen, count }, i) => (
         <motion.div
           key={screen.id}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-60px" }}
+          initial={{ opacity: 0, y: 4 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
           transition={{ delay: Math.min(i, 4) * 0.03, duration: 0.18, ease: "easeOut" }}
         >
           <button
             onClick={() => onApply(screen)}
-            className="group bg-background h-full w-full text-left p-6 flex flex-col gap-4 hover:bg-accent/5 transition-colors duration-300"
+            className="group bg-card/40 border border-border/60 h-full w-full text-left p-5 flex flex-col justify-between gap-4 hover:border-accent/60 hover:bg-accent/5 transition-all duration-200 cursor-pointer"
           >
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="font-[family-name:var(--font-bebas)] text-3xl tracking-tight leading-none text-accent">
-                {count}
-              </span>
-              <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                {count === 1 ? "match" : "matches"}
-              </span>
+            <div>
+              <div className="flex items-baseline justify-between gap-3 border-b border-border/40 pb-2.5">
+                <span className="font-[family-name:var(--font-bebas)] text-3xl tracking-tight leading-none text-accent">
+                  {count}
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {count === 1 ? "match" : "matches"} · 0{i + 1}
+                </span>
+              </div>
+              <h3 className="mt-3 font-mono text-xs uppercase tracking-[0.12em] text-foreground font-semibold leading-relaxed group-hover:text-accent transition-colors">
+                {screen.label}
+              </h3>
+              <p className="mt-2 font-sans text-xs text-muted-foreground leading-relaxed">
+                {screen.description}
+              </p>
             </div>
-            <h3 className="font-mono text-[11px] uppercase tracking-[0.15em] text-foreground leading-relaxed">
-              {screen.label}
-            </h3>
-            <p className="font-mono text-[11px] text-muted-foreground leading-relaxed flex-1">
-              {screen.description}
-            </p>
-            <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground group-hover:text-accent transition-colors duration-200">
-              Run screen
-              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-            </span>
+            <div className="pt-3 border-t border-border/30 flex items-center justify-between">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-accent transition-colors">
+                Run screen
+              </span>
+              <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45 text-muted-foreground group-hover:text-accent" />
+            </div>
           </button>
         </motion.div>
       ))}

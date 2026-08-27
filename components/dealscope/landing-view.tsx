@@ -3,8 +3,6 @@
 import type React from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ScrambleTextOnHover } from "@/components/scramble-text"
-import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
@@ -67,153 +65,143 @@ export function LandingView({
       : [...filters.industry, name]
     onFiltersChange({ ...filters, industry: next })
   }
+
   return (
     <>
-    <section className="relative min-h-screen flex flex-col justify-center pl-6 md:pl-28 pr-6 md:pr-12 py-24">
-      <AnimatedNoise opacity={0.03} />
+      {/* ---------------------------------------------------------------- */}
+      {/* HERO SECTION: Centered, Prestigious, Institutional Identity      */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative min-h-[90vh] flex flex-col justify-center items-center px-4 sm:px-6 md:px-12 py-16 md:py-24 border-b border-border/40">
+        <AnimatedNoise opacity={0.02} />
 
-      {/* Left vertical label */}
-      <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:block">
-        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
-          SCREEN
-        </span>
-      </div>
+        <div className="w-full max-w-5xl mx-auto flex flex-col items-center text-center">
+          {/* Institutional Category Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3.5 py-1.5 mb-6 font-mono text-[11px] uppercase tracking-[0.25em] text-accent"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_6px_var(--accent)]" />
+            Institutional M&amp;A &amp; Equity Intelligence
+          </motion.div>
 
-      <div className="flex-1 w-full max-w-6xl flex flex-col justify-center">
-        <SplitFlapAudioProvider>
-          <div className="relative">
-            <SplitFlapText text="DEALSCOPE" speed={80} />
-            <div className="mt-4">
-              <SplitFlapMuteToggle />
+          {/* Rock-Solid Permanent Wordmark: Never glitches, flips, or scrambles */}
+          <h1 className="font-[family-name:var(--font-bebas)] text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tight text-foreground select-none leading-none">
+            DEALSCOPE
+          </h1>
+
+          {/* Authoritative Subtitle */}
+          <h2 className="mt-4 font-sans text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-foreground/90 max-w-3xl text-balance">
+            Every NSE-listed company, ranked the way a deal team would.
+          </h2>
+
+          <p className="mt-4 max-w-2xl font-sans text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty">
+            DealScope scores every company against its direct sector peers — revenue growth, operating margin, 
+            ROCE, and balance sheet leverage — delivering true apples-to-apples comparability. Free and public. No login, no paywall.
+          </p>
+
+          {/* Live Coverage & Freshness Telemetry Ribbon */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="mt-8 w-full max-w-3xl flex flex-wrap items-center justify-center gap-4 sm:gap-8 border-y border-border/40 py-3 font-mono text-xs text-muted-foreground"
+          >
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Universe</span>
+              <span className="text-foreground font-semibold font-mono">{totalCount.toLocaleString("en-IN")} companies</span>
             </div>
-          </div>
-        </SplitFlapAudioProvider>
+            <span className="hidden sm:inline text-border/60">•</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Market Cap</span>
+              <span className="text-foreground font-semibold font-mono">₹4.6T Total Coverage</span>
+            </div>
+            <span className="hidden sm:inline text-border/60">•</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">M&amp;A Comps</span>
+              <span className="text-foreground font-semibold font-mono">{dealCount.toLocaleString("en-IN")} verified deals</span>
+            </div>
+          </motion.div>
 
-        <h1 className="font-[family-name:var(--font-bebas)] text-muted-foreground text-[clamp(1rem,3vw,2rem)] mt-4 tracking-wide">
-          Every NSE-listed company, ranked the way a deal team would.
-        </h1>
+          {/* Command Search & Screen Box */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className="mt-10 w-full max-w-2xl text-left"
+          >
+            <ScreenBar
+              query={query}
+              onQueryChange={onQueryChange}
+              onSubmit={onRun}
+              filters={screen}
+              onRemoveChip={onRemoveChip}
+              onClearAll={onClearAll}
+              matchCount={matchingCount}
+              totalCount={totalCount}
+              recognised={recognised}
+              trailing={
+                <button
+                  onClick={onRun}
+                  className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-3 px-8 font-mono text-xs uppercase tracking-widest leading-none bg-accent/10 sm:bg-transparent text-foreground hover:text-accent hover:bg-accent/10 border-t sm:border-t-0 sm:border-l border-border/60 transition-colors duration-200 cursor-pointer"
+                >
+                  <span>Run</span>
+                  <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
+                </button>
+              }
+            />
+          </motion.div>
 
-        <p className="mt-3 font-mono text-sm text-foreground/90 tracking-wide">
-          {totalCount.toLocaleString("en-IN")} companies. {dealCount.toLocaleString("en-IN")}{" "}
-          real M&amp;A deals.
-        </p>
+          {/* Secondary Action: Direct Screening Filter CTA */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="mt-6 flex flex-col sm:flex-row sm:items-center justify-center gap-4 w-full max-w-2xl"
+          >
+            <button
+              onClick={onOpenFilters}
+              className="group inline-flex items-center justify-center gap-3 border border-border/80 bg-card/60 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
+            >
+              <span>Screen Quantitative Filters</span>
+              {activeFilterCount > 0 ? (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none font-bold">
+                  {activeFilterCount}
+                </span>
+              ) : (
+                <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
+              )}
+            </button>
 
-        {/* Live proof strip -- reads straight off the bundled dataset (same
-            source as the rest of the page) rather than being hardcoded, so it
-            can never drift out of sync with the actual data. */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3"
-        >
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Universe
-            </span>
-            <span className="font-mono text-xs text-foreground">
-              {totalCount.toLocaleString("en-IN")} companies
-            </span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Deals
-            </span>
-            <span className="font-mono text-xs text-foreground">
-              {dealCount.toLocaleString("en-IN")} historical M&amp;A transactions
-            </span>
-          </div>
-        </motion.div>
-
-        <p className="mt-8 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
-          DealScope scores every company against its own sector — growth, margin, capital efficiency,
-          and debt — so the comparison is always apples to apples. Free and public. No account, no
-          paywall.
-        </p>
-
-        {/* Search + Run — Run is a ScreenBar trailing slot so it shares the
-            input row's height. A fixed h-[58px] sibling of the whole bar
-            (input + count + chips) is what made the button look uneven. */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="mt-12 max-w-2xl"
-        >
-          <ScreenBar
-            query={query}
-            onQueryChange={onQueryChange}
-            onSubmit={onRun}
-            filters={screen}
-            onRemoveChip={onRemoveChip}
-            onClearAll={onClearAll}
-            matchCount={matchingCount}
-            totalCount={totalCount}
-            recognised={recognised}
-            trailing={
+            {activeFilterCount > 0 ? (
               <button
                 onClick={onRun}
-                className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-3 px-8 font-mono text-xs uppercase tracking-widest leading-none text-foreground hover:text-accent transition-colors duration-200"
+                className="group inline-flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground hover:text-accent transition-colors duration-200 cursor-pointer"
               >
-                <ScrambleTextOnHover text="Run" as="span" duration={0.4} />
-                <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+                <span className="text-foreground font-semibold">{matchingCount.toLocaleString("en-IN")}</span>
+                <span>match criteria — view results</span>
+                <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
               </button>
-            }
-          />
-        </motion.div>
-
-        {/* Screen Companies -- filters as a primary, first-class entry point.
-            Previously the filter panel was only reachable from the results
-            view, i.e. only after you'd already searched; screening the universe
-            by real financials is the product's main feature, so it gets its own
-            call to action right beside the search bar, with a live match count
-            so the effect of a filter is visible before committing to results. */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 max-w-2xl"
-        >
-          <button
-            onClick={onOpenFilters}
-            className="group inline-flex items-center gap-3 border border-accent/60 bg-accent/5 px-6 py-3 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 hover:border-accent transition-all duration-200"
-          >
-            <ScrambleTextOnHover text="Screen Companies" as="span" duration={0.5} />
-            {activeFilterCount > 0 ? (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none">
-                {activeFilterCount}
-              </span>
             ) : (
-              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
+              <span className="font-mono text-xs text-muted-foreground/80 leading-relaxed text-center sm:text-left">
+                Filter by market cap, valuation multiples, margin, and promoter pledge without searching.
+              </span>
             )}
-          </button>
+          </motion.div>
 
-          {activeFilterCount > 0 ? (
-            <button
-              onClick={onRun}
-              className="group inline-flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-accent transition-colors duration-200"
-            >
-              <span className="text-foreground">{matchingCount.toLocaleString("en-IN")}</span>
-              <span>match — view results</span>
-              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-            </button>
-          ) : (
-            <span className="font-mono text-xs text-muted-foreground leading-relaxed">
-              Filter the NSE-listed universe by market cap, valuation, growth, quality and risk — no
-              search required.
-            </span>
-          )}
-        </motion.div>
-
-        {/* Sector filter */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="mt-16"
-        >
-          <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">Filter by Sector</span>
-          <div className="mt-6">
+          {/* Sector & Industry Browser */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+            className="mt-14 w-full text-left"
+          >
+            <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border/40">
+              <span className="font-mono text-xs uppercase tracking-[0.25em] text-accent font-semibold">
+                Explore by Sector &amp; Industry
+              </span>
+            </div>
             <SectorIndustryFilter
               sectors={sectors}
               selectedSectors={selectedSectors}
@@ -224,184 +212,161 @@ export function LandingView({
               onToggleIndustry={toggleIndustry}
               onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
             />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* SECTION 01: Core Methodology — Why Sector-Relative Ranking        */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40 bg-card/20">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+          <div className="lg:col-span-5">
+            <SectionLabel index="01" label="The Quantitative Problem" />
+            <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
+              WHY SECTOR-RELATIVE
+            </h2>
+            <p className="mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
+              Empirical Percentile Scoring vs Raw Cross-Sector Screening
+            </p>
           </div>
-        </motion.div>
-      </div>
-
-      {/* Footer data line */}
-      <div className="absolute bottom-8 left-6 md:left-28 right-6 md:right-12 flex items-center justify-between">
-        <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground/80">
-          Screening the NSE-listed universe
-        </span>
-        <div className="hidden md:block border border-border px-4 py-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Not investment advice. Built by Ram —{" "}
-          <Link href="/about" className="text-foreground hover:text-accent transition-colors duration-200">
-            About
-          </Link>
-        </div>
-      </div>
-    </section>
-
-    {/* ---------------------------------------------------------------- */}
-    {/* Why sector-relative -- hook version, ahead of the detailed one    */}
-    {/* under "04 / Why It Matters" further down the page. Same core      */}
-    {/* claim shown twice on purpose: once early as a hook, once later    */}
-    {/* with full context.                                                */}
-    {/* ---------------------------------------------------------------- */}
-    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionLabel index="00" label="Why Sector-Relative" />
-          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-6xl tracking-tight text-balance">
-            WHY IT&apos;S DIFFERENT
-          </h2>
-        </div>
-        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/85 text-pretty">
-          <RevealItem>
-            <p className="text-muted-foreground">
-              Most screeners rank companies on raw numbers. That flatters large caps and buries
-              anything cyclical or capital-intensive. DealScope ranks within sector instead, so the
-              comparison is always apples to apples.
-            </p>
-          </RevealItem>
-        </div>
-      </div>
-    </section>
-
-    {/* ---------------------------------------------------------------- */}
-    {/* What this is                                                     */}
-    {/* ---------------------------------------------------------------- */}
-    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionLabel index="01" label="What This Does" />
-          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-6xl tracking-tight text-balance">
-            WHAT THIS DOES
-          </h2>
-        </div>
-        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/85 text-pretty">
-          <RevealItem>
-            <p>
-              DealScope scores every company on the NSE against its own sector — revenue growth,
-              margins, capital efficiency, debt — so a logistics company is compared to other logistics
-              companies, not to a bank. A score of 80 means the same thing everywhere: top of its
-              actual peer group, not flattered by sitting in a high-margin industry.
-            </p>
-          </RevealItem>
-          <RevealItem delay={0.08}>
-            <p className="text-muted-foreground">
-              Open any company and you get a full tear sheet — real financials, the scoring breakdown,
-              an indicative valuation range from listed-peer trading multiples, and a separate table of
-              comparable M&amp;A deals that actually happened in that sector.
-            </p>
-          </RevealItem>
-          <RevealItem delay={0.16}>
-            <p className="text-muted-foreground">Set your own filters, or start from one of the screens below.</p>
-          </RevealItem>
-        </div>
-      </div>
-    </section>
-
-    {/* ---------------------------------------------------------------- */}
-    {/* How it works -- the default screener, documented                 */}
-    {/* ---------------------------------------------------------------- */}
-    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionLabel index="02" label="How It Works" />
-          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight text-balance">
-            THE DEFAULT SCREEN
-          </h2>
-        </div>
-        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-base md:text-lg leading-relaxed text-foreground/85 text-pretty">
-          <p>
-            Before you touch a single control, every company is scored on four sector-relative
-            factors — Revenue Growth, EBITDA Margin, ROCE, and Debt Level. Each factor is ranked
-            0–100 against the company&apos;s own sector peers, and the four combine, equally weighted,
-            into the composite score shown on every tear sheet. Missing factors are dropped, not
-            scored as zero; the remaining factors are re-weighted.
-          </p>
-          <p className="text-muted-foreground">
-            That equal-weight, sector-relative composite is the default ranking of the entire
-            NSE-listed universe. From there you re-weight the factors to reflect your own thesis, or
-            apply min/max range filters to cut the universe down — the ranking recomputes as you go.
-          </p>
-          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/40 border border-border/40">
-            {["Revenue Growth", "EBITDA Margin", "ROCE", "Debt Level"].map((f, i) => (
-              <div key={f} className="bg-background p-5 flex flex-col gap-2">
-                <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
-                  Factor 0{i + 1}
-                </span>
-                <span className="font-mono text-xs text-foreground leading-relaxed">{f}</span>
-                <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-                  0–100 · equal weight
-                </span>
-              </div>
-            ))}
+          <div className="lg:col-span-7 flex flex-col gap-5 font-sans text-base sm:text-lg leading-relaxed text-foreground/90">
+            <RevealItem>
+              <p>
+                Standard financial screeners rank companies on absolute figures. That systematically distorts results: it overweights capital-light software businesses with 35% margins while hiding world-class logistics, manufacturing, or EPC companies operating at 14% margins.
+              </p>
+            </RevealItem>
+            <RevealItem delay={0.06}>
+              <p className="text-muted-foreground">
+                DealScope evaluates each company strictly against its own direct sector cohort. A factor score of <strong className="text-foreground font-mono">85</strong> means the business is in the 85th percentile of its actual operational peers — never artificially inflated by industry tailwinds or penalized by capital intensity.
+              </p>
+            </RevealItem>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    {/* ---------------------------------------------------------------- */}
-    {/* Example screens -- each is a natural-language query run through the  */}
-    {/* same parser as the search bar, with a live count.                    */}
-    {/* ---------------------------------------------------------------- */}
-    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <SectionLabel index="03" label="Example Screens" />
-      <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-5xl tracking-tight max-w-2xl text-balance">
-        START FROM A SCREEN
-      </h2>
-      <p className="mt-6 max-w-lg font-mono text-xs text-muted-foreground leading-relaxed">
-        Each screen is a real natural-language query, run through the same parser the search bar
-        uses — click one and you&apos;ll see the sentence that produced it. The count is live: it&apos;s
-        exactly what the results page returns.
-      </p>
-      <div className="mt-10">
-        <ExampleScreens screens={screens} onApply={onApplyScreen} variant="cards" />
-      </div>
-
-      {/* Closing action */}
-      <div className="mt-24 pt-8 border-t border-border/40 flex items-center justify-end">
-        <button
-          onClick={onRun}
-          className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
-        >
-          <ScrambleTextOnHover text="Screen All" as="span" duration={0.4} />
-          <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-        </button>
-      </div>
-    </section>
-
-    {/* ---------------------------------------------------------------- */}
-    {/* Why sector-relative                                              */}
-    {/* ---------------------------------------------------------------- */}
-    <section className="relative pl-6 md:pl-28 pr-6 md:pr-12 py-24 border-t border-border/40">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionLabel index="04" label="Why It Matters" />
-          <h2 className="mt-6 font-[family-name:var(--font-bebas)] text-4xl md:text-6xl tracking-tight text-balance">
-            WHY SECTOR-RELATIVE
-          </h2>
-        </div>
-        <div className="lg:col-span-7 flex flex-col gap-6 font-sans text-lg md:text-xl leading-relaxed text-foreground/85 text-pretty">
-          <RevealItem>
-            <p className="text-muted-foreground">
-              Most screeners rank companies on raw numbers. That flatters large caps and buries
-              anything cyclical or capital-intensive. DealScope ranks within sector instead, so the
-              comparison is always apples to apples.
+      {/* ---------------------------------------------------------------- */}
+      {/* SECTION 02: The 4-Factor Scoring Engine Architecture             */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+          <div className="lg:col-span-5">
+            <SectionLabel index="02" label="Deterministic Math" />
+            <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
+              THE 4-FACTOR ENGINE
+            </h2>
+            <p className="mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
+              0–100 Sector ECDF Percentile Decomposition
             </p>
-          </RevealItem>
+          </div>
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            <p className="font-sans text-base sm:text-lg leading-relaxed text-foreground/90">
+              Before adjusting any sliders, every company is assigned four sector-relative percentile factor scores. Factors combine equally (25% default weight) into a single composite score.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { title: "Revenue Growth", factor: "01", desc: "Top-line CAGR momentum relative to sector median expansion." },
+                { title: "EBITDA Margin", factor: "02", desc: "Core cash conversion efficiency from operating revenues." },
+                { title: "ROCE (Return on Capital)", factor: "03", desc: "Operating profit generated per rupee of capital employed." },
+                { title: "Debt Health (Inverted Leverage)", factor: "04", desc: "Balance sheet safety; lower leverage receives higher scores." },
+              ].map((f) => (
+                <div key={f.title} className="border border-border/60 bg-card/40 p-4 flex flex-col gap-1.5 transition-colors hover:border-accent/50">
+                  <div className="flex items-center justify-between font-mono text-xs">
+                    <span className="text-accent font-semibold">{f.title}</span>
+                    <span className="text-muted-foreground/60 text-[10px]">FACTOR {f.factor}</span>
+                  </div>
+                  <p className="font-sans text-xs text-muted-foreground leading-relaxed mt-1">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* SECTION 03: Curated Screening Strategies                         */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40 bg-card/20">
+        <div className="max-w-5xl mx-auto">
+          <SectionLabel index="03" label="Instant Playbooks" />
+          <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-foreground">
+            CURATED SCREENING STRATEGIES
+          </h2>
+          <p className="mt-3 max-w-2xl font-sans text-sm text-muted-foreground leading-relaxed">
+            Click any strategy below to execute a live natural-language screen across the entire 2,381 NSE-listed universe.
+          </p>
+
+          <div className="mt-8">
+            <ExampleScreens screens={screens} onApply={onApplyScreen} variant="cards" />
+          </div>
+
+          <div className="mt-12 flex items-center justify-between border-t border-border/40 pt-6">
+            <span className="font-mono text-xs text-muted-foreground">
+              Explore custom parameters or search individual tickers above
+            </span>
+            <button
+              onClick={onRun}
+              className="inline-flex items-center gap-2 border border-border/80 bg-card/80 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 cursor-pointer"
+            >
+              <span>View Full Directory</span>
+              <BitmapChevron className="transition-transform duration-[300ms] group-hover:rotate-45" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* SECTION 04: Institutional M&A Comps Database                     */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-4 sm:px-6 md:px-12 py-20">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+          <div className="lg:col-span-5">
+            <SectionLabel index="04" label="Transaction Benchmarks" />
+            <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
+              727 REAL M&amp;A DEALS
+            </h2>
+            <p className="mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
+              Historical Indian M&amp;A Multiples
+            </p>
+          </div>
+          <div className="lg:col-span-7 flex flex-col gap-5 font-sans text-base sm:text-lg leading-relaxed text-foreground/90">
+            <RevealItem>
+              <p>
+                Every company tear sheet connects directly to real precedent transactions in that industry. Compare public trading multiples against actual control premiums paid in Indian M&amp;A deals over the last decade.
+              </p>
+            </RevealItem>
+            <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs text-muted-foreground border border-border/60 bg-card/30 p-4">
+              <div><span className="text-foreground font-semibold">13</span> Sector Taxonomies</div>
+              <span className="text-border">•</span>
+              <div><span className="text-foreground font-semibold">100%</span> Verified Filings</div>
+              <span className="text-border">•</span>
+              <div><span className="text-foreground font-semibold">0</span> Imputed Multiples</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Strip */}
+      <footer className="border-t border-border/40 py-8 px-4 sm:px-6 md:px-12 bg-background font-mono text-xs text-muted-foreground">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span>DEALSCOPE · Quantitative Equity &amp; M&amp;A Intelligence</span>
+          <div className="flex items-center gap-4">
+            <Link href="/about" className="hover:text-accent transition-colors">
+              Methodology &amp; Architecture
+            </Link>
+            <span className="text-border">•</span>
+            <span>Built by Ram Suthakaran</span>
+          </div>
+        </div>
+      </footer>
     </>
   )
 }
 
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
-    <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+    <span className="font-mono text-xs uppercase tracking-[0.25em] text-accent font-semibold">
       {index} / {label}
     </span>
   )
@@ -410,10 +375,10 @@ function SectionLabel({ index, label }: { index: string; label: string }) {
 function RevealItem({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ delay: Math.min(delay, 0.12), duration: 0.25, ease: "easeOut" }}
+      initial={{ opacity: 0, y: 4 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ delay: Math.min(delay, 0.1), duration: 0.2, ease: "easeOut" }}
     >
       {children}
     </motion.div>
