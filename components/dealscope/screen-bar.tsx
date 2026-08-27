@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect, useRef } from "react"
-import { Search, X, Sparkles, Command } from "lucide-react"
+import { Search, X } from "lucide-react"
 import { type FilterChip, type ScreenFilters, screenChips, countActiveConstraints } from "@/lib/screener"
 import { cn } from "@/lib/utils"
 
@@ -20,6 +20,8 @@ interface ScreenBarProps {
   autoFocus?: boolean
   size?: "lg" | "sm"
   trailing?: React.ReactNode
+  /** Landing page: do not print the raw universe size under an empty search. */
+  hideIdleCount?: boolean
 }
 
 export function ScreenBar({
@@ -36,13 +38,16 @@ export function ScreenBar({
   autoFocus = false,
   size = "lg",
   trailing,
+  hideIdleCount = false,
 }: ScreenBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const chips = screenChips(filters)
   const activeCount = countActiveConstraints(filters)
   const isFiltered = matchCount !== totalCount
+  const hasQuery = query.trim().length > 0
+  const showCount =
+    !hideIdleCount || isFiltered || hasQuery || recognised || activeCount > 0 || chips.length > 0
 
-  // Global ⌘K / Ctrl+K keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -61,9 +66,7 @@ export function ScreenBar({
     }
   }
 
-  // One outer border shell; both cells use the same fixed height so their top
-  // and bottom edges are identical.
-  const rowH = size === "lg" ? "h-13 sm:h-14" : "h-11 sm:h-12"
+  const rowH = size === "lg" ? "h-12 sm:h-13" : "h-11 sm:h-12"
 
   return (
     <div className="w-full">
@@ -83,7 +86,6 @@ export function ScreenBar({
             trailing ? "w-full sm:flex-1 sm:min-w-0" : "flex-1",
           )}
         >
-          {/* Leading Icon */}
           <div className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none select-none">
             {recognised ? (
               <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-accent bg-accent/15 px-1.5 py-0.5 border border-accent/40">
@@ -106,7 +108,6 @@ export function ScreenBar({
             className="box-border w-full h-full bg-transparent pl-11 sm:pl-12 pr-9 sm:pr-10 font-mono text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
           />
 
-          {/* Trailing clear action */}
           {query ? (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
               <button
@@ -136,36 +137,38 @@ export function ScreenBar({
         ) : null}
       </div>
 
-      {/* Live count + parse feedback — always under the full control row */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="font-mono text-xs">
-          <span className={cn(isFiltered ? "text-accent font-semibold" : "text-foreground font-medium")}>
-            {matchCount.toLocaleString("en-IN")}
-          </span>
-          <span className="text-muted-foreground">
-            {" "}
-            {matchCount === 1 ? "company" : "companies"}
-            {isFiltered && ` of ${totalCount.toLocaleString("en-IN")}`}
-          </span>
-        </span>
+      {(showCount || chips.length > 0) && (
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {showCount && (
+            <span className="font-mono text-xs">
+              <span className={cn(isFiltered ? "text-accent font-semibold" : "text-foreground font-medium")}>
+                {matchCount.toLocaleString("en-IN")}
+              </span>
+              <span className="text-muted-foreground">
+                {" "}
+                {matchCount === 1 ? "company" : "companies"}
+                {isFiltered && ` of ${totalCount.toLocaleString("en-IN")}`}
+              </span>
+            </span>
+          )}
 
-        {recognised && (
-          <span className="font-mono text-[11px] uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 border border-accent/30 font-semibold">
-            Screen Applied
-          </span>
-        )}
+          {recognised && (
+            <span className="font-mono text-[11px] uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 border border-accent/30 font-semibold">
+              Screen Applied
+            </span>
+          )}
 
-        {activeCount > 0 && (
-          <button
-            onClick={onClearAll}
-            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200 cursor-pointer"
-          >
-            Clear all
-          </button>
-        )}
-      </div>
+          {activeCount > 0 && (
+            <button
+              onClick={onClearAll}
+              className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200 cursor-pointer"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+      )}
 
-      {/* Active filter chips */}
       {chips.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {chips.map((chip) => (
