@@ -84,22 +84,24 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </button>
 
         {/* Master Header Ribbon */}
-        <div className="mt-6 md:mt-8 flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-10 border-b border-border/40">
+        <div className="mt-6 md:mt-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 pb-8 sm:pb-10 border-b border-border/40">
           {/* Identity Column */}
           <div className="flex-1 min-w-0 max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent block">
-              Tear Sheet / {company.sector}
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-accent flex flex-wrap items-center gap-1.5">
+              <span>Tear Sheet</span>
+              <span className="text-border">/</span>
+              <span className="break-words">{company.sector}</span>
             </span>
             <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="mt-2.5 font-[family-name:var(--font-bebas)] text-[clamp(2rem,3.8vw,3.5rem)] leading-[0.92] tracking-tight text-balance break-words text-foreground"
+              className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[0.92] tracking-tight text-balance break-words text-foreground"
             >
               {company.name.toUpperCase()}
             </motion.h1>
-            <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
-              <span className="border border-border px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <span className="border border-border bg-card/30 px-2 sm:px-2.5 py-1 font-mono text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
                 NSE: {company.ticker}
               </span>
               <OwnershipBadge
@@ -108,15 +110,15 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 variant="header"
               />
               {company.industry && (
-                <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                <span className="border border-border/50 bg-card/20 px-2 sm:px-2.5 py-1 font-mono text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground truncate max-w-[200px] sm:max-w-none">
                   {company.industry}
                 </span>
               )}
-              <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="border border-border/50 bg-card/20 px-2 sm:px-2.5 py-1 font-mono text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
                 TTM {company.metrics.revenue}
               </span>
               {sectorRank && (
-                <span className="border border-accent/40 bg-accent/5 px-2.5 py-1 font-mono text-xs uppercase tracking-wider text-accent font-medium">
+                <span className="border border-accent/40 bg-accent/5 px-2 sm:px-2.5 py-1 font-mono text-[10px] sm:text-xs uppercase tracking-wider text-accent font-medium">
                   Ranks {sectorRank.rank} of {sectorRank.total} in {company.sector}
                 </span>
               )}
@@ -128,15 +130,15 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="flex items-center gap-5 shrink-0"
+            className="flex items-center gap-4 sm:gap-5 shrink-0 pt-2 lg:pt-0"
           >
-            <ScoreRing score={score} size={110} strokeWidth={3} sectorAverage={avg} />
+            <ScoreRing score={score} size={88} strokeWidth={3} sectorAverage={avg} />
             <div className="font-mono text-xs uppercase tracking-wider leading-relaxed">
               <span className="block text-foreground font-medium">Composite Score</span>
               <span className="block text-muted-foreground">
-                Sector Avg <span className="text-accent font-medium tabular-nums">{avg == null ? "—" : avg}</span>
+                Sector Avg <span className="text-accent font-medium tabular-nums">{avg == null ? "N/A" : avg}</span>
               </span>
-              <span className="block text-muted-foreground/70 text-xs mt-0.5">
+              <span className="block text-muted-foreground/70 text-[10px] sm:text-xs mt-0.5">
                 {unclassified ? "Unclassified: not scored" : "Sector-relative · 0–100"}
               </span>
             </div>
@@ -144,13 +146,13 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </div>
 
         {/* 01 / Key Financials */}
-        <div className="mt-12 md:mt-16">
+        <div className="mt-10 sm:mt-12 md:mt-16">
           <SectionHeader
             index="01"
             label="Key Financials"
             subtitle={`Market Cap & Fundamentals as of ${formatAsOfDate(fin.marketCapAsOf || company.asOfDate)}`}
           />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5 md:gap-4">
             {financialCards.map((card) => (
               <FinancialCard
                 key={card.label}
@@ -163,22 +165,22 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </div>
 
         {/* 02 / Factor Decomposition & Operational Radar */}
-        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+        <div className="mt-12 sm:mt-16 md:mt-24 pt-10 sm:pt-12 md:pt-16 border-t border-border/30">
           <SectionHeader
             index="02"
             label="Factor Decomposition & Operational Radar"
             subtitle={`Sector-relative percentiles (0–100) benchmarked against ${company.sector} cohort`}
           />
-          <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-8">
+          <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-6 sm:mb-8">
             {unclassified
               ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than estimated."
               : `Each factor is ranked 0 to 100 against direct peers in ${company.sector}. A score of 90 means outperforming 90% of sector companies. Missing factors are excluded from weighting.`}
           </p>
 
-          {/* Symmetrical 50/50 Bento Grid */}
+          {/* Symmetrical Bento Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             {/* Left Column: Factor Decomposition Panel */}
-            <div className="border border-border/40 bg-card/25 p-5 sm:p-6 flex flex-col justify-between relative overflow-hidden">
+            <div className="border border-border/40 bg-card/25 p-4 sm:p-6 flex flex-col justify-between relative overflow-hidden">
               {/* Corner Terminal Accent Brackets */}
               <div className="absolute top-2 left-2 w-2 h-2 border-t-2 border-l-2 border-accent/40 pointer-events-none" />
               <div className="absolute top-2 right-2 w-2 h-2 border-t-2 border-r-2 border-accent/40 pointer-events-none" />
@@ -187,11 +189,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
 
               <div>
                 {/* Panel Header */}
-                <div className="flex items-center justify-between border-b border-border/30 pb-3 mb-5 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-border/30 pb-3 mb-4 sm:mb-5 font-mono text-xs">
                   <span className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
                     02.A / Factor Drivers
                   </span>
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground/70">
+                  <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground/70">
                     Cohort: {company.sector}
                   </span>
                 </div>
@@ -213,7 +215,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               </div>
 
               {/* Panel Footer */}
-              <div className="mt-4 pt-3 border-t border-border/20 flex items-center justify-between font-mono text-[11px] text-muted-foreground/60 uppercase tracking-wider">
+              <div className="mt-4 pt-3 border-t border-border/20 flex items-center justify-between font-mono text-[10px] sm:text-[11px] text-muted-foreground/60 uppercase tracking-wider">
                 <span>Sector-Relative Percentiles</span>
                 <span>Active Weights: {Object.values(weights).reduce((a, b) => a + b, 0)}%</span>
               </div>
@@ -240,7 +242,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
 
         {/* 03 / Sector Peers */}
         {peers.length > 0 && (
-          <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+          <div className="mt-12 sm:mt-16 md:mt-24 pt-10 sm:pt-12 md:pt-16 border-t border-border/30">
             <SectionHeader
               index="03"
               label="Sector Peers"
@@ -249,7 +251,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
 
             {/* Closest Peers Table */}
             <div className="border border-border/40 bg-card/20 overflow-hidden">
-              <div className="border-b border-border/40 bg-card/40 px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+              <div className="border-b border-border/40 bg-card/40 px-4 sm:px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <span>Top 5 Closest Peers by Correlation</span>
                 <span className="text-[11px] text-muted-foreground/70">Sector: {company.sector}</span>
               </div>
@@ -261,37 +263,77 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 <span className="col-span-3 text-right">EBITDA Margin</span>
               </div>
               {/* Target company row */}
-              <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b border-border/40 bg-accent/[0.04] border-l-2 border-l-accent px-5 py-3.5 font-mono text-xs items-center">
-                <div className="col-span-2 md:col-span-5 flex items-center gap-2">
-                  <span className="text-foreground font-semibold truncate">{company.name}</span>
-                  <span className="text-[10px] uppercase tracking-wider border border-accent/40 text-accent px-1.5 py-0.5 bg-accent/5 font-medium">
-                    Target
+              <div className="border-b border-border/40 bg-accent/[0.04] border-l-2 border-l-accent px-4 sm:px-5 py-3 font-mono text-xs">
+                {/* Desktop View */}
+                <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                  <div className="col-span-5 flex items-center gap-2">
+                    <span className="text-foreground font-semibold truncate">{company.name}</span>
+                    <span className="text-[10px] uppercase tracking-wider border border-accent/40 text-accent px-1.5 py-0.5 bg-accent/5 font-medium">
+                      Target
+                    </span>
+                  </div>
+                  <span className="col-span-2 text-muted-foreground">{company.ticker}</span>
+                  <span className="col-span-2 text-right text-accent font-bold tabular-nums">
+                    {score != null ? `${score} / 100` : "N/A"}
+                  </span>
+                  <span className="col-span-3 text-right text-foreground font-medium tabular-nums">
+                    {company.metrics.ebitdaMargin}
                   </span>
                 </div>
-                <span className="hidden md:inline md:col-span-2 text-muted-foreground">{company.ticker}</span>
-                <span className="md:col-span-2 text-right text-accent font-bold tabular-nums">
-                  {score != null ? `${score} / 100` : "—"}
-                </span>
-                <span className="md:col-span-3 text-right text-foreground font-medium tabular-nums">
-                  {company.metrics.ebitdaMargin}
-                </span>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden flex flex-col gap-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                      <span className="text-foreground font-bold break-words">{company.name}</span>
+                      <span className="text-[9px] uppercase tracking-wider border border-accent/40 text-accent px-1 py-0.5 bg-accent/10 font-bold shrink-0">
+                        Target
+                      </span>
+                    </div>
+                    <span className="text-accent font-bold text-sm shrink-0 tabular-nums">
+                      {score != null ? `${score} / 100` : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground/80 pt-1 border-t border-border/20">
+                    <span className="font-mono">{company.ticker}</span>
+                    <span className="font-mono text-foreground font-medium">Margin: {company.metrics.ebitdaMargin}</span>
+                  </div>
+                </div>
               </div>
+
               {/* Peer rows */}
               {peers.map((peer) => {
                 const peerScore = computeScore(peer.factors, weights)
                 return (
                   <div
                     key={peer.ticker}
-                    className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-4 border-b last:border-b-0 border-border/25 px-5 py-3 font-mono text-xs items-center hover:bg-accent/5 transition-colors"
+                    className="border-b last:border-b-0 border-border/25 px-4 sm:px-5 py-3 font-mono text-xs hover:bg-accent/5 transition-colors"
                   >
-                    <span className="col-span-2 md:col-span-5 text-foreground/90 truncate">{peer.name}</span>
-                    <span className="hidden md:inline md:col-span-2 text-muted-foreground/70">{peer.ticker}</span>
-                    <span className="md:col-span-2 text-right text-muted-foreground tabular-nums">
-                      {peerScore != null ? `${peerScore} / 100` : "—"}
-                    </span>
-                    <span className="md:col-span-3 text-right text-muted-foreground/80 tabular-nums">
-                      {peer.metrics.ebitdaMargin}
-                    </span>
+                    {/* Desktop View */}
+                    <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                      <span className="col-span-5 text-foreground/90 truncate">{peer.name}</span>
+                      <span className="col-span-2 text-muted-foreground/70">{peer.ticker}</span>
+                      <span className="col-span-2 text-right text-muted-foreground tabular-nums">
+                        {peerScore != null ? `${peerScore} / 100` : "N/A"}
+                      </span>
+                      <span className="col-span-3 text-right text-muted-foreground/80 tabular-nums">
+                        {peer.metrics.ebitdaMargin}
+                      </span>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden flex flex-col gap-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-foreground/90 font-medium break-words flex-1 min-w-0">{peer.name}</span>
+                        <span className="text-muted-foreground shrink-0 tabular-nums font-semibold">
+                          {peerScore != null ? `${peerScore} / 100` : "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground/70 pt-1 border-t border-border/15">
+                        <span className="font-mono">{peer.ticker}</span>
+                        <span className="font-mono">Margin: {peer.metrics.ebitdaMargin}</span>
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -351,7 +393,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                     04.B / Score Rationale
                   </span>
                   <span className="font-mono text-xs uppercase tracking-wider text-accent font-medium">
-                    Score: {score != null ? `${score}/100` : "—"}
+                    Score: {score != null ? `${score}/100` : "N/A"}
                   </span>
                 </div>
                 {hasWhyThisScore ? (
@@ -539,11 +581,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </div>
 
         {/* 07 / Comparable Deals */}
-        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+        <div className="mt-12 sm:mt-16 md:mt-24 pt-10 sm:pt-12 md:pt-16 border-t border-border/30">
           <SectionHeader
             index="07"
             label="Comparable Deals"
-            subtitle={`Historical M&A: ${comparableCount} in ${company.sector} (727 precedent deals total, 2006 to 2025)`}
+            subtitle={`Historical M&A: ${comparableCount} in ${company.sector} (${deals.length} precedent deals total, 2006 to 2025)`}
           />
           <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-6">
             Selected precedent M&amp;A transactions in {company.sector} for benchmark context only. Not the source of the listed-peer valuation range above.
@@ -568,7 +610,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               comparables.map((deal, i) => (
                 <div
                   key={`${deal.target}-${deal.year}-${i}`}
-                  className="border-b last:border-b-0 border-border/25 px-5 py-3.5 font-mono text-xs hover:bg-accent/5 transition-colors"
+                  className="border-b last:border-b-0 border-border/25 px-4 sm:px-5 py-3 sm:py-3.5 font-mono text-xs hover:bg-accent/5 transition-colors"
                 >
                   {/* Desktop Row View */}
                   <div className="hidden md:grid grid-cols-12 gap-4 items-center">
@@ -641,9 +683,9 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </div>
 
         {/* 08 / Filings, Notices & News */}
-        <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-border/30">
+        <div className="mt-12 sm:mt-16 md:mt-24 pt-10 sm:pt-12 md:pt-16 border-t border-border/30">
           <SectionHeader index="08" label="Filings, Notices & News" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-8 sm:gap-y-12">
             {/* NSE regulatory filings */}
             <NewsColumn title="NSE Filings" count={companyNews.filings.length} emptyLabel="No recent filings found">
               {companyNews.filings.map((f, i) => (
@@ -668,16 +710,16 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
         </div>
 
         {/* Footer */}
-        <div className="mt-20 md:mt-24 pt-8 border-t border-border/30 flex items-center justify-between">
+        <div className="mt-16 sm:mt-20 md:mt-24 pt-8 border-t border-border/30 flex flex-wrap items-center justify-between gap-4">
           <button
             onClick={onBack}
-            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
+            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200 cursor-pointer"
           >
             ← Return to Screener
           </button>
           <button
             onClick={onBack}
-            className="border border-border/60 hover:border-accent px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-all duration-200"
+            className="border border-border/60 hover:border-accent px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-all duration-200 cursor-pointer"
           >
             Close Tear Sheet
           </button>
@@ -696,7 +738,7 @@ function SectionHeader({ index, label, subtitle }: { index: string; label: strin
         <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-foreground font-semibold">{label}</h2>
       </div>
       {subtitle && (
-        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70">
+        <span className="font-mono text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground/70">
           {subtitle}
         </span>
       )}
@@ -714,11 +756,11 @@ function FinancialCard({
   flagged?: boolean
 }) {
   return (
-    <div className="border border-border/40 bg-card/25 hover:border-border/70 transition-colors p-5 flex flex-col justify-between h-[105px]">
-      <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+    <div className="border border-border/40 bg-card/25 hover:border-border/70 transition-colors p-4 sm:p-5 flex flex-col justify-between min-h-[95px] sm:min-h-[105px]">
+      <span className="font-mono text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
       <span
         className={cn(
-          "font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl leading-none tracking-tight break-words",
+          "font-[family-name:var(--font-bebas)] text-2xl sm:text-3xl lg:text-4xl leading-none tracking-tight break-words",
           flagged ? "text-accent" : "text-foreground",
         )}
       >
@@ -744,7 +786,7 @@ function NewsColumn({
       <div className="flex items-baseline justify-between border-b border-border/40 pb-3 mb-2">
         <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{title}</span>
         <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70 tabular-nums">
-          {count > 0 ? String(count).padStart(2, "0") : "—"}
+          {count > 0 ? String(count).padStart(2, "0") : "00"}
         </span>
       </div>
       {count === 0 ? (
@@ -829,7 +871,7 @@ function FactorRow({
           <span className="text-muted-foreground/80">{metric}</span>
           <span className="text-border/80">·</span>
           <span className={cn("font-bold tabular-nums", missing ? "text-muted-foreground/50" : "text-accent")}>
-            {missing ? "—" : `${value}/100`}
+            {missing ? "N/A" : `${value}/100`}
           </span>
         </div>
       </div>
