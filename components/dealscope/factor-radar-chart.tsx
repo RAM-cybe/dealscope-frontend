@@ -51,7 +51,7 @@ export function FactorRadarChart({
         shortLabel: "MARGIN",
         angle: 0,
         metricKey: "ebitdaMargin",
-        explainer: "Core operating cash profitability margin",
+        explainer: "Operating profitability before non-cash and capital costs",
       },
       {
         key: "roce" as const,
@@ -371,7 +371,7 @@ export function FactorRadarChart({
                   className="font-mono text-[10px] uppercase tracking-wider"
                 >
                   <tspan className={isHovered ? "fill-accent font-bold" : "fill-foreground font-semibold"}>
-                    {isExempt ? "EXEMPT" : scoreVal != null ? `${scoreVal}` : "—"}
+                    {isExempt ? "EXEMPT" : scoreVal != null ? `${scoreVal}` : "N/A"}
                   </tspan>
                   {rawVal && !isExempt && (
                     <tspan className="fill-muted-foreground/80 text-[9.5px]">

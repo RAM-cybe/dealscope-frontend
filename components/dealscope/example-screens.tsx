@@ -19,16 +19,16 @@ interface ExampleScreensProps {
 export function ExampleScreens({ screens, onApply, variant = "cards" }: ExampleScreensProps) {
   if (variant === "pills") {
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-nowrap sm:flex-wrap items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
         {screens.map(({ screen, count }) => (
           <button
             key={screen.id}
             onClick={() => onApply(screen)}
             title={screen.description}
-            className="group inline-flex items-baseline gap-2 border border-border/60 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+            className="group inline-flex items-baseline gap-1.5 sm:gap-2 border border-border/60 bg-card/30 px-2.5 sm:px-3 py-1 sm:py-1.5 font-mono text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-150 shrink-0 cursor-pointer"
           >
             <span>{screen.label}</span>
-            <span className="text-[11px] text-muted-foreground group-hover:text-accent/70">{count}</span>
+            <span className="text-[9px] sm:text-[11px] text-accent/70 font-semibold tabular-nums">{count}</span>
           </button>
         ))}
       </div>

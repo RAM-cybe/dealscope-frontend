@@ -329,7 +329,7 @@ export interface Company {
   }
   // Unformatted numeric values for real-value bucket filtering and CSV export.
   // Currency fields are in ₹ Cr, percentages are plain (e.g. 14.8), ratios are
-  // plain (e.g. 0.45). null = missing — never coerced to 0.
+  // plain (e.g. 0.45). null = missing: never coerced to 0.
   raw: {
     marketCap: number | null // ₹ Cr
     revenue: number | null // ₹ Cr
@@ -756,7 +756,7 @@ export function comparablesForSector(sectorKey: string, deals: DealRow[]): Compa
       value: isNum(d.deal_value_usdm) ? `US$${d.deal_value_usdm.toLocaleString("en-IN")}m` : "N/A",
       dealType: d.deal_type || undefined,
       stakePct: isNum(d.stake_pct) ? `${d.stake_pct}%` : null,
-      evEbitda: isNum(d.ev_ebitda) ? `${d.ev_ebitda.toFixed(1)}x` : "—",
+      evEbitda: isNum(d.ev_ebitda) ? `${d.ev_ebitda.toFixed(1)}x` : "N/A",
     }))
 }
 

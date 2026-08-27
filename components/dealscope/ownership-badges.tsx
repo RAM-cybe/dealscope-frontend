@@ -9,7 +9,7 @@ import {
  * Native DealScope chip: PROM / PLG percents already on the company record.
  * Row variant matches pass-reason chips; header variant matches the NSE chip.
  * Elevated pledge (> 10%) uses the same accent border already used for
- * "good" reason chips — factual emphasis, not a warning product.
+ * "good" reason chips: factual emphasis, not a warning product.
  */
 export function OwnershipBadge({
   holding,
