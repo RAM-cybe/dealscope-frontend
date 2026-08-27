@@ -79,8 +79,8 @@ export function SectorIndustryFilter({
 
   return (
     <div ref={containerRef}>
-      {/* Sector pills -- unchanged */}
-      <div className="flex flex-wrap gap-2">
+      {/* Sector pills */}
+      <div className="flex flex-nowrap sm:flex-wrap items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
         {sectors.map((sector) => {
           const active = selectedSectors.includes(sector.name)
           return (
@@ -89,14 +89,14 @@ export function SectorIndustryFilter({
               onClick={() => onToggleSector(sector.name)}
               aria-pressed={active}
               className={cn(
-                "inline-flex items-baseline gap-2 border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all duration-200",
+                "inline-flex items-baseline gap-1.5 sm:gap-2 border px-2.5 sm:px-3 py-1 sm:py-1.5 font-mono text-[10px] sm:text-xs uppercase tracking-wider transition-all duration-150 shrink-0 cursor-pointer",
                 active
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                  ? "border-accent bg-accent/15 text-accent font-semibold shadow-xs"
+                  : "border-border/60 bg-card/30 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
               )}
             >
-              {sector.name}
-              <span className={cn("text-[11px]", active ? "text-accent/70" : "text-muted-foreground")}>
+              <span>{sector.name}</span>
+              <span className={cn("text-[9px] sm:text-[11px] tabular-nums", active ? "text-accent font-bold" : "text-muted-foreground")}>
                 {sector.count}
               </span>
             </button>
@@ -105,20 +105,20 @@ export function SectorIndustryFilter({
       </div>
 
       {/* Toggle + active-industry summary */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-3">
         <button
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           className={cn(
-            "inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-all duration-200",
+            "inline-flex items-center gap-2 border px-3 py-1.5 font-mono text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer",
             open || selectedCount > 0
-              ? "border-accent text-accent"
-              : "border-border/60 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+              ? "border-accent bg-accent/10 text-accent font-semibold"
+              : "border-border/60 bg-card/30 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
           )}
         >
           <span>Browse Industries</span>
           {selectedCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-accent text-accent-foreground text-[11px] leading-none">
+            <span className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-accent text-accent-foreground text-[10px] font-bold leading-none">
               {selectedCount}
             </span>
           )}

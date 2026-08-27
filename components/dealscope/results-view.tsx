@@ -100,12 +100,6 @@ export function ResultsView({
     setShowAll(false)
   }, [results])
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-      e.currentTarget.blur()
-    }
-  }
-
   const handleExportCsv = () => {
     if (results.length === 0) return
     const csv = buildCompsCsv(results, weights)
@@ -119,34 +113,35 @@ export function ResultsView({
   }
 
   return (
-    <section className="relative min-h-screen px-4 sm:px-6 md:px-12 py-12 md:py-20 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
-        <div>
+    <section className="relative min-h-screen px-4 sm:px-6 md:px-12 py-10 md:py-16 max-w-7xl mx-auto">
+      {/* Header Band */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 pb-6 mb-6 sm:mb-8 border-b border-border/40">
+        <div className="flex-1 min-w-0">
           {/* Eyebrow label doubles as the back control */}
           <button
             onClick={onBack}
-            className="font-mono text-xs uppercase tracking-[0.3em] text-accent hover:text-foreground transition-colors duration-200"
+            className="font-mono text-xs uppercase tracking-[0.25em] text-accent hover:text-foreground transition-colors duration-200 inline-flex items-center gap-1.5 cursor-pointer"
           >
             ← Back to Overview
           </button>
-          <h1 className="mt-4 font-[family-name:var(--font-bebas)] text-5xl md:text-7xl tracking-tight text-balance">
+          <h1 className="mt-2.5 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl lg:text-6xl tracking-tight text-balance text-foreground leading-none">
             {results.length.toLocaleString("en-IN")}{" "}
-            {results.length === 1 ? "company matches" : "companies match"}
+            {results.length === 1 ? "Company Matches" : "Companies Match"}
           </h1>
-          <p className="mt-2 font-mono text-xs text-muted-foreground">
+          <p className="mt-1.5 font-mono text-[11px] sm:text-xs text-muted-foreground">
             Ranked by sector composite score · Missing metrics excluded from weighting · Unclassified tickers not scored
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 self-start">
+        {/* Action Row: Desktop 1-row aligned; Mobile 3 equal buttons */}
+        <div className="grid grid-cols-3 sm:flex sm:flex-row items-center gap-2 sm:gap-2.5 shrink-0">
           <button
             onClick={onOpenFilters}
-            className="group inline-flex items-center gap-3 border border-border/80 bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
+            className="group inline-flex items-center justify-center gap-2 border border-border/80 bg-card/50 px-3 sm:px-4 py-2.5 font-mono text-[11px] sm:text-xs uppercase tracking-wider text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer min-h-[42px]"
           >
             <span>Filters</span>
             {activeFilters > 0 ? (
-              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none font-bold">
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-[10px] leading-none font-bold">
                 {activeFilters}
               </span>
             ) : (
@@ -156,9 +151,9 @@ export function ResultsView({
 
           <button
             onClick={onOpenWeights}
-            className="group inline-flex items-center gap-3 border border-border/80 bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
+            className="group inline-flex items-center justify-center gap-2 border border-border/80 bg-card/50 px-3 sm:px-4 py-2.5 font-mono text-[11px] sm:text-xs uppercase tracking-wider text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer min-h-[42px]"
           >
-            <span>Adjust Weights</span>
+            <span>Weights</span>
             <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
           </button>
 
@@ -167,15 +162,15 @@ export function ResultsView({
             onClick={handleExportCsv}
             disabled={results.length === 0}
             aria-label="Export current screened companies as CSV"
-            className="group inline-flex min-h-11 items-center gap-3 border border-border/80 bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+            className="group inline-flex items-center justify-center gap-2 border border-border/80 bg-card/50 px-3 sm:px-4 py-2.5 font-mono text-[11px] sm:text-xs uppercase tracking-wider text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 disabled:pointer-events-none disabled:opacity-40 cursor-pointer min-h-[42px]"
           >
-            <span>Export Comps (CSV)</span>
+            <span>Export CSV</span>
           </button>
         </div>
       </div>
 
       {/* Screening bar: natural-language query, active-filter chips, live count */}
-      <div className="mb-8 max-w-3xl">
+      <div className="mb-5 sm:mb-6 w-full max-w-4xl">
         <ScreenBar
           query={query}
           onQueryChange={onQueryChange}
@@ -191,19 +186,16 @@ export function ResultsView({
         />
       </div>
 
-      {/* Example screens, compact on this view */}
-      <div className="mb-10">
-        <span className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-          Example Screens
+      {/* Example screens, compact ribbon on this view */}
+      <div className="mb-4 sm:mb-6">
+        <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-muted-foreground block mb-2">
+          Preset Screens
         </span>
-        <div className="mt-3">
-          <ExampleScreens screens={screens} onApply={onApplyScreen} variant="pills" />
-        </div>
+        <ExampleScreens screens={screens} onApply={onApplyScreen} variant="pills" />
       </div>
 
-      {/* Sector + industry filter -- both levels visible together, no click
-          on a sector pill required to see what industries exist under it. */}
-      <div className="mb-12">
+      {/* Sector + industry filter */}
+      <div className="mb-6 sm:mb-8">
         <SectorIndustryFilter
           sectors={sectors}
           selectedSectors={selectedSectors}
@@ -218,7 +210,7 @@ export function ResultsView({
 
       {/* Results list */}
       {results.length === 0 ? (
-        <div className="border border-border/40 p-16 text-center">
+        <div className="border border-border/40 p-12 sm:p-16 text-center bg-card/20">
           <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
             No companies match all active filters
           </p>
@@ -229,14 +221,14 @@ export function ResultsView({
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={onClearAll}
-              className="inline-flex items-center gap-2 border border-accent/60 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 transition-all duration-200"
+              className="inline-flex items-center gap-2 border border-accent/60 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 transition-all duration-200 cursor-pointer"
             >
               Clear all filters
             </button>
             {activeFilters > 0 && (
               <button
                 onClick={onOpenFilters}
-                className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200 cursor-pointer"
               >
                 Adjust filters ({activeFilters})
               </button>
@@ -259,10 +251,10 @@ export function ResultsView({
       )}
 
       {!showAll && results.length > RENDER_CAP && (
-        <div className="mt-8">
+        <div className="mt-8 text-center sm:text-left">
           <button
             onClick={() => setShowAll(true)}
-            className="border border-border px-6 py-3 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+            className="border border-border bg-card/40 px-6 py-3 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200 cursor-pointer"
           >
             Show all {results.length} results
           </button>
@@ -270,7 +262,7 @@ export function ResultsView({
       )}
 
       {/* Footer */}
-      <div className="mt-16 flex items-center justify-end">
+      <div className="mt-12 sm:mt-16 flex items-center justify-end">
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           {showAll ? "Full universe shown" : `Showing top ${Math.min(RENDER_CAP, results.length)} of ${results.length}`}
         </span>
@@ -296,57 +288,60 @@ function ResultRow({
 
   return (
     <motion.article
-      // Opacity only, no y-drift, no stagger past the first few rows. A y
-      // translate on 60 rows forces layout work every frame; a staggered
-      // entrance on every re-screen made successive searches feel laggy.
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: Math.min(index, 6) * 0.015, duration: 0.15, ease: "easeOut" }}
     >
       <button
         onClick={onSelect}
-        className="group w-full text-left border-t border-border/40 last:border-b hover:bg-accent/5 transition-colors duration-300 py-6 px-2 md:px-4 flex items-center gap-4 md:gap-8"
+        className="group w-full text-left border-t border-border/40 last:border-b hover:bg-accent/5 transition-colors duration-200 py-4 sm:py-5 px-2 sm:px-4 flex items-start sm:items-center gap-3.5 sm:gap-6 cursor-pointer"
       >
         {/* Index */}
-        <span className="hidden md:block font-mono text-xs text-muted-foreground w-8 shrink-0">
+        <span className="hidden md:block font-mono text-xs text-muted-foreground/60 w-7 shrink-0 tabular-nums">
           {String(index + 1).padStart(2, "0")}
         </span>
 
         {/* Score ring */}
-        <ScoreRing score={score} size={56} strokeWidth={2} className="shrink-0" />
+        <div className="shrink-0 pt-0.5 sm:pt-0">
+          <ScoreRing score={score} size={46} strokeWidth={2.5} className="shrink-0" />
+        </div>
 
-        {/* Name + sector */}
+        {/* Name + sector + metadata */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <h3 className="font-[family-name:var(--font-bebas)] text-2xl md:text-3xl tracking-tight group-hover:text-accent transition-colors duration-300 text-pretty">
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <h3 className="font-[family-name:var(--font-bebas)] text-xl sm:text-2xl md:text-3xl tracking-tight group-hover:text-accent transition-colors duration-200 text-foreground break-words">
               {company.name}
             </h3>
-            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground/80 shrink-0">
               {company.ticker}
             </span>
             <OwnershipBadge
               holding={company.raw.promoterHolding}
               pledge={company.raw.promoterPledge}
-              className="self-center"
+              className="self-center shrink-0"
             />
           </div>
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
-            {company.sector}
-          </span>
 
-          {/* Why this company passed -- one chip per active constraint it
-              satisfied. Derived only from constraints that are actually
-              applied, so a chip is always a true statement about why this row
-              is in this list, never a generic compliment. */}
+          <div className="mt-0.5 font-mono text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground/70 flex flex-wrap items-center gap-1.5">
+            <span>{company.sector}</span>
+            {company.industry && (
+              <>
+                <span className="text-border">·</span>
+                <span className="truncate max-w-[200px] sm:max-w-none">{company.industry}</span>
+              </>
+            )}
+          </div>
+
+          {/* Why this company passed */}
           {reasons.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-1.5 flex flex-wrap gap-1">
               {reasons.map((r) => (
                 <span
                   key={r.label}
                   className={cn(
-                    "inline-flex items-center border px-2 py-1 font-mono text-xs uppercase tracking-wider",
+                    "inline-flex items-center border px-1.5 py-0.5 font-mono text-[9px] sm:text-[10px] uppercase tracking-wider",
                     r.tone === "good"
-                      ? "border-accent/40 text-accent/90"
+                      ? "border-accent/40 text-accent/90 bg-accent/5"
                       : "border-border/60 text-muted-foreground",
                   )}
                 >
@@ -356,10 +351,8 @@ function ResultRow({
             </div>
           )}
 
-          {/* Phone/tablet: metrics sat behind `hidden lg:grid` so a 768px
-              row was name + ring only. Keep the desktop 4-up, and show the
-              same four figures under the name below lg. */}
-          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 lg:hidden">
+          {/* Mobile / tablet metrics 2x2 */}
+          <div className="mt-2.5 pt-2 border-t border-border/20 grid grid-cols-2 sm:grid-cols-4 gap-2 lg:hidden">
             <Metric label="Revenue" value={company.metrics.revenue} />
             <Metric label="Margin" value={company.metrics.ebitdaMargin} />
             <Metric label="ROCE" value={company.metrics.roce} />
@@ -367,26 +360,26 @@ function ResultRow({
           </div>
         </div>
 
-        {/* Metrics */}
-        <div className="hidden lg:grid grid-cols-4 gap-8 shrink-0">
-          <Metric label="Revenue" value={company.metrics.revenue} />
-          <Metric label="Margin" value={company.metrics.ebitdaMargin} />
-          <Metric label="ROCE" value={company.metrics.roce} />
-          <Metric label="Debt" value={company.metrics.totalDebt} />
+        {/* Desktop 4-col Metrics */}
+        <div className="hidden lg:grid grid-cols-4 gap-6 shrink-0 text-right">
+          <Metric label="Revenue" value={company.metrics.revenue} align="right" />
+          <Metric label="Margin" value={company.metrics.ebitdaMargin} align="right" />
+          <Metric label="ROCE" value={company.metrics.roce} align="right" />
+          <Metric label="Debt" value={company.metrics.totalDebt} align="right" />
         </div>
 
         {/* Chevron */}
-        <BitmapChevron className="shrink-0 text-muted-foreground group-hover:text-accent transition-all duration-[400ms] group-hover:rotate-45" />
+        <BitmapChevron className="shrink-0 text-muted-foreground group-hover:text-accent transition-all duration-300 group-hover:rotate-45 self-center" />
       </button>
     </motion.article>
   )
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, align = "left" }: { label: string; value: string; align?: "left" | "right" }) {
   return (
-    <div className="min-w-0 lg:w-24">
-      <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
-      <span className="block mt-1 font-mono text-xs text-foreground">{value}</span>
+    <div className={cn("min-w-0", align === "right" ? "text-right w-20 xl:w-24" : "text-left")}>
+      <span className="block font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">{label}</span>
+      <span className="block mt-0.5 font-mono text-xs text-foreground font-medium tabular-nums">{value}</span>
     </div>
   )
 }

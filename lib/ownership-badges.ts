@@ -1,5 +1,5 @@
 // Factual promoter / pledge readout for results rows and the tear-sheet
-// header. Uses the numbers already on Company.raw — never invents a 0 for a
+// header. Uses the numbers already on Company.raw: never invents a 0 for a
 // missing value, and never hides a real 0. Compact chip copy only; no
 // buy/sell/safe language.
 

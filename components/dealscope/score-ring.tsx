@@ -76,7 +76,7 @@ export function ScoreRing({
             className="font-[family-name:var(--font-bebas)] leading-none text-foreground"
             style={{ fontSize: size * 0.32 }}
           >
-            {hasScore ? score : "—"}
+            {hasScore ? score : "N/A"}
           </motion.span>
         </div>
       )}

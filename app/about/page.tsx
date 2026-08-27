@@ -4,12 +4,11 @@ import { Linkedin, Mail, ArrowUpRight } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { FUNDAMENTALS_AS_OF, PRICES_AS_OF } from "@/components/dealscope/data-freshness"
 import datasetMeta from "@/data/dataset-meta.json"
-import { SectorQuartileExplorer } from "@/components/about/sector-quartile-explorer"
 
 export const metadata: Metadata = {
   title: "About & Methodology: DealScope",
   description:
-    "How DealScope screens 2,381 NSE-listed companies for acquisition fit: sector-relative percentile scoring, listed-peer trading multiple valuation bands, and data governance.",
+    "How DealScope screens NSE-listed companies for acquisition fit: sector-relative percentile scoring, listed-peer trading multiple valuation bands, and data governance.",
 }
 
 function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -49,7 +48,7 @@ export default function AboutPage() {
           </h1>
           <p className="mt-3 font-sans text-sm sm:text-base leading-relaxed text-foreground/90 text-pretty">
             An open, login-free acquisition screening workbench for NSE-listed Indian companies.
-            Evaluates 2,381 equities against empirical sector distributions and anchors indicative trading multiple valuation ranges.
+            Ranks companies within their sector peer distributions and anchors indicative trading multiple valuation ranges.
           </p>
 
           {/* 2. Built by Ram + LinkedIn + Email */}
@@ -65,12 +64,12 @@ export default function AboutPage() {
                 Built to make Indian public company comps and screening transparent, sector-relative, and accessible.
               </p>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 shrink-0">
               <a
                 href="https://www.linkedin.com/in/ramsuthakaran-vp-778b4731b/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 border border-border/60 bg-card/40 hover:border-accent hover:text-accent px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-foreground font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 border border-border/60 bg-card/40 hover:border-accent hover:text-accent px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-foreground font-medium transition-colors min-h-[44px] sm:min-h-0"
               >
                 <Linkedin className="w-3.5 h-3.5 text-accent" />
                 <span>LinkedIn</span>
@@ -78,7 +77,7 @@ export default function AboutPage() {
               </a>
               <a
                 href="mailto:ramsuthakaran.vp@gmail.com"
-                className="inline-flex items-center gap-1.5 border border-border/60 bg-card/40 hover:border-accent hover:text-accent px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-foreground font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 border border-border/60 bg-card/40 hover:border-accent hover:text-accent px-3.5 py-2 font-mono text-xs uppercase tracking-wider text-foreground font-medium transition-colors min-h-[44px] sm:min-h-0"
               >
                 <Mail className="w-3.5 h-3.5 text-accent" />
                 <span>Email</span>
@@ -86,55 +85,44 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Clean 4-Stat Telemetry Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-5 font-mono text-xs">
+          {/* Clean 3-Stat Telemetry Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-5 font-mono text-xs">
             <div className="border border-border/30 bg-card/15 p-3">
-              <span className="text-muted-foreground block text-[10px] uppercase tracking-wider">Universe Scope</span>
-              <span className="text-foreground font-bold text-sm sm:text-base mt-0.5 block tabular-nums">
-                {datasetMeta.universe_size.toLocaleString("en-IN")} NSE Equities
+              <span className="text-muted-foreground block text-[10px] uppercase tracking-wider">Prices as of</span>
+              <span className="text-foreground font-bold text-sm sm:text-base mt-0.5 block">
+                {PRICES_AS_OF}
               </span>
             </div>
             <div className="border border-border/30 bg-card/15 p-3">
-              <span className="text-muted-foreground block text-[10px] uppercase tracking-wider">Taxonomy</span>
+              <span className="text-muted-foreground block text-[10px] uppercase tracking-wider">Fundamentals as of</span>
               <span className="text-foreground font-bold text-sm sm:text-base mt-0.5 block">
-                13 Sectors
+                {FUNDAMENTALS_AS_OF}
               </span>
             </div>
             <div className="border border-border/30 bg-card/15 p-3">
               <span className="text-muted-foreground block text-[10px] uppercase tracking-wider">Precedent Deals</span>
               <span className="text-accent font-bold text-sm sm:text-base mt-0.5 block tabular-nums">
-                {datasetMeta.deal_count.toLocaleString("en-IN")} Comps
-              </span>
-            </div>
-            <div className="border border-border/30 bg-card/15 p-3">
-              <span className="text-muted-foreground block text-[10px] uppercase tracking-wider">Prices Updated</span>
-              <span className="text-foreground font-bold text-sm sm:text-base mt-0.5 block">
-                {PRICES_AS_OF}
+                {datasetMeta.deal_count.toLocaleString("en-IN")} Indian Deals
               </span>
             </div>
           </div>
         </div>
 
-        {/* Dossier Body */}
+        {/* Body Content */}
         <div className="space-y-10 md:space-y-12 mt-8">
 
-          {/* 3. Mission & Positioning */}
+          {/* 1. Mission & Positioning */}
           <section id="mission">
             <SectionHeading
-              title="Mission & Positioning"
+              title="01 / Mission & Positioning"
               subtitle="Why sector-relative ranking matters"
             />
             <div className="space-y-3 font-sans text-sm leading-relaxed text-foreground/90 text-pretty">
               <p>
-                In the Indian financial ecosystem, tools are typically optimized for bottom-up fundamental equity research.
-                Platforms like <strong>Screener.in</strong> excel at deep 10-year statement inspection and custom financial queries for public investors.
+                In India, most screening tools are designed for general equity research with flat market-wide cutoffs (such as EBITDA margin &gt; 15% or ROCE &gt; 15%). That cross-compares unrelated business models: it favors asset-light software firms while penalizing capital-efficient manufacturers where an 11% ROCE is top-tier.
               </p>
               <p>
-                However, M&amp;A corporate development teams, private equity scouts, and transaction advisors face a different challenge: <strong>top-down sector triage</strong>.
-                Screening across 2,381 companies using flat market-wide cutoffs (e.g. EBITDA margin &gt; 15% or ROCE &gt; 15%) systematically distorts sector realities: it overvalues asset-light software firms while penalizing capital-efficient leaders in industrials, auto ancillaries, and manufacturing where an 11% ROCE is top-decile performance.
-              </p>
-              <p>
-                DealScope eliminates this distortion by benchmarking each company strictly against its true 13-sector peer cohort.
+                DealScope solves this by scoring every company strictly against its operating sector peers. An 85 score means 85th percentile within that sector cohort.
               </p>
             </div>
 
@@ -142,20 +130,20 @@ export default function AboutPage() {
               <div className="border border-border/40 bg-card/15 p-4 flex flex-col justify-between">
                 <div>
                   <div className="text-muted-foreground uppercase font-semibold text-xs pb-2 mb-2.5 border-b border-border/20">
-                    Fundamental Equity Screeners
+                    General Equity Screeners
                   </div>
                   <ul className="space-y-2 text-muted-foreground text-xs leading-relaxed">
                     <li className="flex items-start gap-2">
                       <span className="text-muted-foreground/60">•</span>
-                      <span>Single market-wide cutoffs cross-compare heterogeneous sectors.</span>
+                      <span>Single market-wide cutoffs cross-compare unrelated sectors.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-muted-foreground/60">•</span>
-                      <span>Outputs filtered metric tables without transaction or trading valuation step-downs.</span>
+                      <span>Raw metric tables without sector-relative peer context.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-muted-foreground/60">•</span>
-                      <span>Optimized for portfolio managers &amp; retail equity research.</span>
+                      <span>Optimized for portfolio managers and retail research.</span>
                     </li>
                   </ul>
                 </div>
@@ -169,15 +157,15 @@ export default function AboutPage() {
                   <ul className="space-y-2 text-foreground/90 text-xs leading-relaxed">
                     <li className="flex items-start gap-2">
                       <span className="text-accent">•</span>
-                      <span>Percentile ranks evaluated strictly within 13 sector cohorts.</span>
+                      <span>Percentile ranks evaluated strictly within sector cohorts.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent">•</span>
-                      <span>Attaches liquid-peer EV/EBITDA and P/E step-down valuation bridges.</span>
+                      <span>Attaches listed-peer EV/EBITDA and P/E valuation bands.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent">•</span>
-                      <span>Zero data imputation: missing metrics stay missing (shown as N/A).</span>
+                      <span>Zero missing-data imputation: missing metrics are skipped, not zeroed.</span>
                     </li>
                   </ul>
                 </div>
@@ -185,15 +173,15 @@ export default function AboutPage() {
             </div>
           </section>
 
-          {/* 4. Universe & Coverage */}
+          {/* 2. Universe & Coverage */}
           <section id="universe" className="pt-8 border-t border-border/30">
             <SectionHeading
-              title="Universe & Coverage"
-              subtitle="2,381 NSE companies across 13 core sectors"
+              title="02 / Universe & Coverage"
+              subtitle="All active NSE-listed companies across 13 operating sectors"
             />
             <div className="space-y-3 font-sans text-sm leading-relaxed text-foreground/90 text-pretty">
               <p>
-                DealScope covers <strong className="text-foreground font-semibold">2,381 active NSE-listed companies</strong>.
+                DealScope covers all active NSE-listed equities.
                 Market capitalization and share prices refresh daily after market close (<strong className="text-foreground font-semibold">{PRICES_AS_OF}</strong>).
                 Fundamentals reflect trailing quarterly and annual filings (<strong className="text-foreground font-semibold">{FUNDAMENTALS_AS_OF}</strong>).
               </p>
@@ -204,11 +192,11 @@ export default function AboutPage() {
             </div>
           </section>
 
-          {/* 5. Scoring Engine + Formulas */}
+          {/* 3. Scoring Engine + Formulas */}
           <section id="scoring" className="pt-8 border-t border-border/30">
             <SectionHeading
-              title="Scoring Engine"
-              subtitle="0–100 sector-relative composite score"
+              title="03 / Scoring Engine"
+              subtitle="0 to 100 sector-relative composite score"
             />
             <div className="space-y-2.5 font-sans text-sm leading-relaxed text-foreground/90 text-pretty">
               <p>
@@ -217,7 +205,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* Formula Block - Clean & Compact */}
+            {/* Formula Block */}
             <div className="border border-border/40 bg-card/25 p-3.5 sm:p-4 my-3.5 font-mono">
               <div className="text-foreground font-semibold text-sm sm:text-base tracking-wide">
                 Composite Score = Σ(wᵢ × Percentileᵢ) / Σ(w_available)
@@ -227,7 +215,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* 4 Factor Cards - Clean & Compact 2x2 */}
+            {/* 4 Factor Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-3.5 font-mono">
               <div className="border border-border/30 bg-card/15 p-3">
                 <div className="flex justify-between items-baseline text-foreground font-semibold text-xs sm:text-sm mb-0.5">
@@ -245,7 +233,7 @@ export default function AboutPage() {
                   <span className="text-accent text-[10px]">w = 25%</span>
                 </div>
                 <p className="text-muted-foreground text-[11px] sm:text-xs leading-relaxed">
-                  Operating cash profitability (EBITDA / Revenue).
+                  Operating profitability (EBITDA / Revenue).
                 </p>
               </div>
 
@@ -261,7 +249,7 @@ export default function AboutPage() {
 
               <div className="border border-border/30 bg-card/15 p-3">
                 <div className="flex justify-between items-baseline text-foreground font-semibold text-xs sm:text-sm mb-0.5">
-                  <span>04 / Leverage (Inverted)</span>
+                  <span>04 / Debt Health</span>
                   <span className="text-accent text-[10px]">w = 25%</span>
                 </div>
                 <p className="text-muted-foreground text-[11px] sm:text-xs leading-relaxed">
@@ -269,17 +257,12 @@ export default function AboutPage() {
                 </p>
               </div>
             </div>
-
-            {/* Interactive Sector Quartile Atlas */}
-            <div className="mt-5">
-              <SectorQuartileExplorer />
-            </div>
           </section>
 
-          {/* 6. Valuation Methodology Simplified */}
+          {/* 4. Valuation Methodology */}
           <section id="valuation" className="pt-8 border-t border-border/30">
             <SectionHeading
-              title="Valuation Methodology"
+              title="04 / Valuation Methodology"
               subtitle="Indicative trading multiple ranges"
             />
             <div className="space-y-3 font-sans text-sm leading-relaxed text-foreground/90 text-pretty">
@@ -298,7 +281,7 @@ export default function AboutPage() {
                   <div>• Implied EV = EBITDA × [Sector P25–P75 EV/EBITDA]</div>
                   <div>• Implied Equity = Implied EV − Total Debt + Cash</div>
                   <div className="text-muted-foreground text-[11px] pt-1.5 border-t border-border/20">
-                    If Debt &gt; EV, equity value is floored at ₹0 (`[DEBT OVERHANG]`).
+                    If Debt &gt; EV, equity value is floored at ₹0 (debt overhang).
                   </div>
                 </div>
               </div>
@@ -322,11 +305,11 @@ export default function AboutPage() {
             </p>
           </section>
 
-          {/* 7. Cap Table / Promoter / Pledge / Float */}
+          {/* 5. Cap Table & Float */}
           <section id="governance" className="pt-8 border-t border-border/30">
             <SectionHeading
-              title="Cap Table & Float Telemetry"
-              subtitle="Promoter holding, encumbrances & public float"
+              title="05 / Cap Table & Float"
+              subtitle="Promoter holding, encumbrances and public float"
             />
             <div className="space-y-3 font-sans text-sm leading-relaxed text-foreground/90 text-pretty">
               <p>
@@ -336,6 +319,9 @@ export default function AboutPage() {
             </div>
 
             <div className="border border-border/30 bg-card/20 p-4 sm:p-5 my-4 font-mono text-xs">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-2">
+                Illustrative Example
+              </div>
               <div className="grid grid-cols-3 gap-3 mb-3.5">
                 <div>
                   <span className="text-muted-foreground text-[10px] uppercase block">Promoter Stake</span>
@@ -360,22 +346,22 @@ export default function AboutPage() {
             </div>
           </section>
 
-          {/* 8. Short Disclaimer */}
+          {/* 6. Disclaimer */}
           <section id="disclaimer" className="pt-8 border-t border-border/30">
-            <SectionHeading title="Disclaimer" />
+            <SectionHeading title="06 / Disclaimer" />
             <div className="space-y-2.5 font-sans text-xs sm:text-sm text-muted-foreground/85 leading-relaxed text-pretty">
               <p>
                 DealScope is an independent quantitative screening tool. It is not SEBI-registered investment advice,
                 not a recommendation to buy or sell securities, and not an M&amp;A advisory fairness opinion.
-                All calculations are automated and deterministic from public filings. Always verify numbers independently.
+                All calculations are automated from public filings. Always verify numbers independently.
               </p>
             </div>
           </section>
 
-          {/* 9. Simple Close: Built by Ram · LinkedIn · Email */}
+          {/* Simple Close: Built by Ram · LinkedIn · Email */}
           <div className="pt-8 pb-4 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
             <div className="text-muted-foreground">
-              Built by <span className="text-foreground font-semibold">Ram</span> · Quantitative Screening for Indian Equities
+              Built by <span className="text-foreground font-semibold">Ram</span> · Listed India comps
             </div>
             <div className="flex items-center gap-3">
               <a

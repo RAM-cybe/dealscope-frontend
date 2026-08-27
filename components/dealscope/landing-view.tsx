@@ -61,7 +61,7 @@ export function LandingView({
   filters,
   onFiltersChange,
 }: LandingViewProps) {
-  const industryGroupsCount = industryGroups.reduce((acc, g) => acc + g.industries.length, 0)
+  const operatingSectorCount = sectors.filter((s) => s.name.toLowerCase() !== "unclassified").length
 
   const toggleIndustry = (name: string) => {
     const next = filters.industry.includes(name)
@@ -228,8 +228,8 @@ export function LandingView({
             </div>
             <span className="hidden sm:inline text-border">·</span>
             <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="uppercase tracking-wider text-muted-foreground/70 text-[9px] sm:text-[10px]">Taxonomy:</span>
-              <span className="text-foreground font-medium">{sectors.length} Sectors · {industryGroupsCount} Groups</span>
+              <span className="uppercase tracking-wider text-muted-foreground/70 text-[9px] sm:text-[10px]">Sectors:</span>
+              <span className="text-foreground font-medium">{operatingSectorCount} + Unclassified</span>
             </div>
             <span className="hidden sm:inline text-border">·</span>
             <div className="flex items-center gap-1.5 whitespace-nowrap">
@@ -246,9 +246,9 @@ export function LandingView({
       <section id="chapter-01" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-16">
           <div className="lg:col-span-5">
-            <SectionLabel index="01" label="SECTOR NORMALIZATION" />
+            <SectionLabel index="01" label="WHY SECTOR SCORES" />
             <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-balance text-foreground">
-              A 20% MARGIN MEANS NOTHING UNTIL YOU KNOW THE SECTOR.
+              SCORE IT AGAINST ITS OWN SECTOR
             </h2>
             <p className="mt-2 sm:mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
               Percentile scoring against direct operating peers
@@ -257,12 +257,17 @@ export function LandingView({
           <div className="lg:col-span-7 flex flex-col gap-4 sm:gap-5 font-sans text-sm sm:text-base md:text-lg leading-relaxed text-foreground/90">
             <RevealItem>
               <p>
-                Software prints fat margins. A good factory does not. Ranking every NSE name on one raw list hides the factory and crowns the software company.
+                DealScope is a free screener for NSE-listed Indian companies. You search a name or a thesis. You get a sector score, listed-peer multiples, and the deals in that sector. No login.
               </p>
             </RevealItem>
-            <RevealItem delay={0.06}>
+            <RevealItem delay={0.04}>
               <p className="text-muted-foreground">
-                DealScope scores each name against its own sector. An 85 means 85th percentile among peers, not among all of India.
+                A 15% margin is ordinary in software and excellent in a factory. A single India-wide cutoff cannot tell those apart.
+              </p>
+            </RevealItem>
+            <RevealItem delay={0.08}>
+              <p className="text-muted-foreground">
+                DealScope ranks each company inside its sector. 85 means 85th percentile among peers.
               </p>
             </RevealItem>
           </div>
@@ -275,25 +280,25 @@ export function LandingView({
       <section id="chapter-02" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-16">
           <div className="lg:col-span-5">
-            <SectionLabel index="02" label="SCORING ARCHITECTURE" />
+            <SectionLabel index="02" label="HOW SCORING WORKS" />
             <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-balance text-foreground">
-              FOUR NUMBERS. THEN A SCORE.
+              FOUR FACTORS, THEN ONE SCORE
             </h2>
             <p className="mt-2 sm:mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
-              Equal default weights with dynamic missing-data handling
+              Missing numbers are skipped, not zeroed
             </p>
           </div>
           <div className="lg:col-span-7 flex flex-col gap-5 sm:gap-6">
             <p className="font-sans text-sm sm:text-base md:text-lg leading-relaxed text-foreground/90">
-              Growth. EBITDA margin. ROCE. Debt. Each is a percentile inside the sector. Equal weights unless you move the sliders. If a number is missing, it is dropped. It is not scored as zero. Banks do not get a debt score.
+              Growth, EBITDA margin, ROCE, debt. Equal weights until you move the sliders. Missing factors are dropped. Banks skip debt.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { title: "Revenue growth", factor: "01", desc: "Top-line growth trajectory relative to sector peers." },
-                { title: "EBITDA margin", factor: "02", desc: "Operating profitability before non-cash and capital costs." },
-                { title: "ROCE", factor: "03", desc: "Operating profit generated per rupee of capital employed." },
-                { title: "Debt health", factor: "04", desc: "Net Debt to EBITDA ratio. Lower debt scores higher. Banks excluded." },
+                { title: "Revenue growth", factor: "01", desc: "Sales growth versus sector peers." },
+                { title: "EBITDA margin", factor: "02", desc: "EBITDA divided by sales, versus the sector." },
+                { title: "ROCE", factor: "03", desc: "Operating return on capital employed." },
+                { title: "Debt health", factor: "04", desc: "Net debt to EBITDA. Lower debt scores higher. Banks excluded." },
               ].map((f) => (
                 <div key={f.title} className="border border-border/60 bg-card/40 p-4 flex flex-col gap-1.5 transition-colors hover:border-accent/50">
                   <div className="flex items-center justify-between font-mono text-xs">
@@ -315,10 +320,10 @@ export function LandingView({
         <div className="max-w-5xl mx-auto">
           <SectionLabel index="03" label="PRESET SCREENS" />
           <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-foreground">
-            START WITH A THESIS. NOT A BLANK GRID.
+            READY-MADE SCREENS
           </h2>
           <p className="mt-2 sm:mt-3 max-w-2xl font-sans text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            Eight live screens. Click one. The list is the real universe, not a canned shortlist.
+            Click one. It runs on the live list.
           </p>
 
           <div className="mt-6 sm:mt-8">
@@ -327,7 +332,7 @@ export function LandingView({
 
           <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border/40 pt-6">
             <span className="font-mono text-xs text-muted-foreground">
-              Click any screen to execute instantly, or build custom criteria above
+              Click a screen, or type your own above.
             </span>
             <button
               onClick={onRun}
@@ -347,10 +352,10 @@ export function LandingView({
         <div className="max-w-5xl mx-auto">
           <SectionLabel index="04" label="TAXONOMY &amp; COVERAGE" />
           <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-foreground">
-            {sectors.length} SECTORS. {industryGroupsCount} GROUPS.
+            {operatingSectorCount} SECTORS. INDUSTRY GROUPS UNDER EACH.
           </h2>
           <p className="mt-2 sm:mt-3 max-w-2xl font-sans text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            A port and a packaging mill are not peers. Every listed name sits in one sector and one industry group. Unclassified names stay visible and unscored against a fake peer set.
+            A port and a packaging mill are not peers. Every listed name sits in one sector and one industry group. Unclassified names stay listed and are not scored against a made-up sector.
           </p>
 
           <div className="mt-6 sm:mt-8 border border-border/60 bg-card/20 p-4 sm:p-6 md:p-8">
@@ -376,21 +381,22 @@ export function LandingView({
           <div className="lg:col-span-5">
             <SectionLabel index="05" label="PRECEDENT TRANSACTIONS" />
             <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-balance text-foreground">
-              {dealCount.toLocaleString("en-IN")} INDIAN DEALS. KEPT NEXT TO THE TAPE, NOT MIXED INTO IT.
+              {dealCount.toLocaleString("en-IN")} INDIAN DEALS, KEPT SEPARATE FROM THE TAPE
             </h2>
             <p className="mt-2 sm:mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
-              Historical M&amp;A transaction benchmarks (2006 to 2025)
+              <span className="whitespace-nowrap">Historical M&amp;A transaction benchmarks</span>{" "}
+              <span className="whitespace-nowrap">(2006 to 2025)</span>
             </p>
           </div>
           <div className="lg:col-span-7 flex flex-col gap-4 sm:gap-5 font-sans text-sm sm:text-base md:text-lg leading-relaxed text-foreground/90">
             <RevealItem>
               <p>
-                Tear sheets show listed trading multiples and historical deals in two different tables. Trading multiples are the public tape. Deals are what buyers paid. We do not blend them into one fake number. We do not invent multiples.
+                Trading multiples are what the market pays today. The deal table is what buyers paid. Two tables. No blended fantasy multiple.
               </p>
             </RevealItem>
             <div className="mt-2 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-4 font-mono text-xs text-muted-foreground border border-border/60 bg-card/30 p-3 sm:p-4">
               <div>
-                <span className="text-foreground font-semibold">{sectors.length}</span> sectors
+                <span className="text-foreground font-semibold">{operatingSectorCount}</span> sectors
               </div>
               <span className="text-border">·</span>
               <div>

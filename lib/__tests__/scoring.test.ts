@@ -1,6 +1,6 @@
 /**
  * Client-side score blend: missing factors are dropped and the rest reweighted.
- * Matches Python scoring.py — missing is never zero.
+ * Matches Python scoring.py: missing is never zero.
  *
  * Run: npx tsx lib/__tests__/scoring.test.ts
  * Or:  npm test
