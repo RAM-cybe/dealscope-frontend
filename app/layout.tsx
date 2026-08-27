@@ -6,6 +6,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
 import { DataFreshness } from "@/components/dealscope/data-freshness"
 import { StaleDataBanner } from "@/components/dealscope/stale-data-banner"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
 import "./globals.css"
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -26,8 +28,6 @@ const SITE_DESCRIPTION =
   "Screen 2,381 NSE-listed Indian companies for acquisition fit. Sector-relative scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from listed-peer trading multiples. Free, no account required."
 
 export const metadata: Metadata = {
-  // metadataBase makes every relative image/URL below absolute, which is what
-  // link-preview crawlers need -- a relative og:image is simply dropped.
   metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
@@ -37,10 +37,6 @@ export const metadata: Metadata = {
     "M&A screening", "NSE", "Indian equities", "acquisition targets",
     "stock screener", "sector-relative scoring", "valuation",
   ],
-  // Open Graph / Twitter were absent entirely, so sharing the link anywhere --
-  // LinkedIn especially -- produced a bare URL with no title, description or
-  // card. For a tool whose whole distribution model is being shared, that was
-  // the single biggest gap on the site.
   openGraph: {
     type: "website",
     url: SITE_URL,
@@ -81,41 +77,30 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark bg-background">
+    <html lang="en" className="dark bg-background" suppressHydrationWarning>
       <body
         className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} font-sans antialiased overflow-x-hidden`}
       >
-        <div className="noise-overlay" aria-hidden="true" />
-        {/* Real header bar, not a floating chip.
-            This was `position: fixed` with a semi-transparent blurred
-            background and no reserved space anywhere in the layout, so it
-            floated over whatever scrolled beneath it -- confirmed overlapping
-            "Adjust Weights" on the results page, industry pill rows, homepage
-            prose, and the About page's own content.
-            `sticky` (not `fixed`) is the fix: a sticky element stays in normal
-            document flow, so it occupies its own 56px of height and pushes all
-            page content down by exactly that much. Nothing can render
-            underneath it -- that's a structural property of the layout now,
-            not per-page padding that the next new page could forget to add.
-            Background is fully opaque (`bg-background`, no backdrop-blur) so
-            content scrolling under it is hidden rather than showing through.
-            z-40 keeps it above page content but below the filters/weights
-            drawers (z-[60]/z-[70]) and the loading screen (z-[200]), so a
-            modal still covers it, as it should. */}
-        <header className="sticky top-0 z-40 w-full bg-background border-b border-border/60">
-          <div className="flex min-h-14 items-center justify-between gap-4 pl-6 pr-6 md:pr-12 py-2">
-            <DataFreshness />
-            <Link
-              href="/about"
-              className="inline-flex shrink-0 items-center border border-border/60 px-4 py-2 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground hover:text-accent hover:border-accent transition-colors duration-200"
-            >
-              About
-            </Link>
-          </div>
-        </header>
-        <StaleDataBanner />
-        <SmoothScroll>{children}</SmoothScroll>
-        <Analytics />
+        <ThemeProvider>
+          <div className="noise-overlay" aria-hidden="true" />
+          <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-xs border-b border-border/60 transition-colors">
+            <div className="flex min-h-14 items-center justify-between gap-4 pl-6 pr-6 md:pr-12 py-2">
+              <DataFreshness />
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <Link
+                  href="/about"
+                  className="inline-flex shrink-0 items-center border border-border/60 bg-card/30 px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground hover:border-accent hover:bg-accent/5 transition-colors duration-200"
+                >
+                  About
+                </Link>
+              </div>
+            </div>
+          </header>
+          <StaleDataBanner />
+          <SmoothScroll>{children}</SmoothScroll>
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )
