@@ -26,19 +26,30 @@ export function DataFreshness({
   return (
     <div
       className={cn(
-        "flex flex-col gap-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground leading-snug",
-        align === "end" && "sm:items-end sm:text-right",
+        "flex flex-wrap items-center gap-1.5 sm:gap-2 font-mono text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground",
+        align === "end" && "sm:justify-end",
         className,
       )}
       role="status"
-      aria-label={`Prices last updated ${PRICES_AS_OF}. Fundamentals last updated ${FUNDAMENTALS_AS_OF}.`}
+      aria-label={`NSE telemetry. Prices last updated ${PRICES_AS_OF}. Fundamentals last updated ${FUNDAMENTALS_AS_OF}.`}
     >
-      <span>
-        Prices <span className="text-foreground">{PRICES_AS_OF}</span>
-      </span>
-      <span>
-        Fundamentals <span className="text-foreground">{FUNDAMENTALS_AS_OF}</span>
-      </span>
+      {/* Live Market Session Badge */}
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-border/80 bg-card/60 text-foreground shadow-xs">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.7)]" />
+        <span className="font-semibold text-[10px] tracking-widest text-foreground">NSE LIVE</span>
+      </div>
+
+      {/* Prices Telemetry Chip */}
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-border/60 bg-card/30">
+        <span className="text-muted-foreground/80 text-[10px]">PRICES</span>
+        <span className="text-foreground font-semibold tabular-nums">{PRICES_AS_OF}</span>
+      </div>
+
+      {/* Fundamentals Telemetry Chip */}
+      <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 border border-border/60 bg-card/30">
+        <span className="text-muted-foreground/80 text-[10px]">FUNDAMENTALS</span>
+        <span className="text-foreground font-semibold tabular-nums">{FUNDAMENTALS_AS_OF}</span>
+      </div>
     </div>
   )
 }
