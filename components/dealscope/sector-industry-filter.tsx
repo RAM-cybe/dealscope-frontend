@@ -152,9 +152,9 @@ export function SectorIndustryFilter({
             />
           </div>
 
-          <div className="max-h-[22rem] overflow-y-auto px-4 py-5">
+          <div className="p-5 sm:p-6">
             {primary.length === 0 && secondary.length === 0 ? (
-              <p className="py-6 text-center font-mono text-[11px] text-muted-foreground">
+              <p className="py-6 text-center font-mono text-xs text-muted-foreground">
                 No industries match &quot;{query}&quot;
               </p>
             ) : (

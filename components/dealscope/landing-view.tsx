@@ -3,6 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { SlidersHorizontal, ArrowRight, Sparkles } from "lucide-react"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { SectorIndustryFilter } from "@/components/dealscope/sector-industry-filter"
@@ -11,6 +12,7 @@ import { ScreenBar } from "@/components/dealscope/screen-bar"
 import { ExampleScreens } from "@/components/dealscope/example-screens"
 import type { ScreenFilters, FilterChip } from "@/lib/screener"
 import type { ExampleScreen } from "@/lib/example-screens"
+import { cn } from "@/lib/utils"
 
 interface LandingViewProps {
   query: string
@@ -66,70 +68,48 @@ export function LandingView({
     onFiltersChange({ ...filters, industry: next })
   }
 
+  const hasActiveFilters =
+    activeFilterCount > 0 ||
+    selectedSectors.length > 0 ||
+    filters.industry.length > 0 ||
+    matchingCount !== totalCount
+
   return (
     <>
       {/* ---------------------------------------------------------------- */}
-      {/* HERO SECTION: Centered, Prestigious, Institutional Identity      */}
+      {/* HERO SECTION: Above-The-Fold Compact Command Center             */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative min-h-[90vh] flex flex-col justify-center items-center px-4 sm:px-6 md:px-12 py-16 md:py-24 border-b border-border/40">
+      <section className="relative flex flex-col justify-center items-center px-4 sm:px-6 md:px-12 pt-8 pb-12 md:pt-12 md:pb-16 border-b border-border/40">
         <AnimatedNoise opacity={0.02} />
 
-        <div className="w-full max-w-5xl mx-auto flex flex-col items-center text-center">
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Institutional Category Badge */}
           <motion.div
-            initial={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3.5 py-1.5 mb-6 font-mono text-[11px] uppercase tracking-[0.25em] text-accent"
+            transition={{ duration: 0.25 }}
+            className="inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3 py-1 mb-3 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-accent"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_6px_var(--accent)]" />
-            Institutional M&amp;A &amp; Equity Intelligence
+            Institutional M&amp;A &amp; Equity Workbench
           </motion.div>
 
-          {/* Rock-Solid Permanent Wordmark: Never glitches, flips, or scrambles */}
-          <h1 className="font-[family-name:var(--font-bebas)] text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tight text-foreground select-none leading-none">
+          {/* Rock-Solid Permanent Wordmark */}
+          <h1 className="font-[family-name:var(--font-bebas)] text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight text-foreground select-none leading-none">
             DEALSCOPE
           </h1>
 
-          {/* Authoritative Subtitle */}
-          <h2 className="mt-4 font-sans text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-foreground/90 max-w-3xl text-balance">
+          {/* Subtitle / Value Proposition */}
+          <p className="mt-2.5 font-sans text-sm sm:text-base md:text-lg text-foreground/90 font-medium tracking-tight max-w-2xl text-balance">
             Every NSE-listed company, ranked the way a deal team would.
-          </h2>
-
-          <p className="mt-4 max-w-2xl font-sans text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty">
-            DealScope scores every company against its direct sector peers — revenue growth, operating margin, 
-            ROCE, and balance sheet leverage — delivering true apples-to-apples comparability. Free and public. No login, no paywall.
           </p>
 
-          {/* Live Coverage & Freshness Telemetry Ribbon */}
+          {/* Monumental Command Omnibar */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="mt-8 w-full max-w-3xl flex flex-wrap items-center justify-center gap-4 sm:gap-8 border-y border-border/40 py-3 font-mono text-xs text-muted-foreground"
-          >
-            <div className="flex items-baseline gap-2">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Universe</span>
-              <span className="text-foreground font-semibold font-mono">{totalCount.toLocaleString("en-IN")} companies</span>
-            </div>
-            <span className="hidden sm:inline text-border/60">•</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Market Cap</span>
-              <span className="text-foreground font-semibold font-mono">₹4.6T Total Coverage</span>
-            </div>
-            <span className="hidden sm:inline text-border/60">•</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">M&amp;A Comps</span>
-              <span className="text-foreground font-semibold font-mono">{dealCount.toLocaleString("en-IN")} verified deals</span>
-            </div>
-          </motion.div>
-
-          {/* Command Search & Screen Box */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-            className="mt-10 w-full max-w-2xl text-left"
+            transition={{ duration: 0.3, delay: 0.05 }}
+            className="mt-6 w-full max-w-2xl text-left"
           >
             <ScreenBar
               query={query}
@@ -141,78 +121,111 @@ export function LandingView({
               matchCount={matchingCount}
               totalCount={totalCount}
               recognised={recognised}
+              placeholder="Search 2,381 NSE companies (e.g. &quot;TCS&quot;, &quot;Tata Motors&quot;) or screen..."
               trailing={
                 <button
+                  type="button"
                   onClick={onRun}
-                  className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-3 px-8 font-mono text-xs uppercase tracking-widest leading-none bg-accent/10 sm:bg-transparent text-foreground hover:text-accent hover:bg-accent/10 border-t sm:border-t-0 sm:border-l border-border/60 transition-colors duration-200 cursor-pointer"
+                  className="group inline-flex h-full w-full sm:w-auto items-center justify-center gap-2 px-7 font-mono text-xs uppercase tracking-widest leading-none bg-accent text-accent-foreground font-bold hover:bg-accent/90 transition-colors duration-200 cursor-pointer"
                 >
-                  <span>Run</span>
+                  <span>Screen ↵</span>
                   <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
                 </button>
               }
             />
           </motion.div>
 
-          {/* Secondary Action: Direct Screening Filter CTA */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="mt-6 flex flex-col sm:flex-row sm:items-center justify-center gap-4 w-full max-w-2xl"
-          >
+          {/* Direct Action Bar */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 w-full max-w-2xl">
             <button
               onClick={onOpenFilters}
-              className="group inline-flex items-center justify-center gap-3 border border-border/80 bg-card/60 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
+              className="group inline-flex items-center justify-center gap-2.5 border border-border/80 bg-card/60 px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer"
             >
-              <span>Screen Quantitative Filters</span>
-              {activeFilterCount > 0 ? (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-xs leading-none font-bold">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Quantitative Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-accent text-accent-foreground font-mono text-[10px] leading-none font-bold">
                   {activeFilterCount}
                 </span>
-              ) : (
-                <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
               )}
             </button>
 
-            {activeFilterCount > 0 ? (
+            {hasActiveFilters ? (
               <button
                 onClick={onRun}
-                className="group inline-flex items-center justify-center gap-2 font-mono text-xs text-muted-foreground hover:text-accent transition-colors duration-200 cursor-pointer"
+                className="group inline-flex items-center justify-center gap-2 border border-accent bg-accent text-accent-foreground px-5 py-2.5 font-mono text-xs uppercase tracking-wider font-bold hover:bg-accent/90 transition-all duration-200 cursor-pointer shadow-sm"
               >
-                <span className="text-foreground font-semibold">{matchingCount.toLocaleString("en-IN")}</span>
-                <span>match criteria — view results</span>
+                <span>View {matchingCount.toLocaleString("en-IN")} Matches</span>
                 <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
               </button>
             ) : (
-              <span className="font-mono text-xs text-muted-foreground/80 leading-relaxed text-center sm:text-left">
-                Filter by market cap, valuation multiples, margin, and promoter pledge without searching.
-              </span>
+              <button
+                onClick={onRun}
+                className="group inline-flex items-center justify-center gap-2 border border-border/60 bg-card/30 px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-border transition-all duration-200 cursor-pointer"
+              >
+                <span>View All {totalCount.toLocaleString("en-IN")} Equities</span>
+                <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
+              </button>
             )}
-          </motion.div>
+          </div>
 
-          {/* Sector & Industry Browser */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.25 }}
-            className="mt-14 w-full text-left"
-          >
-            <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border/40">
-              <span className="font-mono text-xs uppercase tracking-[0.25em] text-accent font-semibold">
-                Explore by Sector &amp; Industry
+          {/* Quick Multi-Select Sector Pills (Immediately in Hero!) */}
+          <div className="mt-5 w-full max-w-3xl pt-4 border-t border-border/40">
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Filter by Sector (multi-select):
               </span>
+              {selectedSectors.length > 0 && (
+                <button
+                  onClick={onClearAll}
+                  className="font-mono text-[10px] uppercase tracking-wider text-accent hover:underline cursor-pointer"
+                >
+                  Clear ({selectedSectors.length})
+                </button>
+              )}
             </div>
-            <SectorIndustryFilter
-              sectors={sectors}
-              selectedSectors={selectedSectors}
-              onToggleSector={onToggleSector}
-              industryGroups={industryGroups}
-              unclassifiedCount={unclassifiedCount}
-              selectedIndustries={filters.industry}
-              onToggleIndustry={toggleIndustry}
-              onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
-            />
-          </motion.div>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {sectors.map((sector) => {
+                const active = selectedSectors.includes(sector.name)
+                return (
+                  <button
+                    key={sector.name}
+                    onClick={() => onToggleSector(sector.name)}
+                    aria-pressed={active}
+                    className={cn(
+                      "inline-flex items-baseline gap-1.5 border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-all duration-150 cursor-pointer",
+                      active
+                        ? "border-accent bg-accent text-accent-foreground font-bold shadow-xs"
+                        : "border-border/60 bg-card/30 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                    )}
+                  >
+                    <span>{sector.name}</span>
+                    <span className={cn("text-[10px]", active ? "text-accent-foreground/80 font-normal" : "text-muted-foreground/70")}>
+                      {sector.count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Live Telemetry Ribbon */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-8 font-mono text-xs text-muted-foreground">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Coverage</span>
+              <span className="text-foreground font-semibold font-mono">{totalCount.toLocaleString("en-IN")} Equities</span>
+            </div>
+            <span className="text-border/60">•</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Valuation</span>
+              <span className="text-foreground font-semibold font-mono">₹4.6T Market Cap</span>
+            </div>
+            <span className="text-border/60">•</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">M&amp;A Database</span>
+              <span className="text-foreground font-semibold font-mono">{dealCount.toLocaleString("en-IN")} Comps</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -317,12 +330,40 @@ export function LandingView({
       </section>
 
       {/* ---------------------------------------------------------------- */}
-      {/* SECTION 04: Institutional M&A Comps Database                     */}
+      {/* SECTION 04: Taxonomy & Industry Explorer                         */}
+      {/* ---------------------------------------------------------------- */}
+      <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40">
+        <div className="max-w-5xl mx-auto">
+          <SectionLabel index="04" label="Taxonomy & Coverage" />
+          <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-foreground">
+            13 SECTORS · 124 INDUSTRY GROUPS
+          </h2>
+          <p className="mt-3 max-w-2xl font-sans text-sm text-muted-foreground leading-relaxed">
+            Every company belongs to a structured taxonomy with independent distribution curves. Select industries or filter by broad sector cohorts.
+          </p>
+
+          <div className="mt-8 border border-border/60 bg-card/20 p-6 md:p-8">
+            <SectorIndustryFilter
+              sectors={sectors}
+              selectedSectors={selectedSectors}
+              onToggleSector={onToggleSector}
+              industryGroups={industryGroups}
+              unclassifiedCount={unclassifiedCount}
+              selectedIndustries={filters.industry}
+              onToggleIndustry={toggleIndustry}
+              onClearIndustries={() => onFiltersChange({ ...filters, industry: [] })}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* SECTION 05: Institutional M&A Comps Database                     */}
       {/* ---------------------------------------------------------------- */}
       <section className="relative px-4 sm:px-6 md:px-12 py-20">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           <div className="lg:col-span-5">
-            <SectionLabel index="04" label="Transaction Benchmarks" />
+            <SectionLabel index="05" label="Transaction Benchmarks" />
             <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
               727 REAL M&amp;A DEALS
             </h2>

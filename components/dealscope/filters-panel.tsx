@@ -20,6 +20,8 @@ interface FiltersPanelProps {
   filters: BucketFilters
   onFiltersChange: (filters: BucketFilters) => void
   onClose: () => void
+  onApply?: () => void
+  matchCount?: number
   industryGroups: IndustryGroup[]
 }
 
@@ -34,7 +36,27 @@ const GROUPS: { index: string; label: string; fields: BucketFieldKey[] }[] = [
   { index: "03", label: "Risk", fields: ["debtLevel", "promoterPledge"] },
 ]
 
-export function FiltersPanel({ open, filters, onFiltersChange, onClose, industryGroups }: FiltersPanelProps) {
+export function FiltersPanel({
+  open,
+  filters,
+  onFiltersChange,
+  onClose,
+  onApply,
+  matchCount,
+  industryGroups,
+}: FiltersPanelProps) {
+  // Lock body scrolling when drawer is open to prevent double scrollbar behavior
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [open])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -54,7 +76,7 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden="true"
@@ -66,49 +88,47 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            // overscroll-contain stops native scroll chaining to the body when
-            // this panel reaches its scroll boundary; data-lenis-prevent tells
-            // the Lenis smooth-scroll to ignore wheel events that originate in
-            // the panel -- without it, Lenis captures the wheel and scrolls the
-            // company list behind the panel instead (the reported scroll trap).
             data-lenis-prevent
-            className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-background border-l border-border overflow-y-auto overscroll-contain"
+            className="fixed right-0 top-0 z-[70] h-full w-full max-w-lg bg-background border-l border-border flex flex-col shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Screening filters"
           >
-            <div className="p-8 md:p-10 flex flex-col min-h-full">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-                    Screening Constraints
-                  </span>
-                  <h2 className="mt-3 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
-                    FILTERS
-                  </h2>
-                </div>
-                <button
-                  onClick={onClose}
-                  aria-label="Close filters panel"
-                  className="border border-border px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
-                >
-                  ESC
-                </button>
+            {/* 1. Sticky Header */}
+            <div className="p-6 sm:p-8 border-b border-border/80 bg-background flex items-start justify-between shrink-0">
+              <div>
+                <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+                  Screening Constraints
+                </span>
+                <h2 className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl tracking-tight text-foreground">
+                  QUANTITATIVE FILTERS
+                </h2>
               </div>
+              <button
+                onClick={onClose}
+                aria-label="Close filters panel"
+                className="border border-border/80 px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200 cursor-pointer"
+              >
+                ESC ✕
+              </button>
+            </div>
 
-              <p className="mt-6 font-mono text-xs text-muted-foreground leading-relaxed">
-                Constrain the screened set by real financials — size, valuation, quality, growth and risk.
-                Pills accept several bands at once; segmented controls pick one. Fields left untouched
-                don&apos;t constrain. Filters decide which companies appear; weights decide how they rank.
+            {/* 2. Isolated Smooth Scrollable Body */}
+            <div
+              className="flex-1 overflow-y-auto p-6 sm:p-8 overscroll-contain space-y-10"
+              data-lenis-prevent
+            >
+              <p className="font-mono text-xs text-muted-foreground leading-relaxed">
+                Constrain the screened set by fundamental financials — size, valuation, quality, growth, and risk.
+                Pills accept several bands at once; segmented controls pick one. Fields left untouched don&apos;t constrain.
               </p>
 
               {/* Grouped bucket controls */}
-              <div className="mt-10 flex flex-col gap-12 flex-1">
+              <div className="flex flex-col gap-10">
                 {GROUPS.map((group) => (
                   <div key={group.index}>
                     <SectionLabel index={group.index} label={group.label} />
-                    <div className="mt-6 flex flex-col gap-8">
+                    <div className="mt-5 flex flex-col gap-7">
                       {group.fields.map((key) => (
                         <FieldControl
                           key={key}
@@ -121,12 +141,10 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
                   </div>
                 ))}
 
-                {/* Industry -- exact-match multi-select over ~123 raw values,
-                    too many for fixed pills, so this is search-to-narrow
-                    rather than the numeric fields' small fixed bucket set. */}
+                {/* Industry */}
                 <div>
-                  <SectionLabel index="04" label="Industry" />
-                  <div className="mt-6">
+                  <SectionLabel index="04" label="Industry Groups" />
+                  <div className="mt-5">
                     <IndustryFilterControl
                       industryGroups={industryGroups}
                       selected={filters.industry}
@@ -134,34 +152,37 @@ export function FiltersPanel({ open, filters, onFiltersChange, onClose, industry
                     />
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Active readout */}
-                <div className="border-t border-border/50 pt-6 flex items-baseline justify-between">
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Active Filters
-                  </span>
-                  <span className="font-[family-name:var(--font-bebas)] text-2xl tracking-tight text-accent">
-                    {activeCount}
-                  </span>
-                </div>
-                <p className="font-mono text-xs text-muted-foreground leading-relaxed -mt-4">
-                  A field only narrows the set once you pick at least one band; up to eight can be active.
-                </p>
+            {/* 3. Sticky Bottom Action Footer (Always Visible!) */}
+            <div className="p-4 sm:p-6 border-t border-border/80 bg-card/95 backdrop-blur-md flex items-center justify-between gap-4 shrink-0 shadow-lg">
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Active Filters
+                </span>
+                <span className="font-mono text-sm font-bold text-accent">
+                  {activeCount} Selected
+                </span>
               </div>
 
-              {/* Actions */}
-              <div className="mt-10 flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={onClose}
-                  className="flex-1 border border-border/80 bg-card/60 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 text-center cursor-pointer font-medium"
-                >
-                  <span>Apply Filters</span>
-                </button>
-                <button
+                  type="button"
                   onClick={() => onFiltersChange({ ...DEFAULT_BUCKET_FILTERS })}
-                  className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
+                  className="px-4 py-3 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onApply) onApply()
+                    else onClose()
+                  }}
+                  className="border border-accent bg-accent text-accent-foreground px-6 py-3 font-mono text-xs uppercase tracking-widest font-bold hover:bg-accent/90 transition-all cursor-pointer shadow-sm"
+                >
+                  {matchCount != null ? `View ${matchCount.toLocaleString("en-IN")} Matches ➔` : "Apply Filters"}
                 </button>
               </div>
             </div>

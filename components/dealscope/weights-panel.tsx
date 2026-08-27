@@ -12,6 +12,18 @@ interface WeightsPanelProps {
 }
 
 export function WeightsPanel({ open, weights, onWeightsChange, onClose }: WeightsPanelProps) {
+  // Lock body scrolling when drawer is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [open])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -31,7 +43,7 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden="true"
@@ -43,41 +55,42 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            // Same scroll-trap fix as the filters panel: keep Lenis from
-            // capturing wheel events over this overlay and scrolling the page
-            // behind it, and stop native scroll chaining at the panel boundary.
             data-lenis-prevent
-            className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-background border-l border-border overflow-y-auto overscroll-contain"
+            className="fixed right-0 top-0 z-[70] h-full w-full max-w-lg bg-background border-l border-border flex flex-col shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Weighting controls"
           >
-            <div className="p-8 md:p-10 flex flex-col min-h-full">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-                    Control Variables
-                  </span>
-                  <h2 className="mt-3 font-[family-name:var(--font-bebas)] text-4xl tracking-tight">
-                    FACTOR WEIGHTS
-                  </h2>
-                </div>
-                <button
-                  onClick={onClose}
-                  aria-label="Close weights panel"
-                  className="border border-border px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
-                >
-                  ESC
-                </button>
+            {/* Sticky Header */}
+            <div className="p-6 sm:p-8 border-b border-border/80 bg-background flex items-start justify-between shrink-0">
+              <div>
+                <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
+                  Control Variables
+                </span>
+                <h2 className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl tracking-tight text-foreground">
+                  FACTOR WEIGHTS
+                </h2>
               </div>
+              <button
+                onClick={onClose}
+                aria-label="Close weights panel"
+                className="border border-border/80 px-3 py-1.5 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200 cursor-pointer"
+              >
+                ESC ✕
+              </button>
+            </div>
 
-              <p className="mt-6 font-mono text-xs text-muted-foreground leading-relaxed">
-                Adjust the weight of each factor. Composite scores across the screened set recalculate in real time.
+            {/* Scrollable Body */}
+            <div
+              className="flex-1 overflow-y-auto p-6 sm:p-8 overscroll-contain space-y-8"
+              data-lenis-prevent
+            >
+              <p className="font-mono text-xs text-muted-foreground leading-relaxed">
+                Adjust the relative weight of each factor. Composite scores across the screened set recalculate in real time.
               </p>
 
               {/* Sliders */}
-              <div className="mt-10 flex flex-col gap-8 flex-1">
+              <div className="flex flex-col gap-7">
                 {FACTOR_LABELS.map((factor) => (
                   <WeightSlider
                     key={factor.key}
@@ -86,35 +99,41 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
                     onChange={(v) => onWeightsChange({ ...weights, [factor.key]: v })}
                   />
                 ))}
+              </div>
 
-                {/* Total readout */}
-                <div className="border-t border-border/50 pt-6 flex items-baseline justify-between">
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Total Allocation
-                  </span>
-                  <span className="font-[family-name:var(--font-bebas)] text-2xl tracking-tight text-accent">
-                    {total}
-                  </span>
-                </div>
-                <p className="font-mono text-xs text-muted-foreground leading-relaxed -mt-4">
+              <div className="border-t border-border/50 pt-6">
+                <p className="font-mono text-xs text-muted-foreground leading-relaxed">
                   Weights are normalized — relative proportions determine the composite. Missing
                   factors are dropped, not treated as zero; the remaining factors are re-weighted.
                 </p>
               </div>
+            </div>
 
-              {/* Actions */}
-              <div className="mt-10 flex items-center gap-4">
+            {/* Sticky Footer */}
+            <div className="p-4 sm:p-6 border-t border-border/80 bg-card/95 backdrop-blur-md flex items-center justify-between gap-4 shrink-0 shadow-lg">
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Total Allocation
+                </span>
+                <span className="font-mono text-sm font-bold text-accent">
+                  {total}% Allocated
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={onClose}
-                  className="flex-1 border border-border/80 bg-card/60 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200 text-center cursor-pointer font-medium"
-                >
-                  <span>Apply Weights</span>
-                </button>
-                <button
+                  type="button"
                   onClick={() => onWeightsChange({ ...DEFAULT_WEIGHTS })}
-                  className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
+                  className="px-4 py-3 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="border border-accent bg-accent text-accent-foreground px-6 py-3 font-mono text-xs uppercase tracking-widest font-bold hover:bg-accent/90 transition-all cursor-pointer shadow-sm"
+                >
+                  Apply Weights ➔
                 </button>
               </div>
             </div>

@@ -217,26 +217,16 @@ export function DealScopeApp() {
    * the screen is materialised into the URL that represents it exactly and
    * the now-inaccurate query text is cleared. What you see (chips) therefore
    * always equals what is applied, which is the property that makes a
-   * natural-language box trustworthy at all.
-   *
-   * On the landing page this is a view change, not a same-page tweak:
-   * staying on landing wrote the sector into the URL, Next/Lenis jumped
-   * scroll to the top, and the user had to scroll back down to click Run.
-   * Confirmed live (Telecom chip at scrollY 670 → 0, still on landing).
-   * Selecting a sector from home now opens the filtered results instead.
+   * Applied screen updates state in-place.
    */
   const materialize = useCallback(
     (next: ScreenFilters) => {
       const cleaned = { ...next, text: "" }
       setRawText("")
       setDebouncedText("")
-      if (view === "landing") {
-        navigate({ view: "results", ticker: null, screen: cleaned })
-        return
-      }
       updateScreen(cleaned)
     },
-    [view, navigate, updateScreen],
+    [updateScreen],
   )
 
   // Emptying the search box is a full reset, not a residual-text edit.
@@ -421,6 +411,13 @@ export function DealScopeApp() {
         filters={screen.buckets}
         onFiltersChange={handleBucketsChange}
         onClose={() => setFiltersOpen(false)}
+        onApply={() => {
+          setFiltersOpen(false)
+          if (view === "landing") {
+            handleRun()
+          }
+        }}
+        matchCount={matchCount}
         industryGroups={industryGroups}
       />
     </main>
