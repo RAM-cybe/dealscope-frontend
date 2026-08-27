@@ -65,7 +65,7 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
             <div className="p-6 sm:p-8 border-b border-border/80 bg-background flex items-start justify-between shrink-0">
               <div>
                 <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-                  Control Variables
+                  Model Weights
                 </span>
                 <h2 className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl tracking-tight text-foreground">
                   FACTOR WEIGHTS
@@ -103,8 +103,8 @@ export function WeightsPanel({ open, weights, onWeightsChange, onClose }: Weight
 
               <div className="border-t border-border/50 pt-6">
                 <p className="font-mono text-xs text-muted-foreground leading-relaxed">
-                  Weights are normalized — relative proportions determine the composite. Missing
-                  factors are dropped, not treated as zero; the remaining factors are re-weighted.
+                  Weights are normalized: relative proportions determine the composite score. Missing
+                  metrics are dropped rather than treated as zero, and remaining factors are dynamically re-weighted.
                 </p>
               </div>
             </div>

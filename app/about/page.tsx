@@ -7,7 +7,7 @@ import datasetMeta from "@/data/dataset-meta.json"
 import { SectorQuartileExplorer } from "@/components/about/sector-quartile-explorer"
 
 export const metadata: Metadata = {
-  title: "About & Methodology — DealScope",
+  title: "About & Methodology: DealScope",
   description:
     "How DealScope screens 2,381 NSE-listed companies for acquisition fit: sector-relative percentile scoring, listed-peer trading multiple valuation bands, and data governance.",
 }
@@ -62,7 +62,7 @@ export default function AboutPage() {
                 Built by Ram
               </h2>
               <p className="font-sans text-xs sm:text-[13px] text-muted-foreground mt-0.5">
-                Conceived and coded to make Indian public company comps and screening transparent, sector-relative, and accessible.
+                Built to make Indian public company comps and screening transparent, sector-relative, and accessible.
               </p>
             </div>
             <div className="flex items-center gap-2.5 shrink-0">
@@ -126,55 +126,61 @@ export default function AboutPage() {
             />
             <div className="space-y-3 font-sans text-sm leading-relaxed text-foreground/90 text-pretty">
               <p>
-                Screening companies across the National Stock Exchange of India using absolute cutoffs
-                (e.g., market-wide EBITDA margin &gt; 15% or ROCE &gt; 15%) creates a heavy bias toward asset-light
-                software and FMCG firms. Capital-intensive manufacturing, auto ancillaries, and cyclical leaders
-                have structurally lower margins that may be exceptional within their own industry.
+                In the Indian financial ecosystem, tools are typically optimized for bottom-up fundamental equity research.
+                Platforms like <strong>Screener.in</strong> excel at deep 10-year statement inspection and custom financial queries for public investors.
               </p>
               <p>
-                DealScope eliminates this distortion by ranking each company strictly against its true 13-sector peer group.
+                However, M&amp;A corporate development teams, private equity scouts, and transaction advisors face a different challenge: <strong>top-down sector triage</strong>.
+                Screening across 2,381 companies using flat market-wide cutoffs (e.g. EBITDA margin &gt; 15% or ROCE &gt; 15%) systematically distorts sector realities: it overvalues asset-light software firms while penalizing capital-efficient leaders in industrials, auto ancillaries, and manufacturing where an 11% ROCE is top-decile performance.
+              </p>
+              <p>
+                DealScope eliminates this distortion by benchmarking each company strictly against its true 13-sector peer cohort.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5 font-mono text-xs">
-              <div className="border border-border/40 bg-card/15 p-4">
-                <div className="text-muted-foreground uppercase font-semibold text-xs pb-2 mb-2.5 border-b border-border/20">
-                  Generic Retail Screeners
+              <div className="border border-border/40 bg-card/15 p-4 flex flex-col justify-between">
+                <div>
+                  <div className="text-muted-foreground uppercase font-semibold text-xs pb-2 mb-2.5 border-b border-border/20">
+                    Fundamental Equity Screeners
+                  </div>
+                  <ul className="space-y-2 text-muted-foreground text-xs leading-relaxed">
+                    <li className="flex items-start gap-2">
+                      <span className="text-muted-foreground/60">•</span>
+                      <span>Single market-wide cutoffs cross-compare heterogeneous sectors.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-muted-foreground/60">•</span>
+                      <span>Outputs filtered metric tables without transaction or trading valuation step-downs.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-muted-foreground/60">•</span>
+                      <span>Optimized for portfolio managers &amp; retail equity research.</span>
+                    </li>
+                  </ul>
                 </div>
-                <ul className="space-y-2 text-muted-foreground text-xs leading-relaxed">
-                  <li className="flex items-start gap-2">
-                    <X className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-                    <span>Flat market cutoffs penalize cyclical &amp; capital-heavy sectors.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <X className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-                    <span>Stops at raw screening with no indicative valuation bounds.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <X className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-                    <span>Quietly substitutes missing data with zeros or averages.</span>
-                  </li>
-                </ul>
               </div>
 
-              <div className="border border-accent/40 bg-card/25 p-4">
-                <div className="text-accent uppercase font-semibold text-xs pb-2 mb-2.5 border-b border-border/20">
-                  DealScope Workbench
+              <div className="border border-accent/40 bg-card/25 p-4 flex flex-col justify-between">
+                <div>
+                  <div className="text-accent uppercase font-semibold text-xs pb-2 mb-2.5 border-b border-border/20">
+                    DealScope M&amp;A Workbench
+                  </div>
+                  <ul className="space-y-2 text-foreground/90 text-xs leading-relaxed">
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent">•</span>
+                      <span>Percentile ranks evaluated strictly within 13 sector cohorts.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent">•</span>
+                      <span>Attaches liquid-peer EV/EBITDA and P/E step-down valuation bridges.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent">•</span>
+                      <span>Zero data imputation: missing metrics stay missing (shown as N/A).</span>
+                    </li>
+                  </ul>
                 </div>
-                <ul className="space-y-2 text-foreground/90 text-xs leading-relaxed">
-                  <li className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                    <span>Percentile ranks evaluated strictly within 13 sector cohorts.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                    <span>Attaches liquid-peer EV/EBITDA and P/E valuation bands.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                    <span>Zero data imputation: missing metrics stay missing (`—`).</span>
-                  </li>
-                </ul>
               </div>
             </div>
           </section>
@@ -305,14 +311,14 @@ export default function AboutPage() {
                   <div>• Implied Equity = Net Income × [Sector P25–P75 P/E]</div>
                   <div>• Direct equity value multiple (requires Net Income &gt; 0).</div>
                   <div className="text-muted-foreground text-[11px] pt-1.5 border-t border-border/20">
-                    If Net Income ≤ 0, P/E range is shown as unavailable (`—`).
+                    If Net Income ≤ 0, P/E range is shown as unavailable (N/A).
                   </div>
                 </div>
               </div>
             </div>
 
             <p className="font-mono text-xs text-muted-foreground leading-relaxed mt-2.5">
-              <strong className="text-foreground font-semibold">Precedent Deals:</strong> {datasetMeta.deal_count} historical Indian M&amp;A transactions (2006–2025) are provided strictly as deal context and do not alter listed trading multiples.
+              <strong className="text-foreground font-semibold">Precedent Deals:</strong> {datasetMeta.deal_count} historical Indian M&amp;A transactions (2006 to 2025) are provided strictly as deal context and do not alter listed trading multiples.
             </p>
           </section>
 
@@ -349,7 +355,7 @@ export default function AboutPage() {
                 <div className="bg-foreground/25 h-full w-[37.6%]" />
               </div>
               <div className="mt-3 text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">Pledge Alert:</strong> Over 85% of NSE companies have 0.0% pledge. An amber warning chip appears when pledge exceeds 10.0%.
+                <strong className="text-foreground">Pledge Telemetry:</strong> Over 85% of NSE companies have 0.0% pledge. An amber warning chip appears when pledge exceeds 10.0%.
               </div>
             </div>
           </section>
