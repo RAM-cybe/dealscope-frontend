@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og"
 // the rest of the site.
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
-export const alt = "DealScope: Sector-relative comps and screening for 2,381 NSE companies."
+export const alt = "DealScope: Sector-relative comps and screening for NSE companies."
 
 // Hex equivalents of the site's oklch tokens. Satori (the renderer behind
 // ImageResponse) does not support oklch(), so these are pinned here
@@ -70,7 +70,7 @@ export default function OpengraphImage() {
               display: "flex",
             }}
           >
-            Screen 2,381 NSE-listed companies on sector-relative growth, margin,
+            Screen NSE-listed Indian companies on sector-relative growth, margin,
             ROCE and leverage.
           </div>
         </div>

@@ -88,7 +88,7 @@ export default function RootLayout({
             <div className="flex min-h-14 items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 md:px-10 py-2.5 max-w-7xl mx-auto">
               <div className="flex items-center gap-3 sm:gap-6 min-w-0">
                 <DealScopeLogo />
-                <div className="hidden lg:block h-4 w-px bg-border/80" />
+                <div className="hidden md:block h-4 w-px bg-border/80" />
                 <DataFreshness className="hidden md:flex" />
               </div>
               <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
@@ -103,15 +103,11 @@ export default function RootLayout({
             </div>
 
             {/* Mobile Sub-Header Telemetry Strip (visible on < md so dates are NEVER hidden) */}
-            <div className="md:hidden border-t border-border/40 bg-card/20 px-4 py-1.5 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_4px_rgba(16,185,129,0.8)]" />
-                <span className="font-semibold text-foreground">NSE LIVE</span>
-              </div>
+            <div className="md:hidden border-t border-border/40 bg-card/20 px-4 py-1.5 flex items-center justify-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               <div className="flex items-center gap-2 text-muted-foreground/90">
-                <span>Prices: <strong className="text-foreground font-semibold">{PRICES_AS_OF}</strong></span>
+                <span>Prices as of: <strong className="text-foreground font-semibold">{PRICES_AS_OF}</strong></span>
                 <span className="text-border">·</span>
-                <span>Fund: <strong className="text-foreground font-semibold">{FUNDAMENTALS_AS_OF}</strong></span>
+                <span>Fundamentals: <strong className="text-foreground font-semibold">{FUNDAMENTALS_AS_OF}</strong></span>
               </div>
             </div>
           </header>

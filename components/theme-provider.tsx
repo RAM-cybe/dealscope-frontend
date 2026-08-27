@@ -16,40 +16,39 @@ const ThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => {},
 })
 
+function applyThemeToDom(t: Theme) {
+  if (typeof document === "undefined") return
+  const root = document.documentElement
+  if (t === "dark") {
+    root.classList.add("dark")
+    root.classList.remove("light")
+  } else {
+    root.classList.add("light")
+    root.classList.remove("dark")
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark")
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("dealscope-theme") as Theme | null
       if (saved === "light" || saved === "dark") {
         setThemeState(saved)
-        applyTheme(saved)
+        applyThemeToDom(saved)
       } else {
         // Default to dark
-        applyTheme("dark")
+        applyThemeToDom("dark")
       }
     } catch {
-      applyTheme("dark")
+      applyThemeToDom("dark")
     }
-    setMounted(true)
   }, [])
-
-  const applyTheme = (t: Theme) => {
-    const root = document.documentElement
-    if (t === "dark") {
-      root.classList.add("dark")
-      root.classList.remove("light")
-    } else {
-      root.classList.add("light")
-      root.classList.remove("dark")
-    }
-  }
 
   const setTheme = (t: Theme) => {
     setThemeState(t)
-    applyTheme(t)
+    applyThemeToDom(t)
     try {
       localStorage.setItem("dealscope-theme", t)
     } catch {}

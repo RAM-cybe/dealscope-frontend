@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 /** Format an ISO calendar date as "21 Aug 2026" without a timezone shift. */
 export function formatAsOfDate(iso: string | null | undefined): string {
-  if (!iso) return "—"
+  if (!iso) return "N/A"
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
   if (!match) return iso
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -33,12 +33,6 @@ export function DataFreshness({
       role="status"
       aria-label={`NSE telemetry. Prices as of ${PRICES_AS_OF}. Fundamentals as of ${FUNDAMENTALS_AS_OF}.`}
     >
-      {/* Live Market Status Badge */}
-      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-border/80 bg-card/60 text-foreground shadow-xs">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.7)]" />
-        <span className="font-semibold text-[10px] tracking-widest text-foreground">NSE LIVE</span>
-      </div>
-
       {/* Prices Telemetry Chip */}
       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-border/60 bg-card/30">
         <span className="text-muted-foreground/80 text-[10px]">Prices as of:</span>
@@ -53,3 +47,4 @@ export function DataFreshness({
     </div>
   )
 }
+
