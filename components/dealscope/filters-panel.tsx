@@ -98,7 +98,7 @@ export function FiltersPanel({
             <div className="p-6 sm:p-8 border-b border-border/80 bg-background flex items-start justify-between shrink-0">
               <div>
                 <span className="font-mono text-xs uppercase tracking-[0.3em] text-accent">
-                  Screening Constraints
+                  Screening Controls
                 </span>
                 <h2 className="mt-2 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl tracking-tight text-foreground">
                   QUANTITATIVE FILTERS
@@ -119,8 +119,8 @@ export function FiltersPanel({
               data-lenis-prevent
             >
               <p className="font-mono text-xs text-muted-foreground leading-relaxed">
-                Constrain the screened set by fundamental financials — size, valuation, quality, growth, and risk.
-                Pills accept several bands at once; segmented controls pick one. Fields left untouched don&apos;t constrain.
+                Filter the screened universe by financial metrics: size, valuation, quality, growth, and leverage.
+                Pills accept several bands at once; segmented controls pick one. Fields left untouched do not filter.
               </p>
 
               {/* Grouped bucket controls */}

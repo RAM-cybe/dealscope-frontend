@@ -75,7 +75,7 @@ export function AboutNav() {
             <ArrowUpRight className="w-2.5 h-2.5 opacity-60" />
           </a>
           <a
-            href="mailto:vpram2007@gmail.com"
+            href="mailto:ramsuthakaran.vp@gmail.com"
             title="Email Ram directly"
             className="inline-flex items-center gap-1 text-muted-foreground hover:text-accent transition-colors px-2 py-1 border border-border/40 hover:border-accent text-[11px] uppercase tracking-wider"
           >

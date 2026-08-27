@@ -190,9 +190,9 @@ export function SectorIndustryFilter({
 
                 {unclassifiedCount != null && unclassifiedCount > 0 && (
                   <p className="border-t border-border/40 pt-4 font-mono text-xs leading-relaxed text-muted-foreground">
-                    Unclassified ({unclassifiedCount}) — no industry data available for these
-                    companies. Confirmed gap in the upstream data source, not a guess. They are not
-                    scored against a fake peer group.
+                    Unclassified ({unclassifiedCount}): sector data is unavailable for these
+                    entities in public filings. Searchable by ticker, but excluded from peer
+                    percentile scoring to prevent misleading rankings.
                   </p>
                 )}
               </div>

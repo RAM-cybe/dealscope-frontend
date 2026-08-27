@@ -123,22 +123,19 @@ export function ResultsView({
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
         <div>
-          {/* Eyebrow label doubles as the back control (onClick={onBack}
-              unchanged) -- restyled to match the SectionLabel pattern used
-              elsewhere on the site (e.g. "01 / What This Does") instead of
-              the old muted "← Entry State" back-link treatment. */}
+          {/* Eyebrow label doubles as the back control */}
           <button
             onClick={onBack}
             className="font-mono text-xs uppercase tracking-[0.3em] text-accent hover:text-foreground transition-colors duration-200"
           >
-            Entry State / Screened Set
+            ← Back to Overview
           </button>
           <h1 className="mt-4 font-[family-name:var(--font-bebas)] text-5xl md:text-7xl tracking-tight text-balance">
             {results.length.toLocaleString("en-IN")}{" "}
             {results.length === 1 ? "company matches" : "companies match"}
           </h1>
           <p className="mt-2 font-mono text-xs text-muted-foreground">
-            ranked by composite score · missing factors shown as — · unclassified names are not scored
+            Ranked by sector composite score · Missing metrics excluded from weighting · Unclassified tickers not scored
           </p>
         </div>
 
@@ -190,7 +187,7 @@ export function ResultsView({
           totalCount={totalCount}
           recognised={recognised}
           size="sm"
-          placeholder="Refine — name, ticker, or a screen like “roce over 20 low debt”"
+          placeholder="Refine by name, ticker, or screen (e.g. 'roce over 20 low debt')"
         />
       </div>
 
@@ -223,23 +220,18 @@ export function ResultsView({
       {results.length === 0 ? (
         <div className="border border-border/40 p-16 text-center">
           <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
-            No companies match every condition
+            No companies match all active filters
           </p>
           <p className="mt-3 mx-auto max-w-sm font-mono text-[11px] leading-relaxed text-muted-foreground">
             Conditions combine with AND, so each one narrows the set further. Remove a chip above to
-            widen the screen, or clear it and start again.
+            widen the screen, or clear all filters to start again.
           </p>
-          {/* Previously this offered "Loosen range filters (N)" and only when a
-              BUCKET filter was set -- so a natural-language query that returned
-              nothing gave the user an empty page with no action at all, which
-              is the most common way to hit zero results now. Clear-all is
-              always offered whenever anything is active, from either surface. */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={onClearAll}
               className="inline-flex items-center gap-2 border border-accent/60 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 transition-all duration-200"
             >
-              Clear all conditions
+              Clear all filters
             </button>
             {activeFilters > 0 && (
               <button
