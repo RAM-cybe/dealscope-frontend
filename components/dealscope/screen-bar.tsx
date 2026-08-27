@@ -32,7 +32,7 @@ export function ScreenBar({
   matchCount,
   totalCount,
   recognised,
-  placeholder = "Search 2,381 NSE companies (e.g. \"TCS\", \"Tata Motors\") or screen by sector, ROCE, margin...",
+  placeholder = "Search company or ticker",
   autoFocus = false,
   size = "lg",
   trailing,
@@ -62,19 +62,14 @@ export function ScreenBar({
   }
 
   // One outer border shell; both cells use the same fixed height so their top
-  // and bottom edges are identical. Never put a separate outer border on the
-  // button (that made it 2px taller than the input content box on production).
-  //
-  // Do NOT use flex-1 on the input cell when the shell is a column (mobile +
-  // trailing): flex-1 → flex-shrink:1 with basis 0% lets the column axis crush
-  // the cell below h-14. Horizontal growth only on the sm+ row layout.
-  const rowH = size === "lg" ? "h-14" : "h-12"
+  // and bottom edges are identical.
+  const rowH = size === "lg" ? "h-13 sm:h-14" : "h-11 sm:h-12"
 
   return (
     <div className="w-full">
       <div
         className={cn(
-          "flex items-stretch border bg-card/60 backdrop-blur-sm transition-all duration-200 shadow-sm",
+          "flex items-stretch border bg-card/60 backdrop-blur-sm transition-all duration-200 shadow-xs",
           trailing ? "flex-col sm:flex-row" : "flex-row",
           recognised
             ? "border-accent/80 ring-1 ring-accent/40 shadow-accent/5"
@@ -89,7 +84,7 @@ export function ScreenBar({
           )}
         >
           {/* Leading Icon */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none select-none">
+          <div className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none select-none">
             {recognised ? (
               <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-accent bg-accent/15 px-1.5 py-0.5 border border-accent/40">
                 SCREEN
@@ -106,14 +101,14 @@ export function ScreenBar({
             onChange={(e) => onQueryChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            aria-label="Search companies or describe a screen"
+            aria-label="Search company or ticker"
             autoFocus={autoFocus}
-            className="box-border w-full h-full bg-transparent pl-12 pr-20 font-mono text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+            className="box-border w-full h-full bg-transparent pl-11 sm:pl-12 pr-9 sm:pr-10 font-mono text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
           />
 
-          {/* Trailing inside-input shortcuts and clear action */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {query ? (
+          {/* Trailing clear action */}
+          {query ? (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
               <button
                 type="button"
                 onClick={() => onQueryChange("")}
@@ -122,12 +117,8 @@ export function ScreenBar({
               >
                 <X className="w-3.5 h-3.5" />
               </button>
-            ) : (
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/70 border border-border/80 bg-background/50 pointer-events-none select-none">
-                <Command className="w-2.5 h-2.5" /> K
-              </kbd>
-            )}
-          </div>
+            </div>
+          ) : null}
         </div>
 
         {trailing ? (
