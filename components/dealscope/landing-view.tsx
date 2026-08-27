@@ -83,7 +83,7 @@ export function LandingView({
         <AnimatedNoise opacity={0.02} />
 
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center text-center">
-          {/* Institutional Category Badge */}
+          {/* Category Badge */}
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -91,20 +91,20 @@ export function LandingView({
             className="inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3 py-1 mb-3 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-accent"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_6px_var(--accent)]" />
-            Institutional M&amp;A &amp; Equity Workbench
+            FREE LISTED-INDIA COMPS &amp; M&amp;A SCREENER
           </motion.div>
 
-          {/* Rock-Solid Permanent Wordmark */}
+          {/* Wordmark */}
           <h1 className="font-[family-name:var(--font-bebas)] text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight text-foreground select-none leading-none">
             DEALSCOPE
           </h1>
 
-          {/* Subtitle / Value Proposition */}
+          {/* Subtitle */}
           <p className="mt-2.5 font-sans text-sm sm:text-base md:text-lg text-foreground/90 font-medium tracking-tight max-w-2xl text-balance">
-            Every NSE-listed company, ranked the way a deal team would.
+            Every NSE-listed company, scored within its sector the way a deal team screens targets.
           </p>
 
-          {/* Monumental Command Omnibar */}
+          {/* Search Omnibar */}
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -121,7 +121,7 @@ export function LandingView({
               matchCount={matchingCount}
               totalCount={totalCount}
               recognised={recognised}
-              placeholder="Search 2,381 NSE companies (e.g. &quot;TCS&quot;, &quot;Tata Motors&quot;) or screen..."
+              placeholder="Search 2,381 NSE companies or thesis (e.g. &quot;TATA MOTORS&quot;, &quot;high margin pharma&quot;, &quot;low debt mid cap&quot;)..."
               trailing={
                 <button
                   type="button"
@@ -155,7 +155,7 @@ export function LandingView({
                 onClick={onRun}
                 className="group inline-flex items-center justify-center gap-2 border border-accent bg-accent text-accent-foreground px-5 py-2.5 font-mono text-xs uppercase tracking-wider font-bold hover:bg-accent/90 transition-all duration-200 cursor-pointer shadow-sm"
               >
-                <span>View {matchingCount.toLocaleString("en-IN")} Matches</span>
+                <span>View {matchingCount.toLocaleString("en-IN")} Matching Targets</span>
                 <BitmapChevron className="transition-transform duration-[300ms] ease-in-out group-hover:rotate-45" />
               </button>
             ) : (
@@ -169,11 +169,11 @@ export function LandingView({
             )}
           </div>
 
-          {/* Quick Multi-Select Sector Pills (Immediately in Hero!) */}
+          {/* Quick Multi-Select Sector Pills */}
           <div className="mt-5 w-full max-w-3xl pt-4 border-t border-border/40">
             <div className="flex items-center justify-between gap-2 mb-2.5">
               <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Filter by Sector (multi-select):
+                Filter by Sector:
               </span>
               {selectedSectors.length > 0 && (
                 <button
@@ -217,13 +217,13 @@ export function LandingView({
             </div>
             <span className="text-border/60">•</span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Valuation</span>
-              <span className="text-foreground font-semibold font-mono">₹4.6T Market Cap</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">Taxonomy</span>
+              <span className="text-foreground font-semibold font-mono">13 Sectors · 124 Groups</span>
             </div>
             <span className="text-border/60">•</span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">M&amp;A Database</span>
-              <span className="text-foreground font-semibold font-mono">{dealCount.toLocaleString("en-IN")} Comps</span>
+              <span className="text-foreground font-semibold font-mono">{dealCount.toLocaleString("en-IN")} Precedent Deals</span>
             </div>
           </div>
         </div>
@@ -235,23 +235,23 @@ export function LandingView({
       <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40 bg-card/20">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           <div className="lg:col-span-5">
-            <SectionLabel index="01" label="The Quantitative Problem" />
+            <SectionLabel index="01" label="Sector Normalization" />
             <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
-              WHY SECTOR-RELATIVE
+              WHY SECTOR-RELATIVE SCORING MATTERS
             </h2>
             <p className="mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
-              Empirical Percentile Scoring vs Raw Cross-Sector Screening
+              Empirical Percentile Distributions vs Raw Cross-Sector Screening
             </p>
           </div>
           <div className="lg:col-span-7 flex flex-col gap-5 font-sans text-base sm:text-lg leading-relaxed text-foreground/90">
             <RevealItem>
               <p>
-                Standard financial screeners rank companies on absolute figures. That systematically distorts results: it overweights capital-light software businesses with 35% margins while hiding world-class logistics, manufacturing, or EPC companies operating at 14% margins.
+                Standard financial screeners rank companies on raw absolute figures. That systematically distorts results: it overweights capital-light software businesses with 35% margins while hiding world-class logistics, manufacturing, or EPC companies operating efficiently at 14% margins.
               </p>
             </RevealItem>
             <RevealItem delay={0.06}>
               <p className="text-muted-foreground">
-                DealScope evaluates each company strictly against its own direct sector cohort. A factor score of <strong className="text-foreground font-mono">85</strong> means the business is in the 85th percentile of its actual operational peers — never artificially inflated by industry tailwinds or penalized by capital intensity.
+                DealScope evaluates each company strictly against its direct sector cohort. A factor score of <strong className="text-foreground font-mono">85</strong> means the business sits in the 85th percentile of its actual operational competitors. Performance is measured against sector reality, never inflated by structural industry tailwinds or penalized by asset intensity.
               </p>
             </RevealItem>
           </div>
@@ -264,25 +264,25 @@ export function LandingView({
       <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
           <div className="lg:col-span-5">
-            <SectionLabel index="02" label="Deterministic Math" />
+            <SectionLabel index="02" label="Scoring Architecture" />
             <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
-              THE 4-FACTOR ENGINE
+              THE 4-FACTOR OPERATING ENGINE
             </h2>
             <p className="mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
-              0–100 Sector ECDF Percentile Decomposition
+              0 to 100 Empirical Sector Percentile Distribution
             </p>
           </div>
           <div className="lg:col-span-7 flex flex-col gap-6">
             <p className="font-sans text-base sm:text-lg leading-relaxed text-foreground/90">
-              Before adjusting any sliders, every company is assigned four sector-relative percentile factor scores. Factors combine equally (25% default weight) into a single composite score.
+              Before adjusting any sliders, every company is assigned four sector-relative percentile factor scores. Factors combine under an equal default weighting (25% each) into a single composite score. If a metric is missing, it is dropped and the remaining factors are dynamically reweighted, never penalized as zero.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { title: "Revenue Growth", factor: "01", desc: "Top-line CAGR momentum relative to sector median expansion." },
-                { title: "EBITDA Margin", factor: "02", desc: "Core cash conversion efficiency from operating revenues." },
-                { title: "ROCE (Return on Capital)", factor: "03", desc: "Operating profit generated per rupee of capital employed." },
-                { title: "Debt Health (Inverted Leverage)", factor: "04", desc: "Balance sheet safety; lower leverage receives higher scores." },
+                { title: "Revenue Growth", factor: "01", desc: "Top-line growth trajectory benchmarked against sector median expansion." },
+                { title: "EBITDA Margin", factor: "02", desc: "Operating profitability and cost discipline relative to sector peer distributions." },
+                { title: "ROCE (Return on Capital)", factor: "03", desc: "Operating profit generated per rupee of capital employed, isolating capital efficiency." },
+                { title: "Debt Health (Inverted Leverage)", factor: "04", desc: "Balance sheet safety via Net Debt to EBITDA. Lower leverage scores higher. Financial Services excluded." },
               ].map((f) => (
                 <div key={f.title} className="border border-border/60 bg-card/40 p-4 flex flex-col gap-1.5 transition-colors hover:border-accent/50">
                   <div className="flex items-center justify-between font-mono text-xs">
@@ -302,9 +302,9 @@ export function LandingView({
       {/* ---------------------------------------------------------------- */}
       <section className="relative px-4 sm:px-6 md:px-12 py-20 border-b border-border/40 bg-card/20">
         <div className="max-w-5xl mx-auto">
-          <SectionLabel index="03" label="Instant Playbooks" />
+          <SectionLabel index="03" label="Preset Screens" />
           <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-foreground">
-            CURATED SCREENING STRATEGIES
+            COMMON DEAL THESES
           </h2>
           <p className="mt-3 max-w-2xl font-sans text-sm text-muted-foreground leading-relaxed">
             Click any strategy below to execute a live natural-language screen across the entire 2,381 NSE-listed universe.
@@ -316,13 +316,13 @@ export function LandingView({
 
           <div className="mt-12 flex items-center justify-between border-t border-border/40 pt-6">
             <span className="font-mono text-xs text-muted-foreground">
-              Explore custom parameters or search individual tickers above
+              Click any playbook to execute instantly, or build custom criteria above
             </span>
             <button
               onClick={onRun}
               className="inline-flex items-center gap-2 border border-border/80 bg-card/80 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200 cursor-pointer"
             >
-              <span>View Full Directory</span>
+              <span>View Full Universe ({totalCount.toLocaleString("en-IN")})</span>
               <BitmapChevron className="transition-transform duration-[300ms] group-hover:rotate-45" />
             </button>
           </div>
@@ -339,7 +339,7 @@ export function LandingView({
             13 SECTORS · 124 INDUSTRY GROUPS
           </h2>
           <p className="mt-3 max-w-2xl font-sans text-sm text-muted-foreground leading-relaxed">
-            Every company belongs to a structured taxonomy with independent distribution curves. Select industries or filter by broad sector cohorts.
+            Broad single-bucket screening fails when comparing port operators to packaging mills. DealScope classifies every company into 13 calibrated sector cohorts and 124 underlying industry groups.
           </p>
 
           <div className="mt-8 border border-border/60 bg-card/20 p-6 md:p-8">
@@ -365,22 +365,22 @@ export function LandingView({
           <div className="lg:col-span-5">
             <SectionLabel index="05" label="Transaction Benchmarks" />
             <h2 className="mt-4 font-[family-name:var(--font-bebas)] text-4xl sm:text-5xl tracking-tight text-balance text-foreground">
-              727 REAL M&amp;A DEALS
+              727 PRECEDENT M&amp;A DEALS
             </h2>
             <p className="mt-3 font-mono text-xs text-muted-foreground uppercase tracking-wider">
-              Historical Indian M&amp;A Multiples
+              Historical Indian M&amp;A Multiples (2006 to 2025)
             </p>
           </div>
           <div className="lg:col-span-7 flex flex-col gap-5 font-sans text-base sm:text-lg leading-relaxed text-foreground/90">
             <RevealItem>
               <p>
-                Every company tear sheet connects directly to real precedent transactions in that industry. Compare public trading multiples against actual control premiums paid in Indian M&amp;A deals over the last decade.
+                Every company tear sheet connects directly to historical transactions in that sector. Compare listed trading multiples against actual deal valuations and control premiums paid in Indian acquisitions. Public trading multiples and precedent transaction comps are kept strictly separate: trading multiples benchmark current public pricing, while historical deals provide transaction context.
               </p>
             </RevealItem>
             <div className="mt-4 flex flex-wrap gap-4 font-mono text-xs text-muted-foreground border border-border/60 bg-card/30 p-4">
               <div><span className="text-foreground font-semibold">13</span> Sector Taxonomies</div>
               <span className="text-border">•</span>
-              <div><span className="text-foreground font-semibold">100%</span> Verified Filings</div>
+              <div><span className="text-foreground font-semibold">100%</span> Sourced Disclosures</div>
               <span className="text-border">•</span>
               <div><span className="text-foreground font-semibold">0</span> Imputed Multiples</div>
             </div>
@@ -391,13 +391,13 @@ export function LandingView({
       {/* Footer Strip */}
       <footer className="border-t border-border/40 py-8 px-4 sm:px-6 md:px-12 bg-background font-mono text-xs text-muted-foreground">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span>DEALSCOPE · Quantitative Equity &amp; M&amp;A Intelligence</span>
+          <span>DEALSCOPE · Listed India M&amp;A and Comps Workbench</span>
           <div className="flex items-center gap-4">
             <Link href="/about" className="hover:text-accent transition-colors">
               Methodology &amp; Architecture
             </Link>
             <span className="text-border">•</span>
-            <span>Built by Ram Suthakaran</span>
+            <span>Built by Ram</span>
           </div>
         </div>
       </footer>

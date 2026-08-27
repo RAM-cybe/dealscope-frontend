@@ -137,7 +137,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 Sector Avg <span className="text-accent font-medium tabular-nums">{avg == null ? "—" : avg}</span>
               </span>
               <span className="block text-muted-foreground/70 text-xs mt-0.5">
-                {unclassified ? "Unclassified — not scored" : "Sector-relative · 0–100"}
+                {unclassified ? "Unclassified: not scored" : "Sector-relative · 0–100"}
               </span>
             </div>
           </motion.div>
@@ -171,8 +171,8 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           />
           <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-8">
             {unclassified
-              ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than invented."
-              : `Each score below is ranked 0–100 against direct peers in ${company.sector} — a 90 means outperforming ~90% of sector companies. Missing factors (—) are excluded from weighting.`}
+              ? "This company has no sector classification, so it is not ranked against a peer group. Factor scores are shown as unavailable rather than estimated."
+              : `Each factor is ranked 0 to 100 against direct peers in ${company.sector}. A score of 90 means outperforming 90% of sector companies. Missing factors are excluded from weighting.`}
           </p>
 
           {/* Symmetrical 50/50 Bento Grid */}
@@ -329,11 +329,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   </motion.p>
                 ) : !detailsReady ? (
                   <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70 py-4">
-                    Loading profile…
+                    Loading profile...
                   </p>
                 ) : (
                   <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 py-4">
-                    — Company overview pending synthesis. Financial metrics and factor rankings above are live.
+                    Company profile is currently being compiled. Financial metrics and factor rankings above are live.
                   </p>
                 )}
               </div>
@@ -365,11 +365,11 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                   </motion.p>
                 ) : !detailsReady ? (
                   <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground/70 py-4">
-                    Loading rationale…
+                    Loading rationale...
                   </p>
                 ) : (
                   <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 py-4">
-                    — Score rationale pending synthesis. Factor decomposition reflects direct sector-relative percentiles.
+                    Score rationale is derived directly from the sector percentile rankings above.
                   </p>
                 )}
               </div>
@@ -386,7 +386,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           <SectionHeader
             index="05"
             label="Indicative Valuation Range"
-            subtitle={`Derived from ${company.sector} listed peer multiples (P25–P75)`}
+            subtitle={`Derived from ${company.sector} listed peer multiples (P25 to P75)`}
           />
           <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-6">
             Two independent estimates based on listed-peer trading multiples in {company.sector} applied to this company&apos;s own earnings. EV/EBITDA values enterprise; P/E values equity.
@@ -410,7 +410,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                 </div>
               </div>
               <p className="pt-3 border-t border-border/20 font-mono text-xs text-muted-foreground/70">
-                Applied against TTM EBITDA of {company.metrics.ebitdaMargin !== "—" ? `${company.metrics.ebitdaMargin} margin` : "reported operating earnings"}. Reflects core operating enterprise value.
+                Applied against reported TTM operating earnings. Enterprise value derived from sector median trading multiples.
               </p>
             </div>
 
@@ -433,7 +433,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               </div>
               <p className="pt-3 border-t border-border/20 font-mono text-xs text-muted-foreground/70">
                 {company.valuation.note ||
-                  "Derived from 25th–75th percentile sector P/E multiples applied to net profit. Excludes debt adjustments."}
+                  "Derived from 25th to 75th percentile sector P/E multiples applied to net profit. Excludes debt adjustments."}
               </p>
             </div>
           </div>
@@ -543,7 +543,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
           <SectionHeader
             index="07"
             label="Comparable Deals"
-            subtitle={`Historical M&A — ${comparableCount} in sector of 727 precedent deals (2006–2025)`}
+            subtitle={`Historical M&A: ${comparableCount} in ${company.sector} (727 precedent deals total, 2006 to 2025)`}
           />
           <p className="font-mono text-xs leading-relaxed text-muted-foreground/70 max-w-3xl mb-6">
             Selected precedent M&amp;A transactions in {company.sector} for benchmark context only. Not the source of the listed-peer valuation range above.

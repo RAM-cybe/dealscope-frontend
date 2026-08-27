@@ -876,7 +876,7 @@ export const FACTOR_LABELS: {
     key: "roce",
     label: "ROCE",
     metricKey: "roce",
-    explainer: "Capital efficiency (EBIT / Capital Employed) — returns generated on deployed capital.",
+    explainer: "Capital efficiency (EBIT / Capital Employed): returns generated on deployed capital.",
   },
   {
     key: "debtLevel",

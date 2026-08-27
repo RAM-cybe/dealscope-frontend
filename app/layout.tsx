@@ -24,9 +24,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" })
 
 const SITE_URL = "https://dealscope-screener.vercel.app"
-const SITE_TITLE = "DealScope — Every NSE-listed company, ranked the way a deal team would."
+const SITE_TITLE = "DealScope: Sector-relative comps and screening for 2,381 NSE companies"
 const SITE_DESCRIPTION =
-  "Screen 2,381 NSE-listed Indian companies for acquisition fit. Sector-relative scoring on growth, margin, ROCE and leverage, with indicative valuation ranges from listed-peer trading multiples. Free, no account required."
+  "Screen 2,381 NSE-listed Indian companies by sector-relative operating percentiles, peer trading multiples, and promoter pledge telemetry. Free, no account required."
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
