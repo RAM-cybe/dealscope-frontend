@@ -33,7 +33,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("dealscope-theme") as Theme | null
+      const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
+      const qTheme = urlParams?.get("theme") as Theme | null
+      const saved = (qTheme || localStorage.getItem("dealscope-theme")) as Theme | null
       if (saved === "light" || saved === "dark") {
         setThemeState(saved)
         applyThemeToDom(saved)

@@ -51,6 +51,9 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
     lenisRef.current = lenis
     activeLenis = lenis
+    if (typeof window !== "undefined") {
+      ;(window as unknown as { __lenis?: Lenis }).__lenis = lenis
+    }
 
     // Connect Lenis to GSAP ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update)

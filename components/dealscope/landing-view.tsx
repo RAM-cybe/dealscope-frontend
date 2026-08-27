@@ -91,10 +91,10 @@ export function LandingView({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="inline-flex items-center gap-2 border border-accent/30 bg-accent/5 px-3 py-1 mb-3 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-accent"
+            className="inline-flex items-center gap-1.5 border border-accent/30 bg-accent/5 px-2.5 py-1 mb-3 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.2em] text-accent max-w-full"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_6px_var(--accent)]" />
-            FREE LISTED-INDIA COMPS &amp; M&amp;A SCREENER
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent animate-pulse shadow-[0_0_6px_var(--accent)]" />
+            <span className="truncate">FREE LISTED-INDIA COMPS &amp; M&amp;A SCREENER</span>
           </motion.div>
 
           {/* Wordmark */}
@@ -199,16 +199,16 @@ export function LandingView({
                     onClick={() => onToggleSector(sector.name)}
                     aria-pressed={active}
                     className={cn(
-                      "inline-flex items-center justify-between gap-1.5 border px-2.5 py-1.5 font-mono text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-150 cursor-pointer min-h-[36px] sm:min-h-[34px]",
+                      "inline-flex items-center justify-between gap-1.5 border px-2 sm:px-2.5 py-1 sm:py-1.5 font-mono text-[9px] sm:text-[10px] uppercase tracking-wider transition-all duration-150 cursor-pointer min-h-[32px] sm:min-h-[34px] max-w-full",
                       active
                         ? "border-accent bg-accent/15 text-accent font-semibold shadow-xs"
                         : "border-border/60 bg-card/30 text-muted-foreground hover:border-foreground/40 hover:text-foreground",
                     )}
                   >
-                    <span>{sector.name}</span>
+                    <span className="truncate">{sector.name}</span>
                     <span
                       className={cn(
-                        "font-mono text-[9px] sm:text-[10px] tabular-nums px-1 py-px",
+                        "font-mono text-[8px] sm:text-[9px] tabular-nums px-1 py-px shrink-0",
                         active ? "bg-accent/20 text-accent font-bold" : "text-muted-foreground/70",
                       )}
                     >
@@ -220,19 +220,21 @@ export function LandingView({
             </div>
           </div>
 
-          {/* Telemetry Ribbon (max-w-xl with atomic non-breaking tokens) */}
-          <div className="mt-6 sm:mt-8 w-full max-w-xl grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs text-muted-foreground">
-            <div className="border border-border/30 bg-card/20 px-3 py-2 flex items-center justify-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">Coverage:</span>
-              <span className="text-foreground font-semibold font-mono whitespace-nowrap">All NSE Equities</span>
+          {/* Telemetry Ribbon */}
+          <div className="mt-6 sm:mt-8 w-full max-w-xl border-t border-border/40 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 font-mono text-[10px] sm:text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="uppercase tracking-wider text-muted-foreground/70 text-[9px] sm:text-[10px]">Coverage:</span>
+              <span className="text-foreground font-medium">All NSE Equities</span>
             </div>
-            <div className="border border-border/30 bg-card/20 px-3 py-2 flex items-center justify-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">Taxonomy:</span>
-              <span className="text-foreground font-semibold font-mono whitespace-nowrap">{sectors.length} Sectors · {industryGroupsCount} Groups</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="uppercase tracking-wider text-muted-foreground/70 text-[9px] sm:text-[10px]">Taxonomy:</span>
+              <span className="text-foreground font-medium">{sectors.length} Sectors · {industryGroupsCount} Groups</span>
             </div>
-            <div className="border border-border/30 bg-card/20 px-3 py-2 flex items-center justify-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70">M&amp;A Deals:</span>
-              <span className="text-accent font-semibold font-mono whitespace-nowrap">{dealCount.toLocaleString("en-IN")} Precedent Deals</span>
+            <span className="hidden sm:inline text-border">·</span>
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="uppercase tracking-wider text-muted-foreground/70 text-[9px] sm:text-[10px]">Deals:</span>
+              <span className="text-accent font-medium">{dealCount.toLocaleString("en-IN")} Precedent Deals</span>
             </div>
           </div>
         </div>
@@ -241,7 +243,7 @@ export function LandingView({
       {/* ---------------------------------------------------------------- */}
       {/* CHAPTER 01: Why Sector-Relative                                  */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background">
+      <section id="chapter-01" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-16">
           <div className="lg:col-span-5">
             <SectionLabel index="01" label="SECTOR NORMALIZATION" />
@@ -270,7 +272,7 @@ export function LandingView({
       {/* ---------------------------------------------------------------- */}
       {/* CHAPTER 02: Four Factors                                         */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background">
+      <section id="chapter-02" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-16">
           <div className="lg:col-span-5">
             <SectionLabel index="02" label="SCORING ARCHITECTURE" />
@@ -309,7 +311,7 @@ export function LandingView({
       {/* ---------------------------------------------------------------- */}
       {/* CHAPTER 03: Screens                                              */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background">
+      <section id="chapter-03" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto">
           <SectionLabel index="03" label="PRESET SCREENS" />
           <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-foreground">
@@ -341,7 +343,7 @@ export function LandingView({
       {/* ---------------------------------------------------------------- */}
       {/* CHAPTER 04: Taxonomy                                             */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background">
+      <section id="chapter-04" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 border-b border-border/40 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto">
           <SectionLabel index="04" label="TAXONOMY &amp; COVERAGE" />
           <h2 className="mt-3 sm:mt-4 font-[family-name:var(--font-bebas)] text-3xl sm:text-4xl md:text-5xl tracking-tight text-foreground">
@@ -369,7 +371,7 @@ export function LandingView({
       {/* ---------------------------------------------------------------- */}
       {/* CHAPTER 05: Deals                                                */}
       {/* ---------------------------------------------------------------- */}
-      <section className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 bg-background">
+      <section id="chapter-05" className="relative px-4 sm:px-6 md:px-12 py-12 sm:py-16 bg-background scroll-mt-14">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-16">
           <div className="lg:col-span-5">
             <SectionLabel index="05" label="PRECEDENT TRANSACTIONS" />
