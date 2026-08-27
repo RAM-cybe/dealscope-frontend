@@ -1,6 +1,8 @@
 "use client"
 
 import type React from "react"
+import { useEffect, useRef } from "react"
+import { Search, X, Sparkles, Command } from "lucide-react"
 import { type FilterChip, type ScreenFilters, screenChips, countActiveConstraints } from "@/lib/screener"
 import { cn } from "@/lib/utils"
 
@@ -13,32 +15,13 @@ interface ScreenBarProps {
   onClearAll: () => void
   matchCount: number
   totalCount: number
-  /** True when the parser understood at least one constraint in the current
-   *  query -- drives the "screening" vs "searching" affordance. */
   recognised: boolean
   placeholder?: string
   autoFocus?: boolean
   size?: "lg" | "sm"
-  /**
-   * Optional control rendered in the same row as the input (e.g. homepage
-   * RUN). Placed here — not as a sibling of the whole bar — so it shares the
-   * input's height and baseline instead of sitting against the taller
-   * count/chips stack underneath.
-   */
   trailing?: React.ReactNode
 }
 
-/**
- * The screening input: one box that accepts both a company name and a
- * natural-language screen, with the parsed result shown back as removable
- * chips and a live match count underneath.
- *
- * The chips are the honest part of this design. A natural-language box that
- * silently reinterprets what you typed is untrustworthy -- so everything the
- * parser understood is rendered as a discrete, removable token. If a chip
- * appears that you didn't mean, you can see it and drop it; if a constraint
- * you expected is missing, its absence is equally visible.
- */
 export function ScreenBar({
   query,
   onQueryChange,
@@ -49,14 +32,28 @@ export function ScreenBar({
   matchCount,
   totalCount,
   recognised,
-  placeholder = "Company, ticker, or a screen like “pharma high margin low debt”",
+  placeholder = "Search 2,381 NSE companies (e.g. \"TCS\", \"Tata Motors\") or screen by sector, ROCE, margin...",
   autoFocus = false,
   size = "lg",
   trailing,
 }: ScreenBarProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
   const chips = screenChips(filters)
   const activeCount = countActiveConstraints(filters)
   const isFiltered = matchCount !== totalCount
+
+  // Global ⌘K / Ctrl+K keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
@@ -74,31 +71,36 @@ export function ScreenBar({
   const rowH = size === "lg" ? "h-14" : "h-12"
 
   return (
-    <div>
+    <div className="w-full">
       <div
         className={cn(
-          "flex items-stretch border transition-colors duration-200",
+          "flex items-stretch border bg-card/60 backdrop-blur-sm transition-all duration-200 shadow-sm",
           trailing ? "flex-col sm:flex-row" : "flex-row",
-          recognised ? "border-accent/60" : "border-border focus-within:border-accent",
+          recognised
+            ? "border-accent/80 ring-1 ring-accent/40 shadow-accent/5"
+            : "border-border/80 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40",
         )}
       >
         <div
           className={cn(
-            "relative min-w-0",
+            "relative min-w-0 flex items-center",
             rowH,
             trailing ? "w-full sm:flex-1 sm:min-w-0" : "flex-1",
           )}
         >
-          <span
-            className={cn(
-              "absolute left-4 top-1/2 -translate-y-1/2 font-mono text-xs uppercase tracking-[0.3em] pointer-events-none",
-              recognised ? "text-accent" : "text-muted-foreground/80",
+          {/* Leading Icon */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none select-none">
+            {recognised ? (
+              <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-accent bg-accent/15 px-1.5 py-0.5 border border-accent/40">
+                SCREEN
+              </span>
+            ) : (
+              <Search className="w-4 h-4 text-muted-foreground" />
             )}
-            aria-hidden="true"
-          >
-            {recognised ? "FX" : "Q_"}
-          </span>
+          </div>
+
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
@@ -106,18 +108,36 @@ export function ScreenBar({
             placeholder={placeholder}
             aria-label="Search companies or describe a screen"
             autoFocus={autoFocus}
-            className="box-border w-full h-full bg-transparent pl-12 pr-4 font-mono text-sm leading-none text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="box-border w-full h-full bg-transparent pl-12 pr-20 font-mono text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
           />
+
+          {/* Trailing inside-input shortcuts and clear action */}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {query ? (
+              <button
+                type="button"
+                onClick={() => onQueryChange("")}
+                aria-label="Clear search input"
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/70 border border-border/80 bg-background/50 pointer-events-none select-none">
+                <Command className="w-2.5 h-2.5" /> K
+              </kbd>
+            )}
+          </div>
         </div>
+
         {trailing ? (
           <div
             className={cn(
               "flex shrink-0 items-stretch",
               rowH,
               "w-full sm:w-auto",
-              // Continuous frame: internal divider only — no second outer border.
               "border-t sm:border-t-0 sm:border-l",
-              recognised ? "border-accent/60" : "border-border",
+              recognised ? "border-accent/80" : "border-border/80",
             )}
           >
             {trailing}
@@ -128,7 +148,7 @@ export function ScreenBar({
       {/* Live count + parse feedback — always under the full control row */}
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="font-mono text-xs">
-          <span className={cn(isFiltered ? "text-accent" : "text-foreground")}>
+          <span className={cn(isFiltered ? "text-accent font-semibold" : "text-foreground font-medium")}>
             {matchCount.toLocaleString("en-IN")}
           </span>
           <span className="text-muted-foreground">
@@ -139,15 +159,15 @@ export function ScreenBar({
         </span>
 
         {recognised && (
-          <span className="font-mono text-xs uppercase tracking-wider text-accent/80">
-            Screen applied
+          <span className="font-mono text-[11px] uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 border border-accent/30 font-semibold">
+            Screen Applied
           </span>
         )}
 
         {activeCount > 0 && (
           <button
             onClick={onClearAll}
-            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200"
+            className="font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-accent transition-colors duration-200 cursor-pointer"
           >
             Clear all
           </button>
@@ -161,11 +181,11 @@ export function ScreenBar({
             <button
               key={chip.id}
               onClick={() => onRemoveChip(chip)}
-              className="group inline-flex max-w-full items-center gap-2 border border-accent/50 bg-accent/10 px-3 py-1.5 font-mono text-xs text-accent hover:bg-accent/20 hover:border-accent transition-colors duration-200"
+              className="group inline-flex max-w-full items-center gap-2 border border-accent/60 bg-accent/10 px-3 py-1 font-mono text-xs text-accent hover:bg-accent/20 hover:border-accent transition-colors duration-200 cursor-pointer"
               aria-label={`Remove filter: ${chip.label}`}
             >
               <span className="truncate">{chip.label}</span>
-              <span aria-hidden="true" className="text-accent/70 group-hover:text-accent">
+              <span aria-hidden="true" className="text-accent font-bold">
                 ×
               </span>
             </button>
