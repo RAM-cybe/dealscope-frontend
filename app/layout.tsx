@@ -5,6 +5,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
 import { DataFreshness } from "@/components/dealscope/data-freshness"
+import { DealScopeLogo } from "@/components/dealscope/dealscope-logo"
 import { StaleDataBanner } from "@/components/dealscope/stale-data-banner"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -83,14 +84,18 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <div className="noise-overlay" aria-hidden="true" />
-          <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-xs border-b border-border/60 transition-colors">
-            <div className="flex min-h-14 items-center justify-between gap-4 pl-6 pr-6 md:pr-12 py-2">
-              <DataFreshness />
-              <div className="flex items-center gap-3">
+          <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-md border-b border-border/60 transition-colors">
+            <div className="flex min-h-14 items-center justify-between gap-4 px-4 sm:px-6 md:px-10 py-2.5 max-w-7xl mx-auto">
+              <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                <DealScopeLogo />
+                <div className="hidden md:block h-4 w-px bg-border/80" />
+                <DataFreshness className="hidden sm:flex" />
+              </div>
+              <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
                 <ThemeToggle />
                 <Link
                   href="/about"
-                  className="inline-flex shrink-0 items-center border border-border/60 bg-card/30 px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground hover:border-accent hover:bg-accent/5 transition-colors duration-200"
+                  className="inline-flex shrink-0 items-center border border-border/60 bg-card/30 px-3.5 py-1.5 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground hover:border-accent hover:bg-accent/5 transition-colors duration-200 font-medium"
                 >
                   About
                 </Link>
