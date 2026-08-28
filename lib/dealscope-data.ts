@@ -662,7 +662,8 @@ export interface IndustryGroup {
  *  which sectors get a group at all (empty = every sector), independent of
  *  the sector-level company counts, same convention as getIndustriesForSectors. */
 export function getIndustryGroups(companies: Company[], sectorNames: string[] = []): IndustryGroup[] {
-  const scopedSectors = sectorNames.length > 0 ? ALL_SECTORS.filter((s) => sectorNames.includes(s.name)) : ALL_SECTORS
+  const scopedSectors = (sectorNames.length > 0 ? ALL_SECTORS.filter((s) => sectorNames.includes(s.name)) : ALL_SECTORS)
+    .filter((s) => s.name.toLowerCase() !== "unclassified")
   return scopedSectors
     .map((sector) => ({ sector: sector.name, industries: getIndustriesForSectors(companies, [sector.name]) }))
     .filter((group) => group.industries.length > 0)

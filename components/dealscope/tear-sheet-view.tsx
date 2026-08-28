@@ -28,9 +28,10 @@ interface TearSheetViewProps {
   onBack: () => void
   companies: Company[]
   deals: DealRow[]
+  onSelectCompany?: (company: Company) => void
 }
 
-export function TearSheetView({ company, weights, onBack, companies, deals }: TearSheetViewProps) {
+export function TearSheetView({ company, weights, onBack, companies, deals, onSelectCompany }: TearSheetViewProps) {
   const score = computeScore(company.factors, weights)
   const avg = sectorAverage(companies, company.sector, weights)
   const sectorRank = computeSectorRank(company, companies, weights)
@@ -305,13 +306,15 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
               {peers.map((peer) => {
                 const peerScore = computeScore(peer.factors, weights)
                 return (
-                  <div
+                  <button
                     key={peer.ticker}
-                    className="border-b last:border-b-0 border-border/25 px-4 sm:px-5 py-3 font-mono text-xs hover:bg-accent/5 transition-colors"
+                    type="button"
+                    onClick={() => onSelectCompany?.(peer)}
+                    className="w-full text-left border-b last:border-b-0 border-border/25 px-4 sm:px-5 py-3 font-mono text-xs hover:bg-accent/5 transition-colors cursor-pointer block group"
                   >
                     {/* Desktop View */}
                     <div className="hidden md:grid grid-cols-12 gap-4 items-center">
-                      <span className="col-span-5 text-foreground/90 truncate">{peer.name}</span>
+                      <span className="col-span-5 text-foreground/90 truncate group-hover:text-accent transition-colors">{peer.name}</span>
                       <span className="col-span-2 text-muted-foreground/70">{peer.ticker}</span>
                       <span className="col-span-2 text-right text-muted-foreground tabular-nums">
                         {peerScore != null ? `${peerScore} / 100` : "N/A"}
@@ -324,7 +327,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                     {/* Mobile Card View */}
                     <div className="md:hidden flex flex-col gap-1.5">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-foreground/90 font-medium break-words flex-1 min-w-0">{peer.name}</span>
+                        <span className="text-foreground/90 font-medium break-words flex-1 min-w-0 group-hover:text-accent transition-colors">{peer.name}</span>
                         <span className="text-muted-foreground shrink-0 tabular-nums font-semibold">
                           {peerScore != null ? `${peerScore} / 100` : "N/A"}
                         </span>
@@ -334,7 +337,7 @@ export function TearSheetView({ company, weights, onBack, companies, deals }: Te
                         <span className="font-mono">Margin: {peer.metrics.ebitdaMargin}</span>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
