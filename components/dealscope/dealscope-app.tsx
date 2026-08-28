@@ -107,22 +107,9 @@ export function DealScopeApp() {
     prefetchCompanyDetails()
   }, [])
 
-  // Sync state when searchParams changes (e.g. clicking header logo link, external link, or Next.js Link)
+  // Listen for browser Back/Forward (popstate) and Next.js / history navigation (locationchange)
   useEffect(() => {
-    const decoded = decodeUrlState(searchParams)
-    const co = decoded.ticker ? companies.find((c) => c.ticker === decoded.ticker) ?? null : null
-    const nextView = decoded.view === "detail" && !co ? "results" : decoded.view
-    const nextTicker = co ? decoded.ticker : null
-    setView(nextView)
-    setTickerParam(nextTicker)
-    setCommittedScreen(decoded.screen)
-    setRawText(decoded.screen.text)
-    setDebouncedText(decoded.screen.text)
-  }, [searchParams])
-
-  // Listen for browser Back/Forward (popstate)
-  useEffect(() => {
-    const handlePopState = () => {
+    const syncFromUrl = () => {
       const sp = new URLSearchParams(window.location.search)
       const decoded = decodeUrlState(sp)
       const co = decoded.ticker ? companies.find((c) => c.ticker === decoded.ticker) ?? null : null
@@ -134,8 +121,31 @@ export function DealScopeApp() {
       setRawText(decoded.screen.text)
       setDebouncedText(decoded.screen.text)
     }
-    window.addEventListener("popstate", handlePopState)
-    return () => window.removeEventListener("popstate", handlePopState)
+
+    const origPush = window.history.pushState
+    const origReplace = window.history.replaceState
+
+    window.history.pushState = function (...args) {
+      const res = origPush.apply(this, args)
+      window.dispatchEvent(new Event("locationchange"))
+      return res
+    }
+
+    window.history.replaceState = function (...args) {
+      const res = origReplace.apply(this, args)
+      window.dispatchEvent(new Event("locationchange"))
+      return res
+    }
+
+    window.addEventListener("popstate", syncFromUrl)
+    window.addEventListener("locationchange", syncFromUrl)
+
+    return () => {
+      window.history.pushState = origPush
+      window.history.replaceState = origReplace
+      window.removeEventListener("popstate", syncFromUrl)
+      window.removeEventListener("locationchange", syncFromUrl)
+    }
   }, [])
 
   // Debounce typed text
