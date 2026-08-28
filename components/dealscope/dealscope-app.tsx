@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useMemo, useCallback, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { LandingView } from "@/components/dealscope/landing-view"
 import { ResultsView } from "@/components/dealscope/results-view"
@@ -13,7 +13,6 @@ import {
   type Weights,
   type BucketFilters,
   DEFAULT_WEIGHTS,
-  DEFAULT_BUCKET_FILTERS,
   getCompanies,
   getDeals,
   countActiveBucketFilters,
@@ -68,42 +67,37 @@ const screensWithCounts: { screen: ExampleScreen; count: number }[] = EXAMPLE_SC
 const UNCLASSIFIED_COUNT = sectors.find((s) => s.name === "Unclassified")?.count ?? 0
 
 export function DealScopeApp() {
-  // --- URL <-> screen, single source of truth --------------------------------
-  //
-  // The URL is the only authoritative store for view/ticker/screen -- it is
-  // never duplicated into React state, so there is nothing to reconcile.
-  // `urlScreen` below is a plain derivation (useMemo), not state: read the
-  // params, decode them, done. The only local state is the raw text of the
-  // search input (see `rawText`), which has to be local so every keystroke
-  // paints instantly; everything else a click can change (sector, chips,
-  // buckets) is written straight to the URL through `updateScreen`/`navigate`.
-  //
-  // Two functions write the URL and nothing else does:
-  //   * `navigate()` -- router.push(), for real view transitions.
-  //   * `updateScreen()` -- router.replace(), for same-view screen edits.
-  // Both stamp the string they wrote into `lastWrittenUrl` (a ref, so it can
-  // never read stale mid-render) before calling the router. A separate effect
-  // watches for the URL changing to something that ISN'T what we last wrote --
-  // that means it came from outside (fresh load, shared link, back/forward) --
-  // and only then resyncs the local text field.
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const urlString = searchParams.toString()
 
-  const decoded = useMemo(() => decodeUrlState(searchParams), [urlString])
+  // ---------------------------------------------------------------------------
+  // State & URL Synchronization Architecture:
+  // - View, ticker, and committedScreen are held in local state for instant,
+  //   synchronous UI rendering on any click or keyboard action.
+  // - Same-view screen edits (sector/industry/buckets) update state and push
+  //   canonical URL state via window.history.replaceState.
+  // - Real view transitions (landing <-> results <-> detail) update state and
+  //   push history entries via window.history.pushState.
+  // - Next.js router Link clicks and browser Back/Forward (popstate) trigger
+  //   effects that synchronize local state directly from the URL.
+  // ---------------------------------------------------------------------------
+  const [view, setView] = useState<View>(() => {
+    const d = decodeUrlState(searchParams)
+    const co = d.ticker ? companies.find((c) => c.ticker === d.ticker) ?? null : null
+    return d.view === "detail" && !co ? "results" : d.view
+  })
+  const [tickerParam, setTickerParam] = useState<string | null>(() => {
+    const d = decodeUrlState(searchParams)
+    const co = d.ticker ? companies.find((c) => c.ticker === d.ticker) ?? null : null
+    return co ? d.ticker : null
+  })
+  const [committedScreen, setCommittedScreen] = useState<ScreenFilters>(() => decodeUrlState(searchParams).screen)
+  const [rawText, setRawText] = useState(() => decodeUrlState(searchParams).screen.text)
+  const [debouncedText, setDebouncedText] = useState(() => decodeUrlState(searchParams).screen.text)
+
   const selectedCompany: Company | null = useMemo(
-    () => (decoded.ticker ? companies.find((c) => c.ticker === decoded.ticker) ?? null : null),
-    [decoded.ticker],
+    () => (tickerParam ? companies.find((c) => c.ticker === tickerParam) ?? null : null),
+    [tickerParam],
   )
-  // A ticker that is not in the universe must not leave a blank tear-sheet
-  // view, and must not stay in the address bar.
-  const view = decoded.view === "detail" && !selectedCompany ? "results" : decoded.view
-  const tickerParam = selectedCompany ? decoded.ticker : null
-  const urlScreen = decoded.screen
-
-  const [rawText, setRawText] = useState(urlScreen.text)
-  const [debouncedText, setDebouncedText] = useState(urlScreen.text)
-  const lastWrittenUrl = useRef(urlString)
 
   const [weights, setWeights] = useState<Weights>({ ...DEFAULT_WEIGHTS })
   const [weightsOpen, setWeightsOpen] = useState(false)
@@ -113,26 +107,48 @@ export function DealScopeApp() {
     prefetchCompanyDetails()
   }, [])
 
-  // Rewrite leftover or legacy params (view=results&ticker=, unknown keys,
-  // a ticker that is not in the universe) to the canonical form. replace(),
-  // not push(), so a dirty shared link does not add a history entry.
+  // Listen for browser Back/Forward (popstate) and Next.js / history navigation (locationchange)
   useEffect(() => {
-    const next = encodeUrlState({ view, ticker: tickerParam, screen: urlScreen })
-    if (next === urlString) return
-    lastWrittenUrl.current = next
-    router.replace(next ? `/?${next}` : "/", { scroll: false })
-  }, [view, tickerParam, urlScreen, urlString, router])
+    const syncFromUrl = () => {
+      const sp = new URLSearchParams(window.location.search)
+      const decoded = decodeUrlState(sp)
+      const co = decoded.ticker ? companies.find((c) => c.ticker === decoded.ticker) ?? null : null
+      const nextView = decoded.view === "detail" && !co ? "results" : decoded.view
+      const nextTicker = co ? decoded.ticker : null
+      setView(nextView)
+      setTickerParam(nextTicker)
+      setCommittedScreen(decoded.screen)
+      setRawText(decoded.screen.text)
+      setDebouncedText(decoded.screen.text)
+    }
 
-  useEffect(() => {
-    if (urlString === lastWrittenUrl.current) return
-    lastWrittenUrl.current = urlString
-    setRawText(urlScreen.text)
-    setDebouncedText(urlScreen.text)
-  }, [urlString, urlScreen.text])
+    const origPush = window.history.pushState
+    const origReplace = window.history.replaceState
 
-  // Debounce only the expensive part. The input stays bound to `rawText` so
-  // typing always feels instant; only the re-parse + re-screen of 2,381
-  // companies waits ~120ms.
+    window.history.pushState = function (...args) {
+      const res = origPush.apply(this, args)
+      window.dispatchEvent(new Event("locationchange"))
+      return res
+    }
+
+    window.history.replaceState = function (...args) {
+      const res = origReplace.apply(this, args)
+      window.dispatchEvent(new Event("locationchange"))
+      return res
+    }
+
+    window.addEventListener("popstate", syncFromUrl)
+    window.addEventListener("locationchange", syncFromUrl)
+
+    return () => {
+      window.history.pushState = origPush
+      window.history.replaceState = origReplace
+      window.removeEventListener("popstate", syncFromUrl)
+      window.removeEventListener("locationchange", syncFromUrl)
+    }
+  }, [])
+
+  // Debounce typed text
   useEffect(() => {
     const t = setTimeout(() => setDebouncedText(rawText), 120)
     return () => clearTimeout(t)
@@ -140,85 +156,56 @@ export function DealScopeApp() {
 
   const parsed = useMemo(() => parseQuery(debouncedText), [debouncedText])
 
-  // The screen actually driving the UI right now. If the box reads exactly
-  // what's already committed (fresh load, or after a sector/chip/bucket edit
-  // reset it), the committed screen stands untouched -- re-parsing it would
-  // throw away sectors/numeric constraints that came from those other
-  // controls, not from text. Only once typed text diverges from the
-  // committed baseline does it take over, replacing the query-owned half of
-  // the screen (sectors/industries/numeric/text) while the buckets drawer,
-  // a separate surface, survives untouched.
-  //
-  // `buckets.industry` is a mirror of `industries`, not an independent drawer
-  // band -- decodeUrlState seeds both from the same `ind=` param. Carrying the
-  // whole buckets object through unchanged therefore left the PREVIOUS query's
-  // industry applied as a hidden filter that intersected with the new one: on
-  // a results page screened to logistics, typing "pharma high margin low debt"
-  // produced a correct-looking set of chips and zero companies, with nothing
-  // on screen explaining why. Industry moves with the query; the genuine
-  // drawer bands (market cap, ROCE, ...) still survive typing.
   const computeScreen = useCallback(
-    (text: string) => screenFromTypedQuery(text, urlScreen),
-    [urlScreen],
+    (text: string) => screenFromTypedQuery(text, committedScreen),
+    [committedScreen],
   )
   const screen = useMemo(() => computeScreen(debouncedText), [computeScreen, debouncedText])
 
   const { results, matchCount } = useMemo(() => runScreen(companies, screen, weights), [screen, weights])
 
-  // Same-view screen edits: sector pill, chip removal, clear all, buckets
-  // drawer. Each is a direct click handler calling this synchronously --
-  // never an effect -- so it can never race a navigate() triggered by the
-  // same interaction (e.g. hitting Enter right as typing settles). replace(),
-  // not push(), so refining a screen doesn't bury the back button under one
-  // entry per click -- back still steps between the views you actually
-  // navigated. Typed text is deliberately NOT auto-committed here while you
-  // type; it only reaches the URL when you submit (Run/Enter), which is what
-  // `navigate()` does, so there is exactly one writer per keystroke-adjacent
-  // action instead of two racing to land last.
+  // Same-view screen edits (sector pills, industry chips, bucket filters, chip removal)
   const updateScreen = useCallback(
     (next: ScreenFilters) => {
+      setCommittedScreen(next)
       const qs = encodeUrlState({ view, ticker: tickerParam, screen: next })
-      if (qs === urlString) return
-      lastWrittenUrl.current = qs
-      router.replace(qs ? `/?${qs}` : "/", { scroll: false })
+      const url = qs ? `/?${qs}` : "/"
+      if (typeof window !== "undefined" && window.location.search !== (qs ? `?${qs}` : "")) {
+        window.history.replaceState(null, "", url)
+      }
     },
-    [view, tickerParam, urlString, router],
+    [view, tickerParam],
   )
 
-  // Real view transitions. The single writer of router.push() -- never paired
-  // with a state write, so there is exactly one thing that can move the app
-  // from one view to another. The scroll reset is deliberately NOT in this
-  // synchronous block: it's deferred a frame so it never fires in the same
-  // tick as the state/URL write that triggers the AnimatePresence swap.
+  // Real view transitions (landing <-> results <-> detail)
   const navigate = useCallback(
     (params: { view?: View; ticker?: string | null; screen?: ScreenFilters }) => {
+      const nextView = params.view ?? view
+      const nextTicker = params.ticker !== undefined ? params.ticker : tickerParam
+      const nextScreen = params.screen ?? screen
+
+      setView(nextView)
+      setTickerParam(nextTicker)
+      setCommittedScreen(nextScreen)
+      if (params.screen) {
+        setRawText(params.screen.text)
+        setDebouncedText(params.screen.text)
+      }
+
       const qs = encodeUrlState({
-        view: params.view ?? view,
-        ticker: params.ticker ?? null,
-        screen: params.screen ?? screen,
+        view: nextView,
+        ticker: nextTicker,
+        screen: nextScreen,
       })
-      lastWrittenUrl.current = qs
-      router.push(qs ? `/?${qs}` : "/", { scroll: false })
-      // Deferred one frame so it never runs in the same tick as the URL write
-      // that triggers the AnimatePresence swap, and routed through Lenis --
-      // a native window.scrollTo leaves Lenis mid-animation at the old offset,
-      // and it drags the page back on its next tick. See scrollToTop().
+      const url = qs ? `/?${qs}` : "/"
+      if (typeof window !== "undefined") {
+        window.history.pushState(null, "", url)
+      }
       requestAnimationFrame(scrollToTop)
     },
-    [router, view, screen],
+    [view, tickerParam, screen],
   )
 
-  /**
-   * Apply a screen built by a visual control (chip removal, sector pill,
-   * filters drawer) and drop the query text.
-   *
-   * A chip can originate either from typed text or from a visual control, and
-   * there is no way to partially un-type a sentence -- so rather than trying,
-   * the screen is materialised into the URL that represents it exactly and
-   * the now-inaccurate query text is cleared. What you see (chips) therefore
-   * always equals what is applied, which is the property that makes a
-   * Applied screen updates state in-place.
-   */
   const materialize = useCallback(
     (next: ScreenFilters) => {
       const cleaned = { ...next, text: "" }
@@ -229,17 +216,12 @@ export function DealScopeApp() {
     [updateScreen],
   )
 
-  // Emptying the search box is a full reset, not a residual-text edit.
-  // Without this, deleting "FMCG high margin under 5000 Cr" character by
-  // character left the last-committed URL screen (chips, num=, sectors=)
-  // sitting under an empty input -- live count and chips out of sync with
-  // what the user just erased.
   const handleQueryChange = useCallback(
     (q: string) => {
       setRawText(q)
       if (!q.trim()) {
         setDebouncedText("")
-        const kept = screenAfterClearedSearch(urlScreen)
+        const kept = screenAfterClearedSearch(committedScreen)
         if (tickerParam) {
           navigate({ view: "results", ticker: null, screen: kept })
         } else {
@@ -247,7 +229,7 @@ export function DealScopeApp() {
         }
       }
     },
-    [tickerParam, navigate, updateScreen, urlScreen],
+    [tickerParam, navigate, updateScreen, committedScreen],
   )
 
   const toggleSector = useCallback(
@@ -265,9 +247,6 @@ export function DealScopeApp() {
     [materialize, screen],
   )
 
-  // Full wipe: chips, live count, URL params, local text. Zero residual.
-  // Detail view drops back to clean results so the user is never stranded
-  // on a tear sheet whose screen no longer exists.
   const handleClearAll = useCallback(() => {
     setRawText("")
     setDebouncedText("")
@@ -279,23 +258,16 @@ export function DealScopeApp() {
     }
   }, [view, tickerParam, navigate, updateScreen])
 
-  // The drawer owns `buckets`; `industry` inside it is mirrored onto the
-  // screen's own industries list so both entry points agree.
   const handleBucketsChange = useCallback(
     (buckets: BucketFilters) => materialize({ ...screen, buckets, industries: buckets.industry }),
     [screen, materialize],
   )
 
-  // Reads `rawText` directly rather than the debounced `screen`, so hitting
-  // Run/Enter immediately after typing always submits exactly what's in the
-  // box -- never a stale pre-debounce value.
   const handleRun = useCallback(
     () => navigate({ view: "results", screen: computeScreen(rawText) }),
     [navigate, computeScreen, rawText],
   )
 
-  // Applying an example screen is literally "type this query and run it" --
-  // same parser, same screener, no private code path.
   const handleApplyScreen = useCallback(
     (example: ExampleScreen) => {
       const next = parseQuery(example.query).filters
@@ -393,6 +365,7 @@ export function DealScopeApp() {
                 onBack={handleBackToResults}
                 companies={companies}
                 deals={deals}
+                onSelectCompany={handleSelectCompany}
               />
             </motion.div>
           )}
