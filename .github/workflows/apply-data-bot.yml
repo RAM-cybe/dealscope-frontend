@@ -4,8 +4,14 @@ name: Apply data-bot branch
 # and never puts a token in a clone URL. It pushes either:
 #   price-sync/<run-id>  — daily market caps; this workflow opens a PR and
 #                          squash-merges it (required reviews stay at 0)
-#   promote/<run-id>     — quarterly fundamentals; this workflow opens a PR
-#                          and STOPS. A human merges it.
+#   promote/<run-id>     — quarterly fundamentals; same treatment. The backend
+#                          has already sanitized the data and passed its own
+#                          publish gate; this repo re-validates independently
+#                          (scripts/validate_data.py) before merging.
+#
+# No human approval anywhere. After every merge a canary checks that the
+# deployed site really shows the new dates; if it does not, the merge is
+# reverted automatically and an issue is opened.
 #
 # Only the published data JSON files are allowed on these branches. Anything
 # else fails the job instead of reaching main.
@@ -31,6 +37,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
+  deployments: read
 
 jobs:
   discover:
@@ -128,8 +136,9 @@ jobs:
           git fetch origin main
           mapfile -t CHANGED < <(git diff --name-only origin/main...HEAD)
           if [[ ${#CHANGED[@]} -eq 0 ]]; then
-            echo "No file differences vs origin/main — nothing to apply."
+            echo "No file differences vs origin/main — nothing to apply; removing the empty branch."
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            git push origin --delete "$BRANCH" || true
             exit 0
           fi
           echo "Changed files:"
@@ -142,6 +151,15 @@ jobs:
               exit 1
             fi
           done
+
+          # Independent content validation. Both the script and the baseline
+          # come from origin/main, never from the branch under test.
+          rm -rf /tmp/trusted /tmp/base-data && mkdir -p /tmp/trusted /tmp/base-data
+          git show origin/main:scripts/validate_data.py > /tmp/trusted/validate_data.py
+          for f in companies deals narratives dataset-meta; do
+            git show "origin/main:data/$f.json" > "/tmp/base-data/$f.json" 2>/dev/null || true
+          done
+          python3 /tmp/trusted/validate_data.py --candidate data --base /tmp/base-data
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Open pull request if missing
@@ -160,15 +178,16 @@ jobs:
               BODY="Automated daily market-cap sync from RAM-cybe/dealscope. Fundamentals are unchanged. Safe to auto-merge. Source run: ${RUN_URL}"
             else
               TITLE="Promote fundamentals snapshot (${BRANCH#promote/})"
-              BODY="Frontend half of a fundamentals promotion from RAM-cybe/dealscope. Merging this is what Vercel deploys. Do not merge until the matching backend promotion PR is ready. Not auto-merged. Source run: ${RUN_URL}"
+              BODY="Quarterly fundamentals promotion from RAM-cybe/dealscope. Sanitized and gated on the backend, independently validated here, auto-merged, then canary-checked on the live site. Source run: ${RUN_URL}"
             fi
             gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
             gh pr view "$BRANCH" --json number --jq .number > /tmp/pr_number
           fi
           echo "number=$(cat /tmp/pr_number)" >> "$GITHUB_OUTPUT"
 
-      - name: Auto-merge daily price-sync only
-        if: success() && startsWith(matrix.branch, 'price-sync/') && steps.verify.outputs.changed == 'true'
+      - name: Auto-merge (validated data only)
+        id: merge
+        if: success() && steps.verify.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.number }}
@@ -181,15 +200,89 @@ jobs:
           for i in 1 2 3 4 5 6 7 8; do
             if gh pr merge "$PR" --squash --delete-branch; then
               echo "Merged PR #$PR"
+              SHA=$(gh pr view "$PR" --json mergeCommit --jq '.mergeCommit.oid')
+              echo "sha=$SHA" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             if [[ "$i" -eq 8 ]]; then
-              echo "::error::Could not merge price-sync PR #$PR after 8 attempts"
+              echo "::error::Could not merge PR #$PR after 8 attempts"
               exit 1
             fi
             echo "Merge not ready (attempt $i/8); waiting 5s"
             sleep 5
           done
+
+      - name: Canary - wait for the production deployment
+        id: deploy
+        if: steps.merge.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ steps.merge.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # Vercel reports each deployment back to GitHub as a deployment status.
+          for i in $(seq 1 60); do
+            ID=$(gh api "repos/${GITHUB_REPOSITORY}/deployments?sha=${SHA}&environment=Production" --jq '.[0].id // empty')
+            if [[ -n "$ID" ]]; then
+              STATE=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${ID}/statuses" --jq '.[0].state // "pending"')
+              echo "Deployment $ID: $STATE (check $i/60)"
+              case "$STATE" in
+                success) echo "ok=true" >> "$GITHUB_OUTPUT"; exit 0 ;;
+                failure|error) echo "::error::Production deployment $ID ended in $STATE"; echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0 ;;
+              esac
+            else
+              echo "No production deployment for ${SHA:0:7} yet (check $i/60)"
+            fi
+            sleep 20
+          done
+          # Slow is not broken: do not roll back good data over a slow deploy.
+          echo "ok=unknown" >> "$GITHUB_OUTPUT"
+          echo "::error::No production deployment result within 20 minutes (not rolled back)"
+          exit 1
+
+      - name: Canary - the live site must show the new dates
+        id: canary
+        if: steps.deploy.outputs.ok == 'true'
+        env:
+          SITE_URL: https://dealscope-screener.vercel.app/
+        run: |
+          set -euo pipefail
+          git fetch origin main --quiet
+          git show origin/main:data/dataset-meta.json > /tmp/meta.json
+          for i in $(seq 1 15); do
+            curl -fsS --max-time 30 "${SITE_URL}?canary=${GITHUB_RUN_ID}-${i}" -o /tmp/page.html || true
+            if python3 scripts/canary_check.py /tmp/meta.json /tmp/page.html; then
+              echo "ok=true" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            sleep 20
+          done
+          echo "ok=false" >> "$GITHUB_OUTPUT"
+
+      - name: Roll back the merge if the deploy or canary failed
+        if: ${{ always() && steps.merge.outputs.sha != '' && (steps.deploy.outputs.ok == 'false' || steps.canary.outputs.ok == 'false') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ steps.merge.outputs.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main --quiet
+          git checkout -q -B "rollback/${SHA:0:7}" origin/main
+          git revert --no-edit "$SHA"
+          git push origin "rollback/${SHA:0:7}"
+          gh pr create --base main --head "rollback/${SHA:0:7}" \
+            --title "Rollback: ${SHA:0:7} failed its post-deploy canary" \
+            --body "Automatic rollback. The deployment or live-site check for ${SHA} failed. Run: ${RUN_URL}"
+          for _ in 1 2 3 4 5 6 7 8; do
+            gh pr merge "rollback/${SHA:0:7}" --squash --delete-branch && break
+            sleep 5
+          done
+          gh issue create --title "[DealScope] Data release rolled back (${SHA:0:7})" \
+            --body "The post-deploy canary failed, so the release was reverted automatically. Run: ${RUN_URL}" || true
+          echo "::error::Release ${SHA:0:7} was rolled back."
+          exit 1
 
       - name: Job summary
         if: always()
@@ -200,9 +293,5 @@ jobs:
             echo "## Data-bot apply — \`${BRANCH}\`"
             echo ""
             echo "- Pull request: ${PR:-'(none)'}"
-            if [[ "$BRANCH" == price-sync/* ]]; then
-              echo "- Daily prices: auto-merge attempted (required reviews = 0)"
-            else
-              echo "- Promote: PR opened only — a human must merge"
-            fi
+            echo "- Validated, auto-merged, canary-checked (rolled back on failure)"
           } >> "$GITHUB_STEP_SUMMARY"
