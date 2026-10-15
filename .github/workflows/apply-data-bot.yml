@@ -1,6 +1,6 @@
 name: Apply data-bot branch
 
-# The backend data bot (RAM-cybe/dealscope) never writes to this repo's main
+# The backend data bot (dealscope) never writes to this repo's main
 # and never puts a token in a clone URL. It pushes either:
 #   price-sync/<run-id>  — daily market caps; this workflow opens a PR and
 #                          squash-merges it (required reviews stay at 0)
@@ -175,10 +175,10 @@ jobs:
           else
             if [[ "$BRANCH" == price-sync/* ]]; then
               TITLE="Daily price refresh: ${BRANCH#price-sync/}"
-              BODY="Automated daily market-cap sync from RAM-cybe/dealscope. Fundamentals are unchanged. Safe to auto-merge. Source run: ${RUN_URL}"
+              BODY="Automated daily market-cap sync from the dealscope backend. Fundamentals are unchanged. Safe to auto-merge. Source run: ${RUN_URL}"
             else
               TITLE="Promote fundamentals snapshot (${BRANCH#promote/})"
-              BODY="Quarterly fundamentals promotion from RAM-cybe/dealscope. Sanitized and gated on the backend, independently validated here, auto-merged, then canary-checked on the live site. Source run: ${RUN_URL}"
+              BODY="Quarterly fundamentals promotion from the dealscope backend. Sanitized and gated on the backend, independently validated here, auto-merged, then canary-checked on the live site. Source run: ${RUN_URL}"
             fi
             gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
             gh pr view "$BRANCH" --json number --jq .number > /tmp/pr_number
