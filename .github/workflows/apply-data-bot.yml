@@ -185,7 +185,7 @@ jobs:
           fi
           echo "number=$(cat /tmp/pr_number)" >> "$GITHUB_OUTPUT"
 
-      - name: Auto-merge (validated data only)
+      - name: Auto-merge as Ram VP (validated data only)
         id: merge
         if: success() && steps.verify.outputs.changed == 'true'
         env:
@@ -197,18 +197,38 @@ jobs:
             echo "::error::No pull request number from the previous step"
             exit 1
           fi
+          git config user.name "Ram VP"
+          git config user.email "225523561+ram-vp@users.noreply.github.com"
+          TITLE=$(gh pr view "$PR" --json title --jq .title)
+          HEAD=$(gh pr view "$PR" --json headRefName --jq .headRefName)
           for i in 1 2 3 4 5 6 7 8; do
-            if gh pr merge "$PR" --squash --delete-branch; then
-              echo "Merged PR #$PR"
-              SHA=$(gh pr view "$PR" --json mergeCommit --jq '.mergeCommit.oid')
+            MERGEABLE=$(gh pr view "$PR" --json mergeable --jq .mergeable || echo "UNKNOWN")
+            if [[ "$MERGEABLE" == "MERGEABLE" ]]; then
+              git fetch origin main --quiet
+              git checkout -q -B "__squash_merge_main" origin/main
+              git fetch origin "$HEAD" --quiet
+              git merge --squash "origin/$HEAD"
+              if git diff --cached --quiet; then
+                echo "Nothing to squash for PR #$PR"
+                echo "sha=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
+                gh pr close "$PR" --comment "Already on main." || true
+                git push origin --delete "$HEAD" || true
+                exit 0
+              fi
+              git commit -m "$TITLE"
+              git push origin "HEAD:main"
+              SHA=$(git rev-parse HEAD)
               echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+              gh pr close "$PR" --comment "Squash-merged onto main as Ram VP (${SHA:0:7})." || true
+              git push origin --delete "$HEAD" || true
+              echo "Merged PR #$PR as Ram VP ($SHA)"
               exit 0
             fi
             if [[ "$i" -eq 8 ]]; then
-              echo "::error::Could not merge PR #$PR after 8 attempts"
+              echo "::error::Could not merge PR #$PR after 8 attempts (mergeable=$MERGEABLE)"
               exit 1
             fi
-            echo "Merge not ready (attempt $i/8); waiting 5s"
+            echo "Merge not ready (attempt $i/8, mergeable=$MERGEABLE); waiting 5s"
             sleep 5
           done
 
@@ -266,8 +286,8 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Ram VP"
+          git config user.email "225523561+ram-vp@users.noreply.github.com"
           git fetch origin main --quiet
           git checkout -q -B "rollback/${SHA:0:7}" origin/main
           git revert --no-edit "$SHA"
