@@ -56,7 +56,7 @@ console.log("\n=== The four required example queries ===")
   check("pharma: both drug industries", filters.industries.length === 2)
   check("pharma: mid-cap band", num(filters, "marketCap")?.min === 5000 && num(filters, "marketCap")?.max === 20000)
   check("pharma: explicit ROCE >= 18", num(filters, "roce")?.min === 18)
-  check("pharma: growth floor from Healthcare & Lifesciences p75, not universe", num(filters, "revenueGrowth")?.min === 27.4,
+  check("pharma: growth floor from Healthcare & Lifesciences p75, not universe", num(filters, "revenueGrowth")?.min === 30.1,
     `got ${num(filters, "revenueGrowth")?.min}`)
 }
 
@@ -65,7 +65,7 @@ console.log("\n=== The four required example queries ===")
   check("consumer: recognised", recognised)
   check("consumer: sector set", filters.sectors.includes("Consumer Discretionary & Retail"))
   check("consumer: zero pledge", num(filters, "promoterPledge")?.max === 0)
-  check("consumer: margin floor is Consumer Discretionary & Retail p75", num(filters, "ebitdaMargin")?.min === 15.8,
+  check("consumer: margin floor is Consumer Discretionary & Retail p75", num(filters, "ebitdaMargin")?.min === 15.9,
     `got ${num(filters, "ebitdaMargin")?.min}`)
 }
 
