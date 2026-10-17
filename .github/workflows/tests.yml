@@ -2,9 +2,6 @@ name: Tests
 
 on:
   pull_request:
-    branches-ignore:
-      - 'price-refresh/**'
-      - 'price-sync/**'
   push:
     branches: [main]
   workflow_dispatch:
@@ -14,6 +11,7 @@ permissions:
 
 jobs:
   frontend:
+    if: ${{ github.event_name != 'pull_request' || (!startsWith(github.head_ref, 'price-refresh/') && !startsWith(github.head_ref, 'price-sync/')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
